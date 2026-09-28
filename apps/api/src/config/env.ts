@@ -12,6 +12,8 @@ const EnvSchema = z.object({
   FIELD_ENCRYPTION_KEY: z.string().refine((v) => Buffer.from(v, 'base64').length === 32, {
     message: 'FIELD_ENCRYPTION_KEY 는 32바이트 키의 base64 문자열이어야 합니다',
   }),
+  /** 키 교체 후에도 예전 암호문을 읽기 위한 이전 키 목록: "k0:base64,k00:base64" */
+  FIELD_ENCRYPTION_PREVIOUS_KEYS: z.string().default(''),
   FIELD_ENCRYPTION_KEY_ID: z
     .string()
     .regex(/^[A-Za-z0-9_-]+$/)
@@ -39,7 +41,7 @@ export interface AppConfig {
   databaseUrl: string;
   redisUrl: string;
   jwtSecret: string;
-  fieldEncryption: { key: Buffer; keyId: string };
+  fieldEncryption: { key: Buffer; keyId: string; previousKeys: Record<string, Buffer> };
   webOrigin: string;
   storage: {
     driver: Env['STORAGE_DRIVER'];
@@ -81,6 +83,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     fieldEncryption: {
       key: Buffer.from(e.FIELD_ENCRYPTION_KEY, 'base64'),
       keyId: e.FIELD_ENCRYPTION_KEY_ID,
+      previousKeys: parsePreviousKeys(e.FIELD_ENCRYPTION_PREVIOUS_KEYS),
     },
     webOrigin: e.WEB_ORIGIN,
     storage: {
@@ -102,4 +105,17 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
       from: e.MAIL_FROM,
     },
   };
+}
+
+function parsePreviousKeys(value: string): Record<string, Buffer> {
+  const keys: Record<string, Buffer> = {};
+  for (const entry of value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean)) {
+    const [id, key] = entry.split(':');
+    if (!id || !key) throw new Error('FIELD_ENCRYPTION_PREVIOUS_KEYS 형식: "keyId:base64,..."');
+    keys[id] = Buffer.from(key, 'base64');
+  }
+  return keys;
 }

@@ -3,6 +3,7 @@ import { refreshTokens, users } from '@wellbuddy/db';
 import type { LoginInput, SignupInput } from '@wellbuddy/shared';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
 import { DbService } from '../db/db.service.js';
 import type { IssuedTokens } from './auth.cookies.js';
@@ -29,6 +30,7 @@ export class AuthService {
     private readonly db: DbService,
     private readonly tokens: TokenService,
     private readonly sessions: SessionService,
+    private readonly audit: AuditService,
   ) {}
 
   async signup(input: SignupInput, meta: ClientMeta): Promise<AuthResult> {
@@ -49,6 +51,12 @@ export class AuthService {
       throw e;
     }
     const tokens = await this.issueTokens(user!.id, null, meta);
+    await this.audit.record({
+      action: 'auth.signup',
+      entity: 'user',
+      entityId: user!.id,
+      userId: user!.id,
+    });
     return { user: user!, companyId: null, ...tokens };
   }
 
@@ -56,9 +64,19 @@ export class AuthService {
     const user = await this.findUserByEmail(input.email);
     if (!user) {
       await burnPasswordCheck(input.password);
+      await this.audit.record({ action: 'auth.login_failed', after: { email: input.email } });
       throw this.invalidCredentials();
     }
-    if (!(await verifyPassword(user.passwordHash, input.password))) throw this.invalidCredentials();
+    if (!(await verifyPassword(user.passwordHash, input.password))) {
+      await this.audit.record({
+        action: 'auth.login_failed',
+        entity: 'user',
+        entityId: user.id,
+        userId: user.id,
+        after: { email: input.email },
+      });
+      throw this.invalidCredentials();
+    }
 
     const companyId = await this.sessions.pickCompany(user.id, user.lastCompanyId);
     await this.db.db
@@ -66,6 +84,13 @@ export class AuthService {
       .set({ lastLoginAt: new Date(), lastCompanyId: companyId })
       .where(eq(users.id, user.id));
     const tokens = await this.issueTokens(user.id, companyId, meta);
+    await this.audit.record({
+      action: 'auth.login',
+      entity: 'user',
+      entityId: user.id,
+      userId: user.id,
+      companyId,
+    });
     return { user: { id: user.id, email: user.email, name: user.name }, companyId, ...tokens };
   }
 
@@ -86,6 +111,13 @@ export class AuthService {
         row.replacedById && Date.now() - row.revokedAt.getTime() < REFRESH_REUSE_GRACE_MS;
       if (recentlyRotated) return null;
       await this.revokeFamily(row.familyId);
+      await this.audit.record({
+        action: 'auth.refresh_reused',
+        entity: 'user',
+        entityId: row.userId,
+        userId: row.userId,
+        companyId: null,
+      });
       throw new AppException(
         'REFRESH_REUSED',
         '보안을 위해 로그아웃되었습니다. 다시 로그인해 주세요.',

@@ -4,6 +4,7 @@ import { businessPlaces, companies, companyMembers, companySettings, users } fro
 import type { CreateCompanyInput } from '@wellbuddy/shared';
 import { and, asc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
+import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
@@ -38,7 +39,10 @@ function isUniqueViolation(e: unknown): boolean {
 
 @Injectable()
 export class CompaniesService {
-  constructor(private readonly db: DbService) {}
+  constructor(
+    private readonly db: DbService,
+    private readonly audit: AuditService,
+  ) {}
 
   /** 회사를 만들고 만든 사람을 대표 관리자로 등록한다. 본점 사업장과 기본 설정도 함께 만든다. */
   async create(userId: string, input: CreateCompanyInput) {
@@ -60,6 +64,16 @@ export class CompaniesService {
         address: input.address,
         isHeadquarters: true,
       });
+      await this.audit.record(
+        {
+          action: 'company.create',
+          entity: 'company',
+          entityId: companyId,
+          companyId,
+          after: created,
+        },
+        tx,
+      );
       return created!;
     });
     await this.db.db.update(users).set({ lastCompanyId: companyId }).where(eq(users.id, userId));
@@ -77,10 +91,23 @@ export class CompaniesService {
 
   async updateCurrent(input: z.infer<typeof UpdateCompanySchema>) {
     const { companyId } = requireCompanyContext();
-    const [company] = await this.db.tenant((tx) =>
-      tx.update(companies).set(input).where(eq(companies.id, companyId)).returning(companyColumns),
-    );
-    if (!company) throw new NotFoundException();
+    const company = await this.db.tenant(async (tx) => {
+      const [before] = await tx
+        .select(companyColumns)
+        .from(companies)
+        .where(eq(companies.id, companyId));
+      const [after] = await tx
+        .update(companies)
+        .set(input)
+        .where(eq(companies.id, companyId))
+        .returning(companyColumns);
+      if (!after) throw new NotFoundException();
+      await this.audit.record(
+        { action: 'company.update', entity: 'company', entityId: companyId, before, after },
+        tx,
+      );
+      return after;
+    });
     return company;
   }
 
@@ -96,13 +123,22 @@ export class CompaniesService {
   async createPlace(input: z.infer<typeof BusinessPlaceInputSchema>) {
     const { companyId } = requireCompanyContext();
     try {
-      const [place] = await this.db.tenant((tx) =>
-        tx
+      return await this.db.tenant(async (tx) => {
+        const [place] = await tx
           .insert(businessPlaces)
           .values({ ...input, companyId })
-          .returning(placeColumns),
-      );
-      return place!;
+          .returning(placeColumns);
+        await this.audit.record(
+          {
+            action: 'business_place.create',
+            entity: 'business_place',
+            entityId: place!.id,
+            after: place,
+          },
+          tx,
+        );
+        return place!;
+      });
     } catch (e) {
       if (isUniqueViolation(e)) throw this.duplicatePlace();
       throw e;
@@ -129,7 +165,7 @@ export class CompaniesService {
   async removePlace(id: string) {
     await this.db.tenant(async (tx) => {
       const [place] = await tx
-        .select({ isHeadquarters: businessPlaces.isHeadquarters })
+        .select(placeColumns)
         .from(businessPlaces)
         .where(eq(businessPlaces.id, id));
       if (!place) throw new NotFoundException();
@@ -139,6 +175,10 @@ export class CompaniesService {
       await tx
         .delete(businessPlaces)
         .where(and(eq(businessPlaces.id, id), eq(businessPlaces.isHeadquarters, false)));
+      await this.audit.record(
+        { action: 'business_place.delete', entity: 'business_place', entityId: id, before: place },
+        tx,
+      );
     });
   }
 

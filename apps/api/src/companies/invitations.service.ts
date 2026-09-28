@@ -3,6 +3,7 @@ import { HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/commo
 import { companies, companyMembers, invitations, users } from '@wellbuddy/db';
 import { ROLE_LABELS, type Role } from '@wellbuddy/shared';
 import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { AuditService } from '../audit/audit.service.js';
 import { TokenService } from '../auth/token.service.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
@@ -38,6 +39,7 @@ export class InvitationsService {
     private readonly db: DbService,
     private readonly tokens: TokenService,
     private readonly mail: MailService,
+    private readonly audit: AuditService,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
@@ -113,6 +115,15 @@ export class InvitationsService {
         .select({ name: companies.name })
         .from(companies)
         .where(eq(companies.id, ctx.companyId));
+      await this.audit.record(
+        {
+          action: 'invitation.create',
+          entity: 'invitation',
+          entityId: created!.id,
+          after: { email, role },
+        },
+        tx,
+      );
       return { invitation: created!, companyName: company?.name ?? '' };
     });
 
@@ -136,14 +147,18 @@ export class InvitationsService {
   }
 
   async revoke(id: string) {
-    const updated = await this.db.tenant((tx) =>
-      tx
+    await this.db.tenant(async (tx) => {
+      const updated = await tx
         .update(invitations)
         .set({ revokedAt: new Date() })
         .where(and(eq(invitations.id, id), isNull(invitations.acceptedAt)))
-        .returning({ id: invitations.id }),
-    );
-    if (updated.length === 0) throw new NotFoundException();
+        .returning({ id: invitations.id, email: invitations.email });
+      if (updated.length === 0) throw new NotFoundException();
+      await this.audit.record(
+        { action: 'invitation.revoke', entity: 'invitation', entityId: id, before: updated[0] },
+        tx,
+      );
+    });
   }
 
   /** 토큰으로 초대를 조회한다(로그인 전 화면에서 사용). */
@@ -194,6 +209,16 @@ export class InvitationsService {
         .update(invitations)
         .set({ acceptedAt: new Date() })
         .where(eq(invitations.id, row.id));
+      await this.audit.record(
+        {
+          action: 'invitation.accept',
+          entity: 'invitation',
+          entityId: row.id,
+          companyId: row.company_id,
+          after: { email: row.email, role: row.role },
+        },
+        tx,
+      );
     });
     await this.db.db
       .update(users)

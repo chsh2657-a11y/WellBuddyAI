@@ -51,6 +51,128 @@
         ]
       }
     },
+    "/api/audit-logs": {
+      "get": {
+        "operationId": "AuditController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "최신순. 다음 페이지는 before=마지막 createdAt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "entity": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "entityId": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "method": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "path": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "statusCode": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "ip": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "userName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "userEmail": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "before": {},
+                      "after": {}
+                    },
+                    "required": [
+                      "id",
+                      "createdAt",
+                      "action",
+                      "entity",
+                      "entityId",
+                      "method",
+                      "path",
+                      "statusCode",
+                      "ip",
+                      "userName",
+                      "userEmail",
+                      "before",
+                      "after"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.audit (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "audit"
+        ]
+      }
+    },
     "/api/auth/signup": {
       "post": {
         "operationId": "AuthController_signup",
@@ -1656,6 +1778,773 @@
         },
         "tags": [
           "companies"
+        ]
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "operationId": "AccessController_roles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "역할별 권한 매트릭스",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "owner",
+                          "admin",
+                          "accountant",
+                          "approver",
+                          "employee"
+                        ]
+                      },
+                      "editable": {
+                        "type": "boolean"
+                      },
+                      "overridden": {
+                        "type": "boolean"
+                      },
+                      "permissions": {
+                        "type": "object",
+                        "properties": {
+                          "dashboard": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "accounting": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "evidence": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "sales": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "production": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "approval": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "hr": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "attendance": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "payroll": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "tax": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings.company": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings.users": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings.menus": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings.integrations": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          },
+                          "settings.audit": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "read",
+                              "write"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "dashboard",
+                          "accounting",
+                          "evidence",
+                          "sales",
+                          "production",
+                          "approval",
+                          "hr",
+                          "attendance",
+                          "payroll",
+                          "tax",
+                          "settings",
+                          "settings.company",
+                          "settings.users",
+                          "settings.menus",
+                          "settings.integrations",
+                          "settings.audit"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "editable",
+                      "overridden",
+                      "permissions"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.users (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/api/roles/{role}/permissions": {
+      "put": {
+        "operationId": "AccessController_updateRole",
+        "parameters": [
+          {
+            "name": "role",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "permissions": {
+                    "type": "object",
+                    "properties": {
+                      "dashboard": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "accounting": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "evidence": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "sales": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "production": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "approval": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "hr": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "attendance": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "payroll": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "tax": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings.company": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings.users": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings.menus": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings.integrations": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      },
+                      "settings.audit": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "read",
+                          "write"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "permissions"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "admin",
+                        "accountant",
+                        "approver",
+                        "employee"
+                      ]
+                    },
+                    "editable": {
+                      "type": "boolean"
+                    },
+                    "overridden": {
+                      "type": "boolean"
+                    },
+                    "permissions": {
+                      "type": "object",
+                      "properties": {
+                        "dashboard": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "accounting": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "evidence": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "sales": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "production": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "approval": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "hr": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "attendance": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "payroll": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "tax": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings.company": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings.users": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings.menus": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings.integrations": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        },
+                        "settings.audit": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "read",
+                            "write"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "dashboard",
+                        "accounting",
+                        "evidence",
+                        "sales",
+                        "production",
+                        "approval",
+                        "hr",
+                        "attendance",
+                        "payroll",
+                        "tax",
+                        "settings",
+                        "settings.company",
+                        "settings.users",
+                        "settings.menus",
+                        "settings.integrations",
+                        "settings.audit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "editable",
+                    "overridden",
+                    "permissions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.users (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/api/members": {
+      "get": {
+        "operationId": "AccessController_members",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "owner",
+                          "admin",
+                          "accountant",
+                          "approver",
+                          "employee"
+                        ]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "active",
+                          "disabled"
+                        ]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "isMe": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "userId",
+                      "name",
+                      "email",
+                      "role",
+                      "status",
+                      "createdAt",
+                      "isMe"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.users (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/api/members/{id}": {
+      "patch": {
+        "operationId": "AccessController_updateMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "admin",
+                      "accountant",
+                      "approver",
+                      "employee"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "disabled"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "admin",
+                        "accountant",
+                        "approver",
+                        "employee"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "disabled"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.users (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "access"
         ]
       }
     }
