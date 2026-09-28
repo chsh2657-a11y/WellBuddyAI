@@ -10,8 +10,9 @@ coverage/
 .env.*
 !.env.example
 
-# local file storage (STORAGE_DRIVER=local)
-storage/
+# local file storage (STORAGE_DRIVER=local) — 소스 폴더(apps/api/src/storage)는 무시하지 않는다
+/storage/
+apps/api/storage/
 
 # playwright
 e2e/test-results/
