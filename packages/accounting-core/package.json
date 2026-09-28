@@ -1,0 +1,23 @@
+{
+  "name": "@wellbuddy/accounting-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "회계 계산 엔진(순수 로직): 원화 금액, 복식부기 대차 검증, 부가세 분리, 표준 계정과목, 재무제표 집계",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  }
+}

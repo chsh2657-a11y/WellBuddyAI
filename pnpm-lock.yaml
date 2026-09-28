@@ -208,6 +208,8 @@ importers:
         specifier: ^22.20.4
         version: 22.20.4
 
+  packages/accounting-core: {}
+
   packages/api-client:
     dependencies:
       openapi-fetch:
