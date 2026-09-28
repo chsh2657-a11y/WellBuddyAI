@@ -72,7 +72,10 @@ export function LoginForm() {
       </form>
       <CardFooter className="justify-center text-sm text-muted-foreground">
         계정이 없으신가요?
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link
+          href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+          className="font-medium text-primary hover:underline"
+        >
           회원가입
         </Link>
       </CardFooter>

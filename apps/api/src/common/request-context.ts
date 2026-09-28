@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Injectable, type NestMiddleware } from '@nestjs/common';
-import type { Role } from '@wellbuddy/shared';
+import type { PermissionMap, Role } from '@wellbuddy/shared';
 import type { NextFunction, Request, Response } from 'express';
 
 /** 요청 하나 동안 유지되는 사용자·회사 컨텍스트. 인증 가드가 userId/companyId/role 을 채운다. */
@@ -8,6 +8,8 @@ export interface RequestContext {
   userId: string | null;
   companyId: string | null;
   role: Role | null;
+  /** 역할 기본값 + 회사별 재정의가 반영된 최종 권한(회사를 선택하지 않았으면 null) */
+  permissions: PermissionMap | null;
   ip: string | null;
   userAgent: string | null;
 }
@@ -18,10 +20,37 @@ export function currentContext(): RequestContext | undefined {
   return storage.getStore();
 }
 
+/** 인증된 요청에서만 호출한다. 컨텍스트가 없으면 프로그래밍 오류다. */
+export function requireContext(): RequestContext & { userId: string } {
+  const ctx = storage.getStore();
+  if (!ctx?.userId) throw new Error('인증 컨텍스트가 없습니다');
+  return ctx as RequestContext & { userId: string };
+}
+
+/** 회사를 선택한 인증 요청에서 사용한다. */
+export function requireCompanyContext(): RequestContext & {
+  userId: string;
+  companyId: string;
+  role: Role;
+  permissions: PermissionMap;
+} {
+  const ctx = requireContext();
+  if (!ctx.companyId || !ctx.role || !ctx.permissions) throw new Error('회사 컨텍스트가 없습니다');
+  return ctx as ReturnType<typeof requireCompanyContext>;
+}
+
 /** 요청 밖(워커, 스크립트, 테스트)에서 컨텍스트를 지정해 실행한다. */
 export function runWithContext<T>(ctx: Partial<RequestContext>, fn: () => T): T {
   return storage.run(
-    { userId: null, companyId: null, role: null, ip: null, userAgent: null, ...ctx },
+    {
+      userId: null,
+      companyId: null,
+      role: null,
+      permissions: null,
+      ip: null,
+      userAgent: null,
+      ...ctx,
+    },
     fn,
   );
 }

@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { sql } from 'drizzle-orm';
 import type { Response } from 'express';
 import { z } from 'zod';
+import { Public } from '../auth/decorators.js';
 import { ZodResponse } from '../common/zod.js';
 import { DbService } from '../db/db.service.js';
 import { RedisService } from '../redis/redis.module.js';
@@ -21,6 +22,7 @@ export class HealthController {
     private readonly redis: RedisService,
   ) {}
 
+  @Public()
   @Get()
   @ZodResponse(HealthSchema, { description: 'DB·Redis 연결 상태' })
   async check(@Res({ passthrough: true }) res: Response): Promise<z.infer<typeof HealthSchema>> {

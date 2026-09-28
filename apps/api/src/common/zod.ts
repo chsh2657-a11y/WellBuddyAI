@@ -7,6 +7,7 @@ import {
   Injectable,
   type NestInterceptor,
   type PipeTransform,
+  Param,
   Query,
   SetMetadata,
 } from '@nestjs/common';
@@ -105,4 +106,9 @@ export class ZodSerializerInterceptor implements NestInterceptor {
     if (!schema) return next.handle();
     return next.handle().pipe(map((value) => schema.parse(value)));
   }
+}
+
+/** 경로 파라미터 UUID 검증 */
+export function UuidParam(name: string): ParameterDecorator {
+  return Param(name, new ZodValidationPipe(z.uuid({ error: '잘못된 ID 형식입니다.' })));
 }

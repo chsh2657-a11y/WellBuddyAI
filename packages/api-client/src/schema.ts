@@ -20,6 +20,230 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/auth/signup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AuthController_signup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AuthController_login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AuthController_refresh'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AuthController_logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AuthController_me'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auth/switch-company': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AuthController_switchCompany'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/companies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['CompaniesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/companies/current': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CompaniesController_current'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['CompaniesController_update'];
+    trace?: never;
+  };
+  '/api/business-places': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CompaniesController_listPlaces'];
+    put?: never;
+    post: operations['CompaniesController_createPlace'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/business-places/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['CompaniesController_removePlace'];
+    options?: never;
+    head?: never;
+    patch: operations['CompaniesController_updatePlace'];
+    trace?: never;
+  };
+  '/api/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CompaniesController_listInvitations'];
+    put?: never;
+    post: operations['CompaniesController_invite'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/invitations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['CompaniesController_revokeInvitation'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/invitations/lookup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CompaniesController_lookupInvitation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/invitations/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['CompaniesController_acceptInvitation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -54,6 +278,702 @@ export interface operations {
             db: 'ok' | 'error';
             /** @enum {string} */
             redis: 'ok' | 'error';
+          };
+        };
+      };
+    };
+  };
+  AuthController_signup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          password: string;
+          name: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 가입 후 바로 로그인된다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            user: {
+              /** Format: uuid */
+              id: string;
+              email: string;
+              name: string;
+            };
+            /** Format: uuid */
+            companyId: string | null;
+            accessToken?: string;
+            refreshToken?: string;
+          };
+        };
+      };
+    };
+  };
+  AuthController_login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            user: {
+              /** Format: uuid */
+              id: string;
+              email: string;
+              name: string;
+            };
+            /** Format: uuid */
+            companyId: string | null;
+            accessToken?: string;
+            refreshToken?: string;
+          };
+        };
+      };
+    };
+  };
+  AuthController_refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          refreshToken?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | {
+                user: {
+                  /** Format: uuid */
+                  id: string;
+                  email: string;
+                  name: string;
+                };
+                /** Format: uuid */
+                companyId: string | null;
+                accessToken?: string;
+                refreshToken?: string;
+              }
+            | {
+                /** @enum {boolean} */
+                ok: true;
+              };
+        };
+      };
+    };
+  };
+  AuthController_logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          refreshToken?: string;
+        };
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_me: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 현재 사용자·회사·권한 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            user: {
+              /** Format: uuid */
+              id: string;
+              email: string;
+              name: string;
+            };
+            company: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              bizRegNo: string;
+            } | null;
+            /** @enum {string|null} */
+            role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee' | null;
+            companies: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              /** @enum {string} */
+              role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee';
+            }[];
+            permissions: {
+              [key: string]: 'none' | 'read' | 'write';
+            };
+            enabledModules: {
+              [key: string]: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  AuthController_switchCompany: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          companyId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            user: {
+              /** Format: uuid */
+              id: string;
+              email: string;
+              name: string;
+            };
+            company: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              bizRegNo: string;
+            } | null;
+            /** @enum {string|null} */
+            role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee' | null;
+            companies: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              /** @enum {string} */
+              role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee';
+            }[];
+            permissions: {
+              [key: string]: 'none' | 'read' | 'write';
+            };
+            enabledModules: {
+              [key: string]: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  CompaniesController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          bizRegNo: string;
+          representative?: string;
+          businessType?: string;
+          businessItem?: string;
+          address?: string;
+          phone?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 만든 회사로 바로 전환된다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            company: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              bizRegNo: string;
+              representative: string | null;
+              businessType: string | null;
+              businessItem: string | null;
+              address: string | null;
+              phone: string | null;
+              fiscalYearStartMonth: number;
+            };
+            accessToken?: string;
+          };
+        };
+      };
+    };
+  };
+  CompaniesController_current: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            bizRegNo: string;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            fiscalYearStartMonth: number;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.company (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name?: string;
+          bizRegNo?: string;
+          representative?: string | null;
+          businessType?: string | null;
+          businessItem?: string | null;
+          address?: string | null;
+          phone?: string | null;
+          fiscalYearStartMonth?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            bizRegNo: string;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            fiscalYearStartMonth: number;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.company (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_listPlaces: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            bizRegNo: string;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            isHeadquarters: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: settings.company (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_createPlace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          bizRegNo: string;
+          representative?: string | null;
+          businessType?: string | null;
+          businessItem?: string | null;
+          address?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            bizRegNo: string;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            isHeadquarters: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.company (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_removePlace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: settings.company (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_updatePlace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name?: string;
+          bizRegNo?: string;
+          representative?: string | null;
+          businessType?: string | null;
+          businessItem?: string | null;
+          address?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            bizRegNo: string;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            isHeadquarters: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.company (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_listInvitations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            /** @enum {string} */
+            role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee';
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: settings.users (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_invite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email: string;
+          /** @enum {string} */
+          role: 'admin' | 'accountant' | 'approver' | 'employee';
+        };
+      };
+    };
+    responses: {
+      /** @description 초대 메일을 보낸다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            /** @enum {string} */
+            role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee';
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.users (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_revokeInvitation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: settings.users (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CompaniesController_lookupInvitation: {
+    parameters: {
+      query: {
+        token: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            companyName: string;
+            email: string;
+            /** @enum {string} */
+            role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee';
+            /** @enum {string} */
+            status: 'pending' | 'accepted' | 'expired' | 'revoked';
+          };
+        };
+      };
+    };
+  };
+  CompaniesController_acceptInvitation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            companyId: string;
+            accessToken?: string;
           };
         };
       };

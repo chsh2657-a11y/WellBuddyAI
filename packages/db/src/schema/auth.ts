@@ -13,6 +13,8 @@ export const users = pgTable(
     email: text().notNull(),
     passwordHash: text().notNull(),
     name: text().notNull(),
+    /** 마지막으로 선택한 회사(로그인·토큰 갱신 시 이 회사로 들어간다). 소속이 끊기면 무시한다. */
+    lastCompanyId: uuid(),
     lastLoginAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

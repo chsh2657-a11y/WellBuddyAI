@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type SignupInput, SignupSchema } from '@wellbuddy/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { ApiError, apiFetch } from '@/lib/api';
 
 export function SignupForm() {
   const router = useRouter();
+  const next = useSearchParams().get('next');
   const queryClient = useQueryClient();
   const form = useForm<z.input<typeof SignupSchema>, unknown, SignupInput>({
     resolver: zodResolver(SignupSchema),
@@ -26,7 +27,7 @@ export function SignupForm() {
     try {
       await apiFetch('/auth/signup', { method: 'POST', json: values });
       queryClient.clear();
-      router.replace('/onboarding/company');
+      router.replace(next?.startsWith('/') ? next : '/onboarding/company');
     } catch (e) {
       form.setError('root', {
         message: e instanceof ApiError ? e.message : '가입하지 못했습니다.',
@@ -84,7 +85,10 @@ export function SignupForm() {
       </form>
       <CardFooter className="justify-center text-sm text-muted-foreground">
         이미 계정이 있으신가요?
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link
+          href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'}
+          className="font-medium text-primary hover:underline"
+        >
           로그인
         </Link>
       </CardFooter>
