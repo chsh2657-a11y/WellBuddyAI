@@ -3402,6 +3402,2118 @@
           "files"
         ]
       }
+    },
+    "/api/accounts": {
+      "get": {
+        "operationId": "MasterController_listAccounts",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "계정과목(코드순). 비어 있으면 표준 계정과목을 넣는다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "group": {
+                        "type": "string",
+                        "enum": [
+                          "quick_assets",
+                          "inventories",
+                          "investments",
+                          "tangible_assets",
+                          "intangible_assets",
+                          "other_noncurrent_assets",
+                          "current_liabilities",
+                          "noncurrent_liabilities",
+                          "capital",
+                          "capital_surplus",
+                          "capital_adjustment",
+                          "accumulated_oci",
+                          "retained_earnings",
+                          "revenue",
+                          "cost_of_sales",
+                          "manufacturing_cost",
+                          "sga",
+                          "non_operating_income",
+                          "non_operating_expense",
+                          "income_tax"
+                        ]
+                      },
+                      "normalBalance": {
+                        "type": "string",
+                        "enum": [
+                          "debit",
+                          "credit"
+                        ]
+                      },
+                      "requiresPartner": {
+                        "type": "boolean"
+                      },
+                      "requiresDepartment": {
+                        "type": "boolean"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      },
+                      "isSystem": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "group",
+                      "normalBalance",
+                      "requiresPartner",
+                      "requiresDepartment",
+                      "isActive",
+                      "isSystem",
+                      "description"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{3,5}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "group": {
+                    "type": "string",
+                    "enum": [
+                      "quick_assets",
+                      "inventories",
+                      "investments",
+                      "tangible_assets",
+                      "intangible_assets",
+                      "other_noncurrent_assets",
+                      "current_liabilities",
+                      "noncurrent_liabilities",
+                      "capital",
+                      "capital_surplus",
+                      "capital_adjustment",
+                      "accumulated_oci",
+                      "retained_earnings",
+                      "revenue",
+                      "cost_of_sales",
+                      "manufacturing_cost",
+                      "sga",
+                      "non_operating_income",
+                      "non_operating_expense",
+                      "income_tax"
+                    ]
+                  },
+                  "normalBalance": {
+                    "type": "string",
+                    "enum": [
+                      "debit",
+                      "credit"
+                    ]
+                  },
+                  "requiresPartner": {
+                    "type": "boolean"
+                  },
+                  "requiresDepartment": {
+                    "type": "boolean"
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "code",
+                  "name",
+                  "group"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "group": {
+                      "type": "string",
+                      "enum": [
+                        "quick_assets",
+                        "inventories",
+                        "investments",
+                        "tangible_assets",
+                        "intangible_assets",
+                        "other_noncurrent_assets",
+                        "current_liabilities",
+                        "noncurrent_liabilities",
+                        "capital",
+                        "capital_surplus",
+                        "capital_adjustment",
+                        "accumulated_oci",
+                        "retained_earnings",
+                        "revenue",
+                        "cost_of_sales",
+                        "manufacturing_cost",
+                        "sga",
+                        "non_operating_income",
+                        "non_operating_expense",
+                        "income_tax"
+                      ]
+                    },
+                    "normalBalance": {
+                      "type": "string",
+                      "enum": [
+                        "debit",
+                        "credit"
+                      ]
+                    },
+                    "requiresPartner": {
+                      "type": "boolean"
+                    },
+                    "requiresDepartment": {
+                      "type": "boolean"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "isSystem": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "group",
+                    "normalBalance",
+                    "requiresPartner",
+                    "requiresDepartment",
+                    "isActive",
+                    "isSystem",
+                    "description"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/accounts/restore-standard": {
+      "post": {
+        "operationId": "MasterController_restoreStandard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "빠진 표준 계정과목 복원",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "added": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "added"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/accounts/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{3,5}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "group": {
+                    "type": "string",
+                    "enum": [
+                      "quick_assets",
+                      "inventories",
+                      "investments",
+                      "tangible_assets",
+                      "intangible_assets",
+                      "other_noncurrent_assets",
+                      "current_liabilities",
+                      "noncurrent_liabilities",
+                      "capital",
+                      "capital_surplus",
+                      "capital_adjustment",
+                      "accumulated_oci",
+                      "retained_earnings",
+                      "revenue",
+                      "cost_of_sales",
+                      "manufacturing_cost",
+                      "sga",
+                      "non_operating_income",
+                      "non_operating_expense",
+                      "income_tax"
+                    ]
+                  },
+                  "normalBalance": {
+                    "type": "string",
+                    "enum": [
+                      "debit",
+                      "credit"
+                    ]
+                  },
+                  "requiresPartner": {
+                    "type": "boolean"
+                  },
+                  "requiresDepartment": {
+                    "type": "boolean"
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "group": {
+                      "type": "string",
+                      "enum": [
+                        "quick_assets",
+                        "inventories",
+                        "investments",
+                        "tangible_assets",
+                        "intangible_assets",
+                        "other_noncurrent_assets",
+                        "current_liabilities",
+                        "noncurrent_liabilities",
+                        "capital",
+                        "capital_surplus",
+                        "capital_adjustment",
+                        "accumulated_oci",
+                        "retained_earnings",
+                        "revenue",
+                        "cost_of_sales",
+                        "manufacturing_cost",
+                        "sga",
+                        "non_operating_income",
+                        "non_operating_expense",
+                        "income_tax"
+                      ]
+                    },
+                    "normalBalance": {
+                      "type": "string",
+                      "enum": [
+                        "debit",
+                        "credit"
+                      ]
+                    },
+                    "requiresPartner": {
+                      "type": "boolean"
+                    },
+                    "requiresDepartment": {
+                      "type": "boolean"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "isSystem": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "group",
+                    "normalBalance",
+                    "requiresPartner",
+                    "requiresDepartment",
+                    "isActive",
+                    "isSystem",
+                    "description"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "delete": {
+        "operationId": "MasterController_removeAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/accounts/{id}/memos": {
+      "get": {
+        "operationId": "MasterController_memos",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "text"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_addMemo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/accounts/{id}/memos/{memoId}": {
+      "delete": {
+        "operationId": "MasterController_removeMemo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/partners": {
+      "get": {
+        "operationId": "MasterController_listPartners",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "supplier",
+                "both",
+                "other"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "customer",
+                          "supplier",
+                          "both",
+                          "other"
+                        ]
+                      },
+                      "bizRegNo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "representative": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "businessType": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "businessItem": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "address": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "phone": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "email": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "contactName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "bankName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "bankAccountMasked": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "bankHolder": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "memo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "kind",
+                      "bizRegNo",
+                      "representative",
+                      "businessType",
+                      "businessItem",
+                      "address",
+                      "phone",
+                      "email",
+                      "contactName",
+                      "bankName",
+                      "bankAccountMasked",
+                      "bankHolder",
+                      "memo",
+                      "isActive"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createPartner",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kind": {
+                    "default": "both",
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "supplier",
+                      "both",
+                      "other"
+                    ]
+                  },
+                  "bizRegNo": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "representative": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "businessType": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "businessItem": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "address": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "phone": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "email": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "contactName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "bankName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "bankAccount": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[0-9-]{6,30}$"
+                  },
+                  "bankHolder": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "코드를 비우면 00001 형식으로 자동 부여",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "customer",
+                        "supplier",
+                        "both",
+                        "other"
+                      ]
+                    },
+                    "bizRegNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "representative": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessItem": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "address": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "email": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankAccountMasked": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankHolder": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "bizRegNo",
+                    "representative",
+                    "businessType",
+                    "businessItem",
+                    "address",
+                    "phone",
+                    "email",
+                    "contactName",
+                    "bankName",
+                    "bankAccountMasked",
+                    "bankHolder",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/partners/{id}": {
+      "get": {
+        "operationId": "MasterController_getPartner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "customer",
+                        "supplier",
+                        "both",
+                        "other"
+                      ]
+                    },
+                    "bizRegNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "representative": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessItem": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "address": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "email": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankAccountMasked": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankHolder": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "bizRegNo",
+                    "representative",
+                    "businessType",
+                    "businessItem",
+                    "address",
+                    "phone",
+                    "email",
+                    "contactName",
+                    "bankName",
+                    "bankAccountMasked",
+                    "bankHolder",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "patch": {
+        "operationId": "MasterController_updatePartner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kind": {
+                    "default": "both",
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "supplier",
+                      "both",
+                      "other"
+                    ]
+                  },
+                  "bizRegNo": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "representative": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "businessType": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "businessItem": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "address": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "phone": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "email": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "contactName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "bankName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "bankAccount": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[0-9-]{6,30}$"
+                  },
+                  "bankHolder": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "customer",
+                        "supplier",
+                        "both",
+                        "other"
+                      ]
+                    },
+                    "bizRegNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "representative": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "businessItem": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "address": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "email": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contactName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankAccountMasked": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bankHolder": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "bizRegNo",
+                    "representative",
+                    "businessType",
+                    "businessItem",
+                    "address",
+                    "phone",
+                    "email",
+                    "contactName",
+                    "bankName",
+                    "bankAccountMasked",
+                    "bankHolder",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "delete": {
+        "operationId": "MasterController_removePartner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/departments": {
+      "get": {
+        "operationId": "MasterController_listDepartments",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "isActive"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createDepartment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "code",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "operationId": "MasterController_listProjects",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      },
+                      "startDate": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "endDate": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "isActive",
+                      "startDate",
+                      "endDate"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createProject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "startDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "endDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "code",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "startDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endDate": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "isActive",
+                    "startDate",
+                    "endDate"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/departments/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "delete": {
+        "operationId": "MasterController_removeDepartment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
+    },
+    "/api/projects/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "startDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "endDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "startDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endDate": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "isActive",
+                    "startDate",
+                    "endDate"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      },
+      "delete": {
+        "operationId": "MasterController_removeProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounting-master"
+        ]
+      }
     }
   },
   "info": {

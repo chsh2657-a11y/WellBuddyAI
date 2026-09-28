@@ -7,6 +7,7 @@ import {
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AccessModule } from './access/access.module.js';
+import { AccountingModule } from './accounting/accounting.module.js';
 import { AuditInterceptor } from './audit/audit.interceptor.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthGuard, PermissionGuard } from './auth/auth.guard.js';
@@ -58,6 +59,7 @@ export class AppModule implements NestModule {
         SettingsModule,
         IntegrationsModule,
         FilesModule,
+        AccountingModule,
       ],
       controllers: [HealthController],
       providers: [

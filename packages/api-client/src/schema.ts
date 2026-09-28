@@ -500,6 +500,182 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_listAccounts'];
+    put?: never;
+    post: operations['MasterController_createAccount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/accounts/restore-standard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['MasterController_restoreStandard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/accounts/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['MasterController_removeAccount'];
+    options?: never;
+    head?: never;
+    patch: operations['MasterController_updateAccount'];
+    trace?: never;
+  };
+  '/api/accounts/{id}/memos': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_memos'];
+    put?: never;
+    post: operations['MasterController_addMemo'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/accounts/{id}/memos/{memoId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['MasterController_removeMemo'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/partners': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_listPartners'];
+    put?: never;
+    post: operations['MasterController_createPartner'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/partners/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_getPartner'];
+    put?: never;
+    post?: never;
+    delete: operations['MasterController_removePartner'];
+    options?: never;
+    head?: never;
+    patch: operations['MasterController_updatePartner'];
+    trace?: never;
+  };
+  '/api/departments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_listDepartments'];
+    put?: never;
+    post: operations['MasterController_createDepartment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/projects': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MasterController_listProjects'];
+    put?: never;
+    post: operations['MasterController_createProject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/departments/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['MasterController_removeDepartment'];
+    options?: never;
+    head?: never;
+    patch: operations['MasterController_updateDepartment'];
+    trace?: never;
+  };
+  '/api/projects/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['MasterController_removeProject'];
+    options?: never;
+    head?: never;
+    patch: operations['MasterController_updateProject'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1961,6 +2137,966 @@ export interface operations {
     requestBody?: never;
     responses: {
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_listAccounts: {
+    parameters: {
+      query?: {
+        q?: string;
+        includeInactive?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 계정과목(코드순). 비어 있으면 표준 계정과목을 넣는다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            group:
+              | 'quick_assets'
+              | 'inventories'
+              | 'investments'
+              | 'tangible_assets'
+              | 'intangible_assets'
+              | 'other_noncurrent_assets'
+              | 'current_liabilities'
+              | 'noncurrent_liabilities'
+              | 'capital'
+              | 'capital_surplus'
+              | 'capital_adjustment'
+              | 'accumulated_oci'
+              | 'retained_earnings'
+              | 'revenue'
+              | 'cost_of_sales'
+              | 'manufacturing_cost'
+              | 'sga'
+              | 'non_operating_income'
+              | 'non_operating_expense'
+              | 'income_tax';
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            requiresPartner: boolean;
+            requiresDepartment: boolean;
+            isActive: boolean;
+            isSystem: boolean;
+            description: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_createAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code: string;
+          name: string;
+          /** @enum {string} */
+          group:
+            | 'quick_assets'
+            | 'inventories'
+            | 'investments'
+            | 'tangible_assets'
+            | 'intangible_assets'
+            | 'other_noncurrent_assets'
+            | 'current_liabilities'
+            | 'noncurrent_liabilities'
+            | 'capital'
+            | 'capital_surplus'
+            | 'capital_adjustment'
+            | 'accumulated_oci'
+            | 'retained_earnings'
+            | 'revenue'
+            | 'cost_of_sales'
+            | 'manufacturing_cost'
+            | 'sga'
+            | 'non_operating_income'
+            | 'non_operating_expense'
+            | 'income_tax';
+          /** @enum {string} */
+          normalBalance?: 'debit' | 'credit';
+          requiresPartner?: boolean;
+          requiresDepartment?: boolean;
+          isActive?: boolean;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            group:
+              | 'quick_assets'
+              | 'inventories'
+              | 'investments'
+              | 'tangible_assets'
+              | 'intangible_assets'
+              | 'other_noncurrent_assets'
+              | 'current_liabilities'
+              | 'noncurrent_liabilities'
+              | 'capital'
+              | 'capital_surplus'
+              | 'capital_adjustment'
+              | 'accumulated_oci'
+              | 'retained_earnings'
+              | 'revenue'
+              | 'cost_of_sales'
+              | 'manufacturing_cost'
+              | 'sga'
+              | 'non_operating_income'
+              | 'non_operating_expense'
+              | 'income_tax';
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            requiresPartner: boolean;
+            requiresDepartment: boolean;
+            isActive: boolean;
+            isSystem: boolean;
+            description: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_restoreStandard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 빠진 표준 계정과목 복원 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            added: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_removeAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_updateAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string;
+          name?: string;
+          /** @enum {string} */
+          group?:
+            | 'quick_assets'
+            | 'inventories'
+            | 'investments'
+            | 'tangible_assets'
+            | 'intangible_assets'
+            | 'other_noncurrent_assets'
+            | 'current_liabilities'
+            | 'noncurrent_liabilities'
+            | 'capital'
+            | 'capital_surplus'
+            | 'capital_adjustment'
+            | 'accumulated_oci'
+            | 'retained_earnings'
+            | 'revenue'
+            | 'cost_of_sales'
+            | 'manufacturing_cost'
+            | 'sga'
+            | 'non_operating_income'
+            | 'non_operating_expense'
+            | 'income_tax';
+          /** @enum {string} */
+          normalBalance?: 'debit' | 'credit';
+          requiresPartner?: boolean;
+          requiresDepartment?: boolean;
+          isActive?: boolean;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            group:
+              | 'quick_assets'
+              | 'inventories'
+              | 'investments'
+              | 'tangible_assets'
+              | 'intangible_assets'
+              | 'other_noncurrent_assets'
+              | 'current_liabilities'
+              | 'noncurrent_liabilities'
+              | 'capital'
+              | 'capital_surplus'
+              | 'capital_adjustment'
+              | 'accumulated_oci'
+              | 'retained_earnings'
+              | 'revenue'
+              | 'cost_of_sales'
+              | 'manufacturing_cost'
+              | 'sga'
+              | 'non_operating_income'
+              | 'non_operating_expense'
+              | 'income_tax';
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            requiresPartner: boolean;
+            requiresDepartment: boolean;
+            isActive: boolean;
+            isSystem: boolean;
+            description: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_memos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            text: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_addMemo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          text: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            text: string;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_removeMemo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        memoId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_listPartners: {
+    parameters: {
+      query?: {
+        q?: string;
+        includeInactive?: 'true' | 'false';
+        kind?: 'customer' | 'supplier' | 'both' | 'other';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'customer' | 'supplier' | 'both' | 'other';
+            bizRegNo: string | null;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            email: string | null;
+            contactName: string | null;
+            bankName: string | null;
+            bankAccountMasked: string | null;
+            bankHolder: string | null;
+            memo: string | null;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_createPartner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name: string;
+          /**
+           * @default both
+           * @enum {string}
+           */
+          kind?: 'customer' | 'supplier' | 'both' | 'other';
+          bizRegNo?: string | null;
+          representative?: string | null;
+          businessType?: string | null;
+          businessItem?: string | null;
+          address?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          contactName?: string | null;
+          bankName?: string | null;
+          bankAccount?: string | null;
+          bankHolder?: string | null;
+          memo?: string | null;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description 코드를 비우면 00001 형식으로 자동 부여 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'customer' | 'supplier' | 'both' | 'other';
+            bizRegNo: string | null;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            email: string | null;
+            contactName: string | null;
+            bankName: string | null;
+            bankAccountMasked: string | null;
+            bankHolder: string | null;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_getPartner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'customer' | 'supplier' | 'both' | 'other';
+            bizRegNo: string | null;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            email: string | null;
+            contactName: string | null;
+            bankName: string | null;
+            bankAccountMasked: string | null;
+            bankHolder: string | null;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_removePartner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_updatePartner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name?: string;
+          /**
+           * @default both
+           * @enum {string}
+           */
+          kind?: 'customer' | 'supplier' | 'both' | 'other';
+          bizRegNo?: string | null;
+          representative?: string | null;
+          businessType?: string | null;
+          businessItem?: string | null;
+          address?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          contactName?: string | null;
+          bankName?: string | null;
+          bankAccount?: string | null;
+          bankHolder?: string | null;
+          memo?: string | null;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'customer' | 'supplier' | 'both' | 'other';
+            bizRegNo: string | null;
+            representative: string | null;
+            businessType: string | null;
+            businessItem: string | null;
+            address: string | null;
+            phone: string | null;
+            email: string | null;
+            contactName: string | null;
+            bankName: string | null;
+            bankAccountMasked: string | null;
+            bankHolder: string | null;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_listDepartments: {
+    parameters: {
+      query?: {
+        q?: string;
+        includeInactive?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_createDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code: string;
+          name: string;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_listProjects: {
+    parameters: {
+      query?: {
+        q?: string;
+        includeInactive?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+            startDate: string | null;
+            endDate: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_createProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code: string;
+          name: string;
+          isActive?: boolean;
+          /** Format: date */
+          startDate?: string | null;
+          /** Format: date */
+          endDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+            startDate: string | null;
+            endDate: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_removeDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_updateDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string;
+          name?: string;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_removeProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MasterController_updateProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string;
+          name?: string;
+          isActive?: boolean;
+          /** Format: date */
+          startDate?: string | null;
+          /** Format: date */
+          endDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+            startDate: string | null;
+            endDate: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
         headers: {
           [name: string]: unknown;
         };

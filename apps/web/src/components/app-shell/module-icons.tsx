@@ -30,5 +30,6 @@ export const MODULE_ICONS: Record<ModuleKey, LucideIcon> = {
 
 export const MODULE_PATHS: Partial<Record<ModuleKey, string>> = {
   dashboard: '/dashboard',
+  accounting: '/accounting',
   settings: '/settings',
 };

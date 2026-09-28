@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import argon2 from 'argon2';
 import { sql } from 'drizzle-orm';
 import { createDb } from './client.js';
+import { ensureStandardAccounts } from './standard-accounts.js';
 import {
   businessPlaces,
   companies,
@@ -68,6 +69,7 @@ try {
         bizRegNo: '0000000000',
         isHeadquarters: true,
       });
+      await ensureStandardAccounts(tx, company!.id);
     });
     console.log(`✔ 데모 데이터 생성: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
   }

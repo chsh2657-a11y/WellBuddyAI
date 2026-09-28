@@ -29,6 +29,13 @@
       "when": 1790633033640,
       "tag": "0003_users_last_company",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790638283873,
+      "tag": "0004_accounting_master",
+      "breakpoints": true
     }
   ]
 }

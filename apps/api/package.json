@@ -22,6 +22,7 @@
     "@nestjs/platform-express": "^12.1.1",
     "@nestjs/swagger": "^12.0.2",
     "@nestjs/throttler": "^6.7.1",
+    "@wellbuddy/accounting-core": "workspace:*",
     "@wellbuddy/db": "workspace:*",
     "@wellbuddy/shared": "workspace:*",
     "argon2": "^0.45.1",

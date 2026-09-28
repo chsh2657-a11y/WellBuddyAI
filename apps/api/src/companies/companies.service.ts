@@ -4,6 +4,7 @@ import { businessPlaces, companies, companyMembers, companySettings, users } fro
 import type { BusinessPlaceInput, CreateCompanyInput, UpdateCompanyInput } from '@wellbuddy/shared';
 import { and, asc, eq } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
+import { isUniqueViolation } from '../common/db-errors.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
@@ -30,10 +31,6 @@ const placeColumns = {
   address: businessPlaces.address,
   isHeadquarters: businessPlaces.isHeadquarters,
 };
-
-function isUniqueViolation(e: unknown): boolean {
-  return (e as { cause?: { code?: string } }).cause?.code === '23505';
-}
 
 @Injectable()
 export class CompaniesService {
