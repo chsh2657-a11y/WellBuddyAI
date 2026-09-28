@@ -10,3 +10,4 @@
 - 위치 기반 자동출근 앱
 
 - 조사 결과 및 개발계획: [docs/development-plan.md](docs/development-plan.md)
+- 개발 목표 체크리스트(진행 순서): [docs/CHECKLIST.md](docs/CHECKLIST.md)
