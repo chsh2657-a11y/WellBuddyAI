@@ -11,3 +11,18 @@
 
 - 조사 결과 및 개발계획: [docs/development-plan.md](docs/development-plan.md)
 - 개발 목표 체크리스트(진행 순서): [docs/CHECKLIST.md](docs/CHECKLIST.md)
+
+## 로컬 개발 시작
+
+```bash
+pnpm install
+cp .env.example .env
+
+# PostgreSQL 16 · Redis 준비 (둘 중 하나)
+docker compose -f infra/docker-compose.yml up -d   # Docker 사용
+scripts/dev-services.sh                              # Docker 없이 로컬 설치본 사용
+
+pnpm db:migrate   # 마이그레이션 (wellbuddy_owner 롤)
+pnpm db:seed      # 데모 계정: demo@wellbuddy.local / demo1234!
+pnpm test         # 단위·통합 테스트 (wellbuddy_test DB 사용)
+```

@@ -47,7 +47,7 @@
 
 ### 2.1 기술 스택
 - **Web**: Next.js 15 (App Router) + React + TypeScript + Tailwind + shadcn/ui + TanStack Query + react-hook-form/zod. 전표입력 그리드는 AG Grid Community, 차트는 Recharts.
-- **API**: NestJS 11 + Prisma + PostgreSQL 16. OpenAPI(Swagger)에서 타입 클라이언트를 생성해 웹과 앱이 공유한다.
+- **API**: NestJS 12 + Drizzle ORM + PostgreSQL 16. OpenAPI(Swagger)에서 타입 클라이언트를 생성해 웹과 앱이 공유한다. (ORM은 RLS 정책·DB 트리거를 SQL 그대로 다루고 엔진 바이너리가 필요 없는 Drizzle로 결정)
 - **비동기 작업**: Redis 7 + BullMQ (수집 스케줄, 자동분개, OCR, 급여 일괄 계산, 알림)
 - **모바일 앱**: Expo (React Native, expo-router). 출퇴근 지오펜스, 영수증 촬영, 결재 승인, 급여명세서 조회, 푸시 알림을 담당한다.
 - **파일 저장**: S3 호환 스토리지 (로컬은 MinIO). 메일 테스트는 Mailpit.
@@ -58,7 +58,7 @@
 apps/web            Next.js 웹 (경리/관리자/사원 화면)
 apps/api            NestJS API + worker 엔트리(worker.ts, BullMQ 소비자)
 apps/mobile         Expo 앱 (출퇴근, 영수증, 결재, 명세서)
-packages/db         Prisma schema, 마이그레이션, 시드(계정과목·요율·간이세액표)
+packages/db         Drizzle 스키마, 마이그레이션, 시드(계정과목·요율·간이세액표)
 packages/shared     zod 스키마, 공용 타입·enum·상수
 packages/accounting-core  순수 도메인 로직: 복식부기 검증, 부가세 분리, 4대보험·소득세·수당 계산, 재고 이동평균
 packages/integrations     Provider 인터페이스 + 구현체(file, mock, codef, popbill, ocr-*, ai-claude)
