@@ -20,8 +20,10 @@ import { ConfigModule } from './config/config.module.js';
 import { APP_CONFIG, type AppConfig } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { HealthController } from './health/health.controller.js';
+import { IntegrationsModule } from './integrations/integrations.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { RedisModule } from './redis/redis.module.js';
+import { SettingsModule } from './settings/settings.module.js';
 
 @Module({})
 export class AppModule implements NestModule {
@@ -46,6 +48,8 @@ export class AppModule implements NestModule {
         AuthModule,
         CompaniesModule,
         AccessModule,
+        SettingsModule,
+        IntegrationsModule,
       ],
       controllers: [HealthController],
       providers: [

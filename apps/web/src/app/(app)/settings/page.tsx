@@ -1,8 +1,21 @@
-import type { Metadata } from 'next';
-import { PageHeader } from '@/components/page-header';
+'use client';
 
-export const metadata: Metadata = { title: '설정' };
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { can, useSession } from '@/lib/session';
+import { SETTINGS_TABS } from './settings-tabs';
 
-export default function SettingsPage() {
-  return <PageHeader title="설정" description="회사정보, 사용자·권한, 메뉴, 연동을 관리합니다." />;
+export default function SettingsIndexPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const first = SETTINGS_TABS.find((t) => can(session, t.permission, 'read'));
+
+  useEffect(() => {
+    if (first) router.replace(first.href);
+  }, [first, router]);
+
+  if (session && !first) {
+    return <p className="text-sm text-muted-foreground">설정 메뉴에 접근할 권한이 없습니다.</p>;
+  }
+  return null;
 }

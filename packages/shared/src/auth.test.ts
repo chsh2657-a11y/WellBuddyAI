@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CreateCompanySchema, LoginSchema, PasswordSchema, SignupSchema } from './auth.js';
+import { LoginSchema, PasswordSchema, SignupSchema } from './auth.js';
+import { CreateCompanySchema } from './company.js';
 
 describe('비밀번호 정책', () => {
   it('8자 이상, 영문과 숫자를 모두 포함해야 한다', () => {

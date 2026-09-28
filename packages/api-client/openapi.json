@@ -2547,6 +2547,445 @@
           "access"
         ]
       }
+    },
+    "/api/settings/modules": {
+      "get": {
+        "operationId": "SettingsController_modules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "메뉴(업무 모듈) 사용 여부",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "phase": {
+                        "type": "string"
+                      },
+                      "available": {
+                        "type": "boolean"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "label",
+                      "phase",
+                      "available",
+                      "required",
+                      "enabled"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.menus (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      },
+      "put": {
+        "operationId": "SettingsController_updateModules",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabledModules": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "required": [
+                  "enabledModules"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "phase": {
+                        "type": "string"
+                      },
+                      "available": {
+                        "type": "boolean"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "label",
+                      "phase",
+                      "available",
+                      "required",
+                      "enabled"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.menus (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/integrations": {
+      "get": {
+        "operationId": "IntegrationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "채널별 연동 상태(자격증명은 마스킹)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "channel": {
+                        "type": "string",
+                        "enum": [
+                          "bank",
+                          "card",
+                          "hometax",
+                          "taxinvoice",
+                          "ocr",
+                          "ai"
+                        ]
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "provider": {
+                        "type": "string"
+                      },
+                      "credentials": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "schedule": {
+                        "type": "string",
+                        "enum": [
+                          "manual",
+                          "hourly",
+                          "daily"
+                        ]
+                      },
+                      "lastStatus": {
+                        "nullable": true,
+                        "type": "string",
+                        "enum": [
+                          "success",
+                          "error"
+                        ]
+                      },
+                      "lastMessage": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "lastRunAt": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "channel",
+                      "enabled",
+                      "provider",
+                      "credentials",
+                      "schedule",
+                      "lastStatus",
+                      "lastMessage",
+                      "lastRunAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.integrations (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/api/integrations/{channel}": {
+      "put": {
+        "operationId": "IntegrationsController_update",
+        "parameters": [
+          {
+            "name": "channel",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 4000
+                    }
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "hourly",
+                      "daily"
+                    ]
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "provider"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "channel": {
+                      "type": "string",
+                      "enum": [
+                        "bank",
+                        "card",
+                        "hometax",
+                        "taxinvoice",
+                        "ocr",
+                        "ai"
+                      ]
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "credentials": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "schedule": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "hourly",
+                        "daily"
+                      ]
+                    },
+                    "lastStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "success",
+                        "error"
+                      ]
+                    },
+                    "lastMessage": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "lastRunAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "channel",
+                    "enabled",
+                    "provider",
+                    "credentials",
+                    "schedule",
+                    "lastStatus",
+                    "lastMessage",
+                    "lastRunAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.integrations (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/api/integrations/{channel}/test": {
+      "post": {
+        "operationId": "IntegrationsController_test",
+        "parameters": [
+          {
+            "name": "channel",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "저장된 설정으로 연결 테스트",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: settings.integrations (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
     }
   },
   "info": {

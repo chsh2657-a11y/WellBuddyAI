@@ -1,6 +1,12 @@
 import { Controller, Delete, Get, HttpCode, Inject, Patch, Post, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type CreateCompanyInput, CreateCompanySchema } from '@wellbuddy/shared';
+import {
+  BusinessPlaceInputSchema,
+  type CreateCompanyInput,
+  CreateCompanySchema,
+  CreateInvitationSchema,
+  UpdateCompanySchema,
+} from '@wellbuddy/shared';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { setAuthCookies, wantsTokenMode } from '../auth/auth.cookies.js';
@@ -10,15 +16,12 @@ import { requireContext } from '../common/request-context.js';
 import { UuidParam, ZodBody, ZodQuery, ZodResponse } from '../common/zod.js';
 import { APP_CONFIG, type AppConfig } from '../config/env.js';
 import {
-  BusinessPlaceInputSchema,
   BusinessPlaceSchema,
   CompanySchema,
   CreateCompanyResultSchema,
-  CreateInvitationSchema,
   InvitationLookupSchema,
   InvitationSchema,
   TokenBodySchema,
-  UpdateCompanySchema,
 } from './companies.schemas.js';
 import { CompaniesService } from './companies.service.js';
 import { InvitationsService } from './invitations.service.js';

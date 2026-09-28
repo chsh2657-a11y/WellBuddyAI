@@ -324,6 +324,70 @@ export interface paths {
     patch: operations['AccessController_updateMember'];
     trace?: never;
   };
+  '/api/settings/modules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SettingsController_modules'];
+    put: operations['SettingsController_updateModules'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/integrations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['IntegrationsController_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/integrations/{channel}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['IntegrationsController_update'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/integrations/{channel}/test': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['IntegrationsController_test'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1356,6 +1420,212 @@ export interface operations {
         };
       };
       /** @description 권한 필요: settings.users (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SettingsController_modules: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 메뉴(업무 모듈) 사용 여부 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            key: string;
+            label: string;
+            phase: string;
+            available: boolean;
+            required: boolean;
+            enabled: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: settings.menus (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SettingsController_updateModules: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          enabledModules: {
+            [key: string]: boolean;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            key: string;
+            label: string;
+            phase: string;
+            available: boolean;
+            required: boolean;
+            enabled: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: settings.menus (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  IntegrationsController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 채널별 연동 상태(자격증명은 마스킹) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'ai';
+            enabled: boolean;
+            provider: string;
+            credentials: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            schedule: 'manual' | 'hourly' | 'daily';
+            /** @enum {string|null} */
+            lastStatus: 'success' | 'error' | null;
+            lastMessage: string | null;
+            /** Format: date-time */
+            lastRunAt: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: settings.integrations (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  IntegrationsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channel: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          enabled: boolean;
+          provider: string;
+          credentials?: {
+            [key: string]: string;
+          };
+          /** @enum {string} */
+          schedule?: 'manual' | 'hourly' | 'daily';
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'ai';
+            enabled: boolean;
+            provider: string;
+            credentials: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            schedule: 'manual' | 'hourly' | 'daily';
+            /** @enum {string|null} */
+            lastStatus: 'success' | 'error' | null;
+            lastMessage: string | null;
+            /** Format: date-time */
+            lastRunAt: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.integrations (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  IntegrationsController_test: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channel: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 저장된 설정으로 연결 테스트 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            ok: boolean;
+            message: string;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.integrations (write) */
       403: {
         headers: {
           [name: string]: unknown;

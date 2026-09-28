@@ -1,14 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { businessPlaces, companies, companyMembers, companySettings, users } from '@wellbuddy/db';
-import type { CreateCompanyInput } from '@wellbuddy/shared';
+import type { BusinessPlaceInput, CreateCompanyInput, UpdateCompanyInput } from '@wellbuddy/shared';
 import { and, asc, eq } from 'drizzle-orm';
-import type { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
-import type { BusinessPlaceInputSchema, UpdateCompanySchema } from './companies.schemas.js';
 
 const companyColumns = {
   id: companies.id,
@@ -89,7 +87,7 @@ export class CompaniesService {
     return company;
   }
 
-  async updateCurrent(input: z.infer<typeof UpdateCompanySchema>) {
+  async updateCurrent(input: UpdateCompanyInput) {
     const { companyId } = requireCompanyContext();
     const company = await this.db.tenant(async (tx) => {
       const [before] = await tx
@@ -120,7 +118,7 @@ export class CompaniesService {
     );
   }
 
-  async createPlace(input: z.infer<typeof BusinessPlaceInputSchema>) {
+  async createPlace(input: BusinessPlaceInput) {
     const { companyId } = requireCompanyContext();
     try {
       return await this.db.tenant(async (tx) => {
@@ -145,7 +143,7 @@ export class CompaniesService {
     }
   }
 
-  async updatePlace(id: string, input: Partial<z.infer<typeof BusinessPlaceInputSchema>>) {
+  async updatePlace(id: string, input: Partial<BusinessPlaceInput>) {
     try {
       const [place] = await this.db.tenant((tx) =>
         tx

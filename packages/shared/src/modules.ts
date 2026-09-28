@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * 업무 모듈(사이드 메뉴 최상위). 회사는 설정 > 메뉴 사용 여부에서 모듈을 켜고 끌 수 있다.
  * phase 는 개발 체크리스트 단계이며, available 이 false 인 모듈은 "준비 중"으로 표시한다.
@@ -29,3 +31,8 @@ export function isModuleEnabled(
   if (mod.required) return true;
   return enabledModules?.[key] ?? true;
 }
+
+export const UpdateModulesSchema = z.object({
+  enabledModules: z.record(z.string(), z.boolean()),
+});
+export type UpdateModulesInput = z.infer<typeof UpdateModulesSchema>;

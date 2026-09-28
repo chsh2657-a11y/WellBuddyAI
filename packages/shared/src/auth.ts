@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { isValidBizRegNo, normalizeBizRegNo } from './biz-reg-no.js';
 import { ROLES } from './roles.js';
 
 export const EmailSchema = z
@@ -29,23 +28,6 @@ export const LoginSchema = z.object({
   password: z.string().min(1, { error: '비밀번호를 입력해 주세요.' }),
 });
 export type LoginInput = z.infer<typeof LoginSchema>;
-
-export const BizRegNoSchema = z
-  .string()
-  .trim()
-  .transform(normalizeBizRegNo)
-  .refine(isValidBizRegNo, { error: '올바른 사업자등록번호가 아닙니다.' });
-
-export const CreateCompanySchema = z.object({
-  name: z.string().trim().min(1, { error: '회사명을 입력해 주세요.' }).max(100),
-  bizRegNo: BizRegNoSchema,
-  representative: z.string().trim().max(50).optional(),
-  businessType: z.string().trim().max(50).optional(),
-  businessItem: z.string().trim().max(100).optional(),
-  address: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(30).optional(),
-});
-export type CreateCompanyInput = z.infer<typeof CreateCompanySchema>;
 
 export const SwitchCompanySchema = z.object({ companyId: z.uuid() });
 
