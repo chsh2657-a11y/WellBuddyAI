@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -11,7 +13,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/drizzle/**',
       '**/next-env.d.ts',
-      'packages/api-client/src/schema.d.ts',
+      'packages/api-client/src/schema.ts',
       'e2e/test-results/**',
       'e2e/playwright-report/**',
     ],
@@ -32,6 +34,16 @@ export default tseslint.config(
         { prefer: 'type-imports', fixStyle: 'inline-type-imports', disallowTypeAnnotations: false },
       ],
     },
+  },
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    ...nextPlugin.configs['core-web-vitals'],
+    settings: { next: { rootDir: 'apps/web' } },
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat['recommended-latest'],
   },
   {
     // NestJS relies on runtime class references for dependency injection,

@@ -12,7 +12,7 @@
 
 | 단계 | 내용 | 항목 수 | 완료 | 상태 |
 |---|---|---|---|---|
-| P0 | 기반 구축 | 21 | 5 | 🟦 진행 중 |
+| P0 | 기반 구축 | 21 | 8 | 🟦 진행 중 |
 | P1 | 회계 코어 | 23 | 0 | ⬜ 대기 |
 | P1b | 회계 확장 | 7 | 0 | ⬜ 대기 |
 | P2 | 증빙 자동수집·자동분개 | 29 | 0 | ⬜ 대기 |
@@ -35,9 +35,9 @@
 - [x] **P0-02** 공통 개발 설정: TypeScript strict, ESLint, Prettier, `.editorconfig`, `.env.example`
 - [x] **P0-03** `infra/docker-compose.yml`: PostgreSQL 16, Redis 7, MinIO, Mailpit
 - [x] **P0-04** `packages/db`: Drizzle ORM 설정, 첫 마이그레이션, 시드 스크립트 (`pnpm db:migrate`, `pnpm db:seed`)
-- [ ] **P0-05** `apps/api`: NestJS 골격, 헬스체크, 환경변수 검증, Swagger 문서
-- [ ] **P0-06** `apps/web`: Next.js 골격, Tailwind + shadcn/ui, 기본 레이아웃(사이드 메뉴·상단바)
-- [ ] **P0-07** OpenAPI → 웹·앱 공용 타입 클라이언트 자동생성
+- [x] **P0-05** `apps/api`: NestJS 골격, 헬스체크, 환경변수 검증, Swagger 문서
+- [x] **P0-06** `apps/web`: Next.js 골격, Tailwind + shadcn/ui, 기본 레이아웃(사이드 메뉴·상단바)
+- [x] **P0-07** OpenAPI → 웹·앱 공용 타입 클라이언트 자동생성
 - [ ] **P0-08** GitHub Actions CI: lint · typecheck · test · build
 
 ### 인증·회사·권한

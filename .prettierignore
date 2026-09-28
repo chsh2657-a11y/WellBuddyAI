@@ -3,9 +3,10 @@ dist
 .next
 coverage
 pnpm-lock.yaml
-packages/api-client/src/schema.d.ts
+packages/api-client/src/schema.ts
 packages/api-client/openapi.json
 packages/db/drizzle
 e2e/test-results
 e2e/playwright-report
 docs
+apps/web/next-env.d.ts

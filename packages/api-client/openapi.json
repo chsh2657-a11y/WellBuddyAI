@@ -1,0 +1,78 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "DB·Redis 연결 상태",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "degraded"
+                      ]
+                    },
+                    "db": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "error"
+                      ]
+                    },
+                    "redis": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "error"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "db",
+                    "redis"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "WellBuddy ERP API",
+    "description": "자동화 회계 ERP API. 웹은 쿠키(wb_at), 모바일 앱은 Bearer 토큰으로 인증한다.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "wb_at"
+      },
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}

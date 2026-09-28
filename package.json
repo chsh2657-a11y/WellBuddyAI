@@ -18,12 +18,14 @@
     "db:generate": "pnpm --filter @wellbuddy/db generate",
     "db:migrate": "pnpm --filter @wellbuddy/db migrate",
     "db:seed": "pnpm --filter @wellbuddy/db seed",
-    "openapi": "pnpm --filter @wellbuddy/api openapi && pnpm --filter @wellbuddy/api-client generate"
+    "openapi": "pnpm --filter @wellbuddy/api build && pnpm --filter @wellbuddy/api openapi && pnpm --filter @wellbuddy/api-client generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "^16.3.6",
     "@types/node": "^22.19.0",
     "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.0.0",
     "prettier": "^3.9.9",
     "turbo": "^2.11.5",
