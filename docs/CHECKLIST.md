@@ -12,7 +12,7 @@
 
 | 단계 | 내용 | 항목 수 | 완료 | 상태 |
 |---|---|---|---|---|
-| P0 | 기반 구축 | 21 | 0 | ⬜ 대기 |
+| P0 | 기반 구축 | 21 | 2 | 🟦 진행 중 |
 | P1 | 회계 코어 | 23 | 0 | ⬜ 대기 |
 | P1b | 회계 확장 | 7 | 0 | ⬜ 대기 |
 | P2 | 증빙 자동수집·자동분개 | 29 | 0 | ⬜ 대기 |
@@ -31,8 +31,8 @@
 ## P0. 기반 구축
 
 ### 프로젝트 셋업
-- [ ] **P0-01** pnpm 모노레포 + Turborepo 구성 (`apps/web`, `apps/api`, `apps/mobile`, `packages/*`)
-- [ ] **P0-02** 공통 개발 설정: TypeScript strict, ESLint, Prettier, `.editorconfig`, `.env.example`
+- [x] **P0-01** pnpm 모노레포 + Turborepo 구성 (`apps/web`, `apps/api`, `apps/mobile`, `packages/*`)
+- [x] **P0-02** 공통 개발 설정: TypeScript strict, ESLint, Prettier, `.editorconfig`, `.env.example`
 - [ ] **P0-03** `infra/docker-compose.yml`: PostgreSQL 16, Redis 7, MinIO, Mailpit
 - [ ] **P0-04** `packages/db`: Prisma 설정, 첫 마이그레이션, 시드 스크립트 틀
 - [ ] **P0-05** `apps/api`: NestJS 골격, 헬스체크, 환경변수 검증, Swagger 문서
