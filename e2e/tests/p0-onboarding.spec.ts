@@ -92,6 +92,34 @@ test('설정 > 연동관리에서 은행 채널을 모의 데이터로 켜고 �
   await snap(page, '07-settings-audit');
 });
 
+test('사업장을 엑셀로 일괄 등록한다(미리보기에서 오류 행 확인 후 제외하고 등록)', async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto('/settings/company');
+  await page.getByRole('button', { name: '엑셀 업로드' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('link', { name: '양식 내려받기' })).toHaveAttribute(
+    'href',
+    '/api/imports/business-places/template',
+  );
+  const csv =
+    '사업장명,사업자등록번호,주소\n부산지점,220-81-12341,부산\n잘못된지점,123-45-67890,서울\n';
+  await dialog.getByLabel('엑셀 파일 선택').setInputFiles({
+    name: '사업장.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(csv),
+  });
+  await expect(dialog.getByText('정상 1행')).toBeVisible();
+  await expect(dialog.getByText('오류 1행')).toBeVisible();
+  await expect(dialog.getByText('올바른 사업자등록번호가 아닙니다.')).toBeVisible();
+  await snap(page, '08-excel-import-preview');
+
+  await dialog.getByRole('button', { name: '오류 행 제외하고 1건 등록' }).click();
+  await expect(page.getByText('1건 추가, 0건 수정, 1건 제외')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '부산지점', exact: true })).toBeVisible();
+});
+
 async function login(page: Page) {
   await page.goto('/login');
   await page.getByLabel('이메일').fill(email);

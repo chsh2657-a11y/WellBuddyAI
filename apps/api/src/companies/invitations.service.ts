@@ -9,7 +9,9 @@ import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { APP_CONFIG, type AppConfig } from '../config/env.js';
 import { DbService } from '../db/db.service.js';
-import { MailService } from '../mail/mail.service.js';
+import { JobsService } from '../jobs/jobs.service.js';
+import type { MailMessage } from '../mail/mail.service.js';
+import { renderMail } from '../mail/templates.js';
 
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -38,7 +40,7 @@ export class InvitationsService {
   constructor(
     private readonly db: DbService,
     private readonly tokens: TokenService,
-    private readonly mail: MailService,
+    private readonly jobs: JobsService,
     private readonly audit: AuditService,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
@@ -128,16 +130,20 @@ export class InvitationsService {
     });
 
     const link = `${this.config.webOrigin}/invite/${token}`;
-    await this.mail.send({
+    const body = renderMail({
+      title: `${companyName}에서 초대했습니다`,
+      paragraphs: [
+        `${companyName}에서 WellBuddy ERP에 ${ROLE_LABELS[role]}(으)로 초대했습니다.`,
+        '아래 버튼을 눌러 가입하거나 로그인한 뒤 초대를 수락해 주세요.',
+      ],
+      action: { label: '초대 수락하기', url: link },
+      footnote: '이 링크는 7일 동안 유효합니다. 요청하지 않은 초대라면 이 메일을 무시해 주세요.',
+    });
+    await this.jobs.enqueue('mail', 'send', {
       to: email,
       subject: `[WellBuddy] ${companyName}에서 초대했습니다`,
-      text: [
-        `${companyName}에서 WellBuddy ERP에 ${ROLE_LABELS[role]}(으)로 초대했습니다.`,
-        '',
-        `아래 링크에서 초대를 수락해 주세요 (7일 동안 유효):`,
-        link,
-      ].join('\n'),
-    });
+      ...body,
+    } satisfies MailMessage);
 
     return {
       ...invitation,

@@ -31,6 +31,11 @@ const EnvSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('WellBuddy <no-reply@wellbuddy.local>'),
+  /** true 이면 작업 큐를 거치지 않고 요청 안에서 바로 실행(테스트·워커 없는 개발 환경) */
+  QUEUE_INLINE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -55,6 +60,7 @@ export interface AppConfig {
     };
   };
   mail: { host?: string; port: number; user?: string; pass?: string; from: string };
+  queue: { inline: boolean };
 }
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
@@ -104,6 +110,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
       pass: e.SMTP_PASS || undefined,
       from: e.MAIL_FROM,
     },
+    queue: { inline: e.QUEUE_INLINE },
   };
 }
 

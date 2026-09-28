@@ -19,11 +19,15 @@ import { ZodSerializerInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
 import { APP_CONFIG, type AppConfig } from './config/env.js';
 import { DbModule } from './db/db.module.js';
+import { FilesModule } from './files/files.module.js';
 import { HealthController } from './health/health.controller.js';
+import { ImportsModule } from './imports/imports.module.js';
 import { IntegrationsModule } from './integrations/integrations.module.js';
+import { JobsModule } from './jobs/jobs.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { SettingsModule } from './settings/settings.module.js';
+import { StorageModule } from './storage/storage.module.js';
 
 @Module({})
 export class AppModule implements NestModule {
@@ -44,12 +48,16 @@ export class AppModule implements NestModule {
         RedisModule,
         CryptoModule,
         MailModule,
+        StorageModule,
+        JobsModule,
         AuditModule,
+        ImportsModule,
         AuthModule,
         CompaniesModule,
         AccessModule,
         SettingsModule,
         IntegrationsModule,
+        FilesModule,
       ],
       controllers: [HealthController],
       providers: [

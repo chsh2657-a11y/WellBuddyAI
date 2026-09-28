@@ -13,6 +13,8 @@ export function testConfig(overrides: Partial<NodeJS.ProcessEnv> = {}): AppConfi
     JWT_SECRET: 'test-secret-test-secret-test-secret-123',
     FIELD_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
     FIELD_ENCRYPTION_KEY_ID: 'test',
+    QUEUE_INLINE: 'true',
+    STORAGE_LOCAL_DIR: process.env.TEST_STORAGE_DIR ?? 'apps/api/storage/test',
     ...overrides,
   });
 }

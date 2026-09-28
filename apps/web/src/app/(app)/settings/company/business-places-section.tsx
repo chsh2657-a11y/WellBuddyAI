@@ -7,11 +7,12 @@ import {
   formatBizRegNo,
 } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
+import { ExcelImportDialog } from '@/components/excel-import-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,12 +75,32 @@ export function BusinessPlacesSection() {
             본점과 지점(종사업장)을 관리합니다. 부가세 신고는 사업장별로 합니다.
           </CardDescription>
         </div>
-        {writable ? (
-          <Button size="sm" onClick={() => setEditing('new')}>
-            <Plus />
-            사업장 추가
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="/api/exports/business-places" download>
+              <Download />
+              엑셀 다운로드
+            </a>
           </Button>
-        ) : null}
+          {writable ? (
+            <>
+              <ExcelImportDialog
+                spec="business-places"
+                title="사업장"
+                columns={[
+                  { key: 'name', label: '사업장명' },
+                  { key: 'bizRegNo', label: '사업자등록번호' },
+                  { key: 'address', label: '주소' },
+                ]}
+                onImported={() => void queryClient.invalidateQueries({ queryKey: KEY })}
+              />
+              <Button size="sm" onClick={() => setEditing('new')}>
+                <Plus />
+                사업장 추가
+              </Button>
+            </>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-2">
         <Table>
@@ -89,7 +110,7 @@ export function BusinessPlacesSection() {
               <TableHead>사업자등록번호</TableHead>
               <TableHead>대표자</TableHead>
               <TableHead>주소</TableHead>
-              {writable ? <TableHead className="w-24 pr-5 text-right">관리</TableHead> : null}
+              {writable ? <TableHead className="w-28 pr-5 text-right">관리</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -102,7 +123,7 @@ export function BusinessPlacesSection() {
                 <TableCell>{p.representative ?? '—'}</TableCell>
                 <TableCell className="max-w-64 truncate">{p.address ?? '—'}</TableCell>
                 {writable ? (
-                  <TableCell className="pr-5 text-right">
+                  <TableCell className="whitespace-nowrap pr-5 text-right">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -145,7 +166,7 @@ function PlaceDialog({ place, onClose }: { place: Place | 'new' | null; onClose:
       place && place !== 'new'
         ? {
             name: place.name,
-            bizRegNo: place.bizRegNo,
+            bizRegNo: formatBizRegNo(place.bizRegNo),
             representative: place.representative ?? '',
             businessType: place.businessType ?? '',
             businessItem: place.businessItem ?? '',

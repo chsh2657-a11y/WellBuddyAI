@@ -25,4 +25,11 @@ scripts/dev-services.sh                              # Docker 없이 로컬 설�
 pnpm db:migrate   # 마이그레이션 (wellbuddy_owner 롤)
 pnpm db:seed      # 데모 계정: demo@wellbuddy.local / demo1234!
 pnpm test         # 단위·통합 테스트 (wellbuddy_test DB 사용)
+
+pnpm build        # 공용 패키지·API·웹 빌드
+pnpm dev          # API http://localhost:4000/api (문서: /api/docs) + 웹 http://localhost:3000
+pnpm test:e2e     # Playwright E2E (pnpm build 후, API·웹을 자동으로 띄움)
 ```
+
+- 작업 큐: `.env` 의 `QUEUE_INLINE=true` 이면 워커 없이 바로 실행된다. 운영처럼 BullMQ 워커를 쓰려면 `QUEUE_INLINE=false` 로 두고 `pnpm --filter @wellbuddy/api worker` 를 함께 실행한다.
+- 브라우저 버전이 Playwright 와 다른 환경에서는 `PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome pnpm test:e2e` 로 실행한다.

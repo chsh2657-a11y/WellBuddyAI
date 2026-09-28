@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type UpdateCompanyInput, UpdateCompanySchema } from '@wellbuddy/shared';
+import { formatBizRegNo, type UpdateCompanyInput, UpdateCompanySchema } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -39,7 +39,7 @@ type FormValues = z.input<typeof UpdateCompanySchema>;
 function toForm(c: Company): FormValues {
   return {
     name: c.name,
-    bizRegNo: c.bizRegNo,
+    bizRegNo: formatBizRegNo(c.bizRegNo),
     representative: c.representative ?? '',
     businessType: c.businessType ?? '',
     businessItem: c.businessItem ?? '',
