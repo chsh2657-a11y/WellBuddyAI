@@ -10,7 +10,6 @@ import {
 } from '@wellbuddy/accounting-core';
 import {
   accounts,
-  ensureStandardAccounts,
   exchangeRates,
   type FxRevaluationDetail,
   fxRevaluations,
@@ -27,6 +26,7 @@ import {
 } from '@wellbuddy/shared';
 import { and, asc, desc, eq, gte, inArray, isNotNull, lte, sql, sum } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
+import { accountIdByCode } from './account-lookup.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { AppException } from '../common/errors.js';
 import { DbService } from '../db/db.service.js';
@@ -302,19 +302,6 @@ export class FxService {
     });
   }
 
-  private async accountIdByCode(tx: Transaction, code: string) {
-    const { companyId } = requireCompanyContext();
-    const find = async () =>
-      (await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, code)))[0]?.id;
-    let id = await find();
-    if (!id) {
-      await ensureStandardAccounts(tx, companyId);
-      id = await find();
-    }
-    if (!id) throw new AppException('ACCOUNT_NOT_FOUND', `${code} 계정이 없습니다.`);
-    return id;
-  }
-
   /**
    * 평가일 기준 외화평가 전표를 전기한다(평가일마다 한 번, 날짜 순서대로).
    * (차) 외화자산 증가·외화부채 감소 / 외화환산손실  (대) 외화자산 감소·외화부채 증가 / 외화환산이익
@@ -365,7 +352,7 @@ export class FxService {
         });
         if (plan.loss > 0) {
           lines.push({
-            accountId: await this.accountIdByCode(tx, FX_ACCOUNTS.revaluationLoss),
+            accountId: await accountIdByCode(tx, FX_ACCOUNTS.revaluationLoss),
             partnerId: null,
             debit: plan.loss,
             credit: 0,
@@ -374,7 +361,7 @@ export class FxService {
         }
         if (plan.gain > 0) {
           lines.push({
-            accountId: await this.accountIdByCode(tx, FX_ACCOUNTS.revaluationGain),
+            accountId: await accountIdByCode(tx, FX_ACCOUNTS.revaluationGain),
             partnerId: null,
             debit: 0,
             credit: plan.gain,

@@ -71,6 +71,13 @@
       "when": 1790666833766,
       "tag": "0009_fx",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790668167271,
+      "tag": "0010_notes",
+      "breakpoints": true
     }
   ]
 }

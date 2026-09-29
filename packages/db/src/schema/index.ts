@@ -4,4 +4,5 @@ export * from './auth.js';
 export * from './companies.js';
 export * from './fx.js';
 export * from './journal.js';
+export * from './notes.js';
 export * from './system.js';

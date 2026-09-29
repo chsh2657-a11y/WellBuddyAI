@@ -33,6 +33,7 @@ export const ACCOUNTING_TABS: Tab[] = [
   { href: '/accounting/reports', label: '장부·보고서' },
   { href: '/accounting/assets', label: '고정자산' },
   { href: '/accounting/fx', label: '환율·외화평가' },
+  { href: '/accounting/notes', label: '어음관리' },
   { href: '/accounting/accounts', label: '계정과목' },
   { href: '/accounting/partners', label: '거래처' },
   { href: '/accounting/dimensions', label: '부서·프로젝트' },

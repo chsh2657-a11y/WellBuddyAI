@@ -14836,6 +14836,1593 @@
           "fx"
         ]
       }
+    },
+    "/api/notes": {
+      "get": {
+        "operationId": "NotesController_list",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "receivable",
+                "payable"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "holding",
+                "settled",
+                "discounted",
+                "endorsed",
+                "dishonored"
+              ]
+            }
+          },
+          {
+            "name": "dueFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "dueTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "어음 목록(만기일순)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "receivable",
+                          "payable"
+                        ]
+                      },
+                      "noteNo": {
+                        "type": "string"
+                      },
+                      "partnerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "partnerName": {
+                        "type": "string"
+                      },
+                      "issueDate": {
+                        "type": "string"
+                      },
+                      "dueDate": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "bank": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "holding",
+                          "settled",
+                          "discounted",
+                          "endorsed",
+                          "dishonored"
+                        ]
+                      },
+                      "statusDate": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "endorsedToPartnerId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "endorsedToName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "memo": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "kind",
+                      "noteNo",
+                      "partnerId",
+                      "partnerName",
+                      "issueDate",
+                      "dueDate",
+                      "amount",
+                      "bank",
+                      "status",
+                      "statusDate",
+                      "endorsedToPartnerId",
+                      "endorsedToName",
+                      "memo"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      },
+      "post": {
+        "operationId": "NotesController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "receivable",
+                      "payable"
+                    ]
+                  },
+                  "noteNo": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30
+                  },
+                  "partnerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "issueDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "bank": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "entryDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "counterAccountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "createEntry": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "noteNo",
+                  "partnerId",
+                  "issueDate",
+                  "dueDate",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "받을어음 수취·지급어음 발행(전표 자동 전기, createEntry=false 면 대장만)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}": {
+      "get": {
+        "operationId": "NotesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "어음과 처리 이력",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}/settle": {
+      "post": {
+        "operationId": "NotesController_settle",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "date",
+                  "accountId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "만기 결제",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}/discount": {
+      "post": {
+        "operationId": "NotesController_discount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "annualRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "date",
+                  "annualRate",
+                  "accountId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "받을어음 할인(할인료는 매출채권처분손실)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}/endorse": {
+      "post": {
+        "operationId": "NotesController_endorse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "toPartnerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "accountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "date",
+                  "toPartnerId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "받을어음 배서양도",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}/dishonor": {
+      "post": {
+        "operationId": "NotesController_dishonor",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "받을어음 부도(부도어음과수표로 대체)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "receivable",
+                        "payable"
+                      ]
+                    },
+                    "noteNo": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "dueDate": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bank": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "holding",
+                        "settled",
+                        "discounted",
+                        "endorsed",
+                        "dishonored"
+                      ]
+                    },
+                    "statusDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "endorsedToPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "endorsedToName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "register",
+                              "settle",
+                              "discount",
+                              "endorse",
+                              "dishonor"
+                            ]
+                          },
+                          "eventDate": {
+                            "type": "string"
+                          },
+                          "entryId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "entryNumber": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "eventDate",
+                          "entryId",
+                          "entryNumber",
+                          "detail"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "noteNo",
+                    "partnerId",
+                    "partnerName",
+                    "issueDate",
+                    "dueDate",
+                    "amount",
+                    "bank",
+                    "status",
+                    "statusDate",
+                    "endorsedToPartnerId",
+                    "endorsedToName",
+                    "memo",
+                    "events"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
+    },
+    "/api/notes/{id}/undo": {
+      "post": {
+        "operationId": "NotesController_undo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "마지막 처리 취소(역분개). 등록만 남았으면 어음을 지운다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "note": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "receivable",
+                            "payable"
+                          ]
+                        },
+                        "noteNo": {
+                          "type": "string"
+                        },
+                        "partnerId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "partnerName": {
+                          "type": "string"
+                        },
+                        "issueDate": {
+                          "type": "string"
+                        },
+                        "dueDate": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "bank": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "holding",
+                            "settled",
+                            "discounted",
+                            "endorsed",
+                            "dishonored"
+                          ]
+                        },
+                        "statusDate": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "endorsedToPartnerId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "endorsedToName": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "memo": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "events": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "action": {
+                                "type": "string",
+                                "enum": [
+                                  "register",
+                                  "settle",
+                                  "discount",
+                                  "endorse",
+                                  "dishonor"
+                                ]
+                              },
+                              "eventDate": {
+                                "type": "string"
+                              },
+                              "entryId": {
+                                "nullable": true,
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "entryNumber": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "detail": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "action",
+                              "eventDate",
+                              "entryId",
+                              "entryNumber",
+                              "detail"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "noteNo",
+                        "partnerId",
+                        "partnerName",
+                        "issueDate",
+                        "dueDate",
+                        "amount",
+                        "bank",
+                        "status",
+                        "statusDate",
+                        "endorsedToPartnerId",
+                        "endorsedToName",
+                        "memo",
+                        "events"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "note"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notes"
+        ]
+      }
     }
   },
   "info": {

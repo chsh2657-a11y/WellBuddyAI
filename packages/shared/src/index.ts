@@ -7,5 +7,6 @@ export * from './fx.js';
 export * from './integrations.js';
 export * from './journal.js';
 export * from './modules.js';
+export * from './notes.js';
 export * from './permissions.js';
 export * from './roles.js';

@@ -8,6 +8,7 @@ import {
 import { depreciationSchedule, disposalProfit } from './depreciation.js';
 import { type FxSide, revaluationLines, settlementLines } from './fx.js';
 import { reverseLines, validateJournal } from './journal.js';
+import { discountCharge, NOTE_ACCOUNTS } from './notes.js';
 import { type BalanceRow, carryForwardLines } from './periods.js';
 import { type AccountTotals, balanceSheet, incomeStatement, trialBalance } from './statements.js';
 import { paymentLines, purchaseLines, receiptLines, salesLines } from './templates.js';
@@ -133,6 +134,53 @@ function generate(seed: number, count: number): Line[][] {
         { accountCode: '212', debit: 0, credit: cost, partnerId: null },
         { accountCode: '914', debit: 0, credit: profit > 0 ? profit : 0, partnerId: null },
       ].filter((l) => l.debit > 0 || l.credit > 0);
+    } else if (kind < 0.86) {
+      // 받을어음 수취 후 결제·할인·배서·부도 중 하나
+      const face = amount();
+      const partner = pick(PARTNERS);
+      const note = { accountCode: NOTE_ACCOUNTS.receivable, partnerId: partner };
+      entries.push([
+        { ...note, debit: face, credit: 0 },
+        { accountCode: '108', debit: 0, credit: face, partnerId: partner },
+      ]);
+      const action = pick(['settle', 'discount', 'endorse', 'dishonor'] as const);
+      const { charge } = discountCharge({
+        faceAmount: face,
+        annualRatePercent: Math.round(r() * 2000) / 100,
+        discountDate: '2026-03-01',
+        maturityDate: `2026-0${4 + Math.floor(r() * 5)}-15`,
+      });
+      lines =
+        action === 'settle'
+          ? [
+              { accountCode: '103', debit: face, credit: 0, partnerId: null },
+              { ...note, debit: 0, credit: face },
+            ]
+          : action === 'discount'
+            ? [
+                { accountCode: '103', debit: face - charge, credit: 0, partnerId: null },
+                {
+                  accountCode: NOTE_ACCOUNTS.discountLoss,
+                  debit: charge,
+                  credit: 0,
+                  partnerId: null,
+                },
+                { ...note, debit: 0, credit: face },
+              ].filter((l) => l.debit > 0 || l.credit > 0)
+            : action === 'endorse'
+              ? [
+                  { accountCode: '251', debit: face, credit: 0, partnerId: pick(PARTNERS) },
+                  { ...note, debit: 0, credit: face },
+                ]
+              : [
+                  {
+                    accountCode: NOTE_ACCOUNTS.dishonored,
+                    debit: face,
+                    credit: 0,
+                    partnerId: partner,
+                  },
+                  { ...note, debit: 0, credit: face },
+                ];
     } else if (kind < 0.9 || entries.length === 0) {
       // 여러 줄 대체전표: 마지막 줄로 차대를 맞춘다(차감 계정·매출할인 포함 아무 계정)
       const n = 2 + Math.floor(r() * 4);

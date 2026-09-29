@@ -1268,6 +1268,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/notes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['NotesController_list'];
+    put?: never;
+    post: operations['NotesController_register'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['NotesController_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}/settle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotesController_settle'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}/discount': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotesController_discount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}/endorse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotesController_endorse'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}/dishonor': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotesController_dishonor'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notes/{id}/undo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotesController_undo'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6813,6 +6925,552 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_list: {
+    parameters: {
+      query?: {
+        kind?: 'receivable' | 'payable';
+        status?: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+        dueFrom?: string;
+        dueTo?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 어음 목록(만기일순) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          kind: 'receivable' | 'payable';
+          noteNo: string;
+          /** Format: uuid */
+          partnerId: string;
+          /** Format: date */
+          issueDate: string;
+          /** Format: date */
+          dueDate: string;
+          amount: number;
+          bank?: string | null;
+          memo?: string | null;
+          /** Format: date */
+          entryDate?: string | null;
+          /** Format: uuid */
+          counterAccountId?: string | null;
+          /** @default true */
+          createEntry?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description 받을어음 수취·지급어음 발행(전표 자동 전기, createEntry=false 면 대장만) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 어음과 처리 이력 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_settle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+          /** Format: uuid */
+          accountId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 만기 결제 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_discount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+          annualRate: number;
+          /** Format: uuid */
+          accountId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 받을어음 할인(할인료는 매출채권처분손실) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_endorse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+          /** Format: uuid */
+          toPartnerId: string;
+          /** Format: uuid */
+          accountId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 받을어음 배서양도 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_dishonor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 받을어음 부도(부도어음과수표로 대체) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            noteNo: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            issueDate: string;
+            dueDate: string;
+            amount: number;
+            bank: string | null;
+            /** @enum {string} */
+            status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+            statusDate: string | null;
+            /** Format: uuid */
+            endorsedToPartnerId: string | null;
+            endorsedToName: string | null;
+            memo: string | null;
+            events: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+              eventDate: string;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+              detail: {
+                [key: string]: unknown;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotesController_undo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 마지막 처리 취소(역분개). 등록만 남았으면 어음을 지운다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            note: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind: 'receivable' | 'payable';
+              noteNo: string;
+              /** Format: uuid */
+              partnerId: string;
+              partnerName: string;
+              issueDate: string;
+              dueDate: string;
+              amount: number;
+              bank: string | null;
+              /** @enum {string} */
+              status: 'holding' | 'settled' | 'discounted' | 'endorsed' | 'dishonored';
+              statusDate: string | null;
+              /** Format: uuid */
+              endorsedToPartnerId: string | null;
+              endorsedToName: string | null;
+              memo: string | null;
+              events: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                action: 'register' | 'settle' | 'discount' | 'endorse' | 'dishonor';
+                eventDate: string;
+                /** Format: uuid */
+                entryId: string | null;
+                entryNumber: string | null;
+                detail: {
+                  [key: string]: unknown;
+                };
+              }[];
+            } | null;
+          };
+        };
+      };
       /** @description 권한 필요: accounting (write) */
       403: {
         headers: {
