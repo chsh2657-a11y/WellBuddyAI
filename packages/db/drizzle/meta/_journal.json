@@ -78,6 +78,13 @@
       "when": 1790668167271,
       "tag": "0010_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790668922971,
+      "tag": "0011_budgets",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,7 @@ export const REPORTS = [
   { href: '/accounting/reports/trial-balance', label: '합계잔액시산표' },
   { href: '/accounting/reports/statements', label: '재무제표' },
   { href: '/accounting/reports/aging', label: '채권·채무' },
+  { href: '/accounting/reports/budget', label: '예산 대비 실적' },
 ];
 
 export function ReportsNav() {

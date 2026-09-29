@@ -1380,6 +1380,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/budgets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['BudgetsController_get'];
+    put: operations['BudgetsController_save'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/budgets/suggest': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['BudgetsController_suggest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/budget-vs-actual': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['BudgetsController_report'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7472,6 +7520,307 @@ export interface operations {
         };
       };
       /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BudgetsController_get: {
+    parameters: {
+      query: {
+        fiscalYearId: string;
+        departmentId?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 회계연도·부서(비우면 부서 미지정)의 월별 예산 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            fiscalYearId: string;
+            fiscalYear: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            periods: {
+              periodNo: number;
+              month: string;
+            }[];
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              months: number[];
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BudgetsController_save: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          fiscalYearId: string;
+          /** Format: uuid */
+          departmentId?: string | null;
+          lines: {
+            /** Format: uuid */
+            accountId: string;
+            months: number[];
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description 예산 저장(그 회계연도·부서의 예산을 통째로 바꾼다) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            fiscalYearId: string;
+            fiscalYear: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            periods: {
+              periodNo: number;
+              month: string;
+            }[];
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              months: number[];
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BudgetsController_suggest: {
+    parameters: {
+      query: {
+        fiscalYearId: string;
+        departmentId?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 전년도 같은 달 실적(예산 편성 참고용) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            fiscalYear: string | null;
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              months: number[];
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BudgetsController_report: {
+    parameters: {
+      query: {
+        fiscalYearId: string;
+        departmentId?: string | null;
+        throughPeriod?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 예산 대비 실적(부서를 비우면 전사, throughPeriod 번째 달까지 누계) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            fiscalYear: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            throughPeriod: number;
+            throughMonth: string;
+            lines: {
+              budget: number;
+              budgetToDate: number;
+              actualToDate: number;
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              /** @enum {string} */
+              category: 'revenue' | 'expense';
+              variance: number;
+              rate: number | null;
+              exceeded: boolean;
+            }[];
+            revenue: {
+              budget: number;
+              budgetToDate: number;
+              actualToDate: number;
+            };
+            expense: {
+              budget: number;
+              budgetToDate: number;
+              actualToDate: number;
+            };
+            profit: {
+              budget: number;
+              budgetToDate: number;
+              actualToDate: number;
+            };
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
       403: {
         headers: {
           [name: string]: unknown;
