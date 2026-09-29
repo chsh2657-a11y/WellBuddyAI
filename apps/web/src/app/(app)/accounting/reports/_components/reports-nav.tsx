@@ -16,6 +16,7 @@ export const REPORTS = [
   { href: '/accounting/reports/budget', label: '예산 대비 실적' },
   { href: '/accounting/reports/daily-cash', label: '일일자금일보' },
   { href: '/accounting/reports/cash-plan', label: '자금계획' },
+  { href: '/accounting/reports/dimension-pl', label: '부서·프로젝트별 손익' },
 ];
 
 export function ReportsNav() {

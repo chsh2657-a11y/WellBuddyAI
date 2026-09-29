@@ -4,6 +4,8 @@ import { BudgetsController } from './budgets.controller.js';
 import { BudgetsService } from './budgets.service.js';
 import { CashController } from './cash.controller.js';
 import { CashService } from './cash.service.js';
+import { DimensionReportController } from './dimension-report.controller.js';
+import { DimensionReportService } from './dimension-report.service.js';
 import { DimensionsService } from './dimensions.service.js';
 import { FiscalYearsController } from './fiscal-years.controller.js';
 import { FiscalYearsService } from './fiscal-years.service.js';
@@ -33,6 +35,7 @@ import { ReportsService } from './reports.service.js';
     NotesController,
     BudgetsController,
     CashController,
+    DimensionReportController,
   ],
   providers: [
     AccountsService,
@@ -48,6 +51,7 @@ import { ReportsService } from './reports.service.js';
     NotesService,
     BudgetsService,
     CashService,
+    DimensionReportService,
   ],
   exports: [
     AccountsService,
