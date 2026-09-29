@@ -12,6 +12,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, type ApiBodyOptions, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
+  COLLECT_CHANNELS,
+  type CollectChannel,
+  type CollectRequest,
+  CollectRequestSchema,
   type EvidenceListQuery,
   EvidenceListQuerySchema,
   EvidenceStatusUpdateSchema,
@@ -28,11 +32,14 @@ import {
   CardTransactionSchema,
   CashReceiptSchema,
   CollectionRunSchema,
+  CollectResultSchema,
+  CollectStatusSchema,
   ImportMappingSchema,
   TaxInvoiceSchema,
   UploadCommitSchema,
   UploadPreviewSchema,
 } from './evidence.schemas.js';
+import { CollectionService } from './collection.service.js';
 import { EvidenceService } from './evidence.service.js';
 import { UploadService } from './upload.service.js';
 
@@ -85,6 +92,7 @@ export class EvidenceController {
   constructor(
     private readonly evidence: EvidenceService,
     private readonly uploads: UploadService,
+    private readonly collection: CollectionService,
   ) {}
 
   @RequirePermission('evidence', 'write')
@@ -162,6 +170,28 @@ export class EvidenceController {
     @ZodBody(EvidenceStatusUpdateSchema) body: z.infer<typeof EvidenceStatusUpdateSchema>,
   ) {
     return this.evidence.setStatus(kind, id, body.status);
+  }
+
+  @RequirePermission('evidence', 'read')
+  @Get('collect')
+  @ZodResponse(z.array(CollectStatusSchema), {
+    description: '통장·카드·홈택스 자동 수집 설정과 마지막 결과',
+  })
+  collectStatus() {
+    return this.collection.status();
+  }
+
+  @RequirePermission('evidence', 'write')
+  @Post('collect/:channel')
+  @HttpCode(200)
+  @ZodResponse(CollectResultSchema, {
+    description: '연동관리에서 고른 공급자(모의·실연동)로 지금 수집(기간을 비우면 최근 30일)',
+  })
+  collect(
+    @ZodParam('channel', z.enum(COLLECT_CHANNELS)) channel: CollectChannel,
+    @ZodBody(CollectRequestSchema) body: CollectRequest,
+  ) {
+    return this.collection.collect(channel, body);
   }
 
   @RequirePermission('evidence', 'read')

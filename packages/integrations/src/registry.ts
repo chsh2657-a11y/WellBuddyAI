@@ -7,8 +7,17 @@ export interface ProviderSetting {
   credentials: Record<string, string>;
 }
 
+/** 구현체가 알아야 하는 회사 정보(모의 홈택스의 매출·매입 판단, 실연동의 사업자번호 등) */
+export interface ProviderContext {
+  companyId: string;
+  companyName: string;
+  /** 숫자 10자리 */
+  bizNo: string | null;
+}
+
 type Factory<C extends ProviderChannel> = (
   credentials: Record<string, string>,
+  context: ProviderContext,
 ) => ChannelProviders[C];
 
 export class ProviderError extends Error {
@@ -36,7 +45,11 @@ export class ProviderRegistry {
     return this.factories.has(`${channel}:${provider}`);
   }
 
-  resolve<C extends ProviderChannel>(channel: C, setting: ProviderSetting): ChannelProviders[C] {
+  resolve<C extends ProviderChannel>(
+    channel: C,
+    setting: ProviderSetting,
+    context: ProviderContext,
+  ): ChannelProviders[C] {
     if (!setting.enabled) {
       throw new ProviderError('CHANNEL_DISABLED', '연동관리에서 이 채널이 꺼져 있습니다.');
     }
@@ -49,6 +62,6 @@ export class ProviderRegistry {
           : `지원하지 않는 공급자입니다(${setting.provider}).`,
       );
     }
-    return factory(setting.credentials) as ChannelProviders[C];
+    return factory(setting.credentials, context) as ChannelProviders[C];
   }
 }

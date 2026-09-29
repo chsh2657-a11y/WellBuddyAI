@@ -6,6 +6,7 @@ import {
   carryForwardLines,
   fiscalYearOf,
   monthlyPeriods,
+  todayInKorea,
 } from './periods.js';
 
 describe('날짜 계산', () => {
@@ -14,6 +15,11 @@ describe('날짜 계산', () => {
     expect(addDays('2027-03-01', -1)).toBe('2027-02-28');
     expect(addMonthsToMonthStart('2026-11-15', 3)).toBe('2027-02-01');
     expect(addMonthsToMonthStart('2026-01-31', -1)).toBe('2025-12-01');
+  });
+
+  it('오늘은 한국 시간 기준이다', () => {
+    expect(todayInKorea(new Date('2026-03-31T14:59:59Z'))).toBe('2026-03-31');
+    expect(todayInKorea(new Date('2026-03-31T15:00:00Z'))).toBe('2026-04-01');
   });
 });
 

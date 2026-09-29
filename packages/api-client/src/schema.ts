@@ -1716,6 +1716,38 @@ export interface paths {
     patch: operations['EvidenceController_setStatus'];
     trace?: never;
   };
+  '/api/evidence/collect': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_collectStatus'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/collect/{channel}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['EvidenceController_collect'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/evidence/runs': {
     parameters: {
       query?: never;
@@ -9236,6 +9268,96 @@ export interface operations {
       };
     };
     responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_collectStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 통장·카드·홈택스 자동 수집 설정과 마지막 결과 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            channel: 'bank' | 'card' | 'hometax';
+            label: string;
+            provider: string;
+            providerLabel: string;
+            enabled: boolean;
+            collectable: boolean;
+            /** @enum {string} */
+            schedule: 'manual' | 'hourly' | 'daily';
+            /** @enum {string|null} */
+            lastStatus: 'success' | 'error' | null;
+            lastMessage: string | null;
+            lastRunAt: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_collect: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channel: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          from?: string;
+          /** Format: date */
+          to?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 연동관리에서 고른 공급자(모의·실연동)로 지금 수집(기간을 비우면 최근 30일) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            runId: string;
+            /** @enum {string} */
+            status: 'success' | 'error';
+            from: string;
+            to: string;
+            fetched: number;
+            inserted: number;
+            duplicates: number;
+            message: string;
+          };
+        };
+      };
       /** @description 권한 필요: evidence (write) */
       403: {
         headers: {

@@ -1,4 +1,4 @@
-import { EVIDENCE_STATUSES, UPLOAD_KINDS } from '@wellbuddy/shared';
+import { COLLECT_CHANNELS, EVIDENCE_STATUSES, UPLOAD_KINDS } from '@wellbuddy/shared';
 import { z } from 'zod';
 
 const int = z.number().int();
@@ -131,4 +131,28 @@ export const CollectionRunSchema = z.object({
   message: nullableString,
   startedAt: z.string(),
   finishedAt: nullableString,
+});
+
+export const CollectStatusSchema = z.object({
+  channel: z.enum(COLLECT_CHANNELS),
+  label: z.string(),
+  provider: z.string(),
+  providerLabel: z.string(),
+  enabled: z.boolean(),
+  /** 켜져 있고 자동 수집 공급자(모의·실연동)인지 */
+  collectable: z.boolean(),
+  schedule: z.enum(['manual', 'hourly', 'daily']),
+  lastStatus: z.enum(['success', 'error']).nullable(),
+  lastMessage: nullableString,
+  lastRunAt: nullableString,
+});
+export const CollectResultSchema = z.object({
+  runId: z.uuid(),
+  status: z.enum(['success', 'error']),
+  from: z.string(),
+  to: z.string(),
+  fetched: int,
+  inserted: int,
+  duplicates: int,
+  message: z.string(),
 });

@@ -154,3 +154,24 @@ export type EvidenceListQuery = z.infer<typeof EvidenceListQuerySchema>;
 
 /** 제외 처리(개인 사용분 등) 또는 되살리기 */
 export const EvidenceStatusUpdateSchema = z.object({ status: z.enum(['pending', 'ignored']) });
+
+/** 자동 수집(모의·실연동) 채널 */
+export const COLLECT_CHANNELS = ['bank', 'card', 'hometax'] as const;
+export type CollectChannel = (typeof COLLECT_CHANNELS)[number];
+export const COLLECT_CHANNEL_LABELS: Record<CollectChannel, string> = {
+  bank: '통장',
+  card: '법인카드',
+  hometax: '홈택스',
+};
+/** 한 번에 수집하는 최대 기간(일) */
+export const MAX_COLLECT_DAYS = 92;
+export const DEFAULT_COLLECT_DAYS = 30;
+
+/** 수집 기간. 비우면 최근 30일, 끝나는 날은 오늘을 넘지 않는다 */
+export const CollectRequestSchema = z
+  .object({ from: z.iso.date().optional(), to: z.iso.date().optional() })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, {
+    error: '시작일이 종료일보다 늦습니다.',
+    path: ['from'],
+  });
+export type CollectRequest = z.infer<typeof CollectRequestSchema>;

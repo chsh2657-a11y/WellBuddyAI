@@ -121,8 +121,8 @@ test('증빙: 통장 파일 올리기 → 미리보기 → 등록, 처음 보는
   await expect(bank.locator('tbody tr')).toHaveCount(1);
   await snap(page, 'p2-06-records');
 
-  await tab('수집 이력').click();
-  await expect(page).toHaveURL(/\/evidence\/runs/);
+  await tab('자동 수집').click();
+  await expect(page).toHaveURL(/\/evidence\/collect/);
   const runs = page.getByRole('table', { name: '수집 이력' });
   await expect(runs.locator('tbody tr')).toHaveCount(2);
   await expect(runs.getByRole('row', { name: /custom\.csv/ })).toContainText('파일 · 업로드');

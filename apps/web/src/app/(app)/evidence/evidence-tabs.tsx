@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export const EVIDENCE_TABS = [
   { href: '/evidence/records', label: '수집 내역' },
   { href: '/evidence/upload', label: '파일 올리기' },
-  { href: '/evidence/runs', label: '수집 이력' },
+  { href: '/evidence/collect', label: '자동 수집' },
   { href: '/evidence/sources', label: '계좌·카드' },
 ];
 

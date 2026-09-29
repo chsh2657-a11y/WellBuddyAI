@@ -159,3 +159,8 @@ export function daysBetween(a: IsoDate, b: IsoDate): number {
   const [by, bm, bd] = parts(b);
   return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000);
 }
+
+/** 한국 시간 기준 오늘(YYYY-MM-DD) */
+export function todayInKorea(now: Date = new Date()): IsoDate {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(now);
+}

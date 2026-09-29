@@ -173,12 +173,20 @@ export class SourcesService {
     });
   }
 
-  /** 실연동 수집용 계좌번호(복호화) */
-  async bankAccountNo(tx: Transaction, id: string) {
+  /** 수집 대상: 사용 중인 계좌(계좌번호 복호화) */
+  async activeBankRefs(tx: Transaction) {
     const { companyId } = requireCompanyContext();
-    const [row] = await tx.select().from(bankAccounts).where(eq(bankAccounts.id, id));
-    if (!row) throw new NotFoundException();
-    return this.crypto.decrypt(row.accountNoEnc, this.purpose('bank', companyId));
+    const rows = await tx
+      .select()
+      .from(bankAccounts)
+      .where(eq(bankAccounts.isActive, true))
+      .orderBy(asc(bankAccounts.createdAt));
+    return rows.map((r) => ({
+      id: r.id,
+      alias: r.alias,
+      bankCode: r.bankCode,
+      accountNo: this.crypto.decrypt(r.accountNoEnc, this.purpose('bank', companyId)),
+    }));
   }
 
   // ── 법인카드 ─────────────────────────────────────────
@@ -285,11 +293,19 @@ export class SourcesService {
     });
   }
 
-  /** 실연동 수집용 카드번호(복호화) */
-  async cardNo(tx: Transaction, id: string) {
+  /** 수집 대상: 사용 중인 카드(카드번호 복호화) */
+  async activeCardRefs(tx: Transaction) {
     const { companyId } = requireCompanyContext();
-    const [row] = await tx.select().from(corporateCards).where(eq(corporateCards.id, id));
-    if (!row) throw new NotFoundException();
-    return this.crypto.decrypt(row.cardNoEnc, this.purpose('card', companyId));
+    const rows = await tx
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.isActive, true))
+      .orderBy(asc(corporateCards.createdAt));
+    return rows.map((r) => ({
+      id: r.id,
+      alias: r.alias,
+      cardCompany: r.cardCompany,
+      cardNo: this.crypto.decrypt(r.cardNoEnc, this.purpose('card', companyId)),
+    }));
   }
 }

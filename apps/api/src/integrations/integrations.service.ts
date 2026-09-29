@@ -135,6 +135,17 @@ export class IntegrationsService {
     return this.toStatus(channel, row);
   }
 
+  /** 수집 공급자를 만들 설정(자격증명 복호화). 저장한 적이 없으면 기본 공급자·꺼짐 */
+  async providerSetting(channel: IntegrationChannel) {
+    const { companyId } = requireCompanyContext();
+    const row = await this.findRow(channel);
+    return {
+      provider: row?.provider ?? getChannel(channel)!.defaultProvider,
+      enabled: row?.enabled ?? false,
+      credentials: row?.credentialsEnc ? this.decrypt(companyId, channel, row.credentialsEnc) : {},
+    };
+  }
+
   /** 저장된 설정으로 연결을 시험하고 결과를 마지막 상태로 기록한다. */
   async test(channel: IntegrationChannel) {
     const { companyId } = requireCompanyContext();
