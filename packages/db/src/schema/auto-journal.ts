@@ -5,6 +5,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   real,
   text,
@@ -38,8 +39,9 @@ export type AutoJournalKind =
   | 'cash_sales'
   | 'cash_purchase';
 
-/** 추천 방법: 회사 규칙, 과거 이력, AI, 기본 추천, 사용자가 고침 */
-export type SuggestionMethod = 'rule' | 'history' | 'ai' | 'default' | 'manual' | 'none';
+/** 추천 방법: 회사 규칙, 외상 반제, 과거 이력, AI, 기본 추천, 사용자가 고침 */
+export type SuggestionMethod =
+  'rule' | 'settlement' | 'history' | 'ai' | 'default' | 'manual' | 'none';
 
 /**
  * 회사 분개 규칙(P2-20). 우선순위가 작은 규칙부터 조건(거래 종류·키워드·거래처·금액)을 보고,
@@ -108,8 +110,12 @@ export const autoJournalMemory = pgTable(
       .references(() => accounts.id, { onDelete: 'cascade' }),
     deductible: boolean(),
     partnerId: uuid().references(() => partners.id, { onDelete: 'set null' }),
+    /** 사람이 읽는 이름(원래 거래처명·적요) */
+    label: text(),
     useCount: integer().notNull().default(0),
     lastUsedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** 규칙 제안을 무시했는지(P2-25) */
+    suggestionDismissed: boolean().notNull().default(false),
   },
   (t) => [
     uniqueIndex('auto_journal_memory_uq').on(t.companyId, t.kind, t.key, t.accountId),
@@ -139,6 +145,8 @@ export const evidenceSuggestions = pgTable(
     ruleId: uuid().references(() => autoJournalRules.id, { onDelete: 'set null' }),
     /** 사용자가 고쳤으면 다시 분류하지 않는다 */
     edited: boolean().notNull().default(false),
+    /** 이 입출금으로 반제할 세금계산서(P2-27) */
+    settles: jsonb().$type<string[]>(),
     /** 전기하지 못한 이유(마감 기간·거래처 없음 등) */
     error: text(),
     createdAt: createdAt(),
@@ -148,7 +156,7 @@ export const evidenceSuggestions = pgTable(
     uniqueIndex('evidence_suggestions_uq').on(t.companyId, t.evidenceKind, t.evidenceId),
     check(
       'evidence_suggestions_method_ck',
-      sql`method in ('rule', 'history', 'ai', 'default', 'manual', 'none')`,
+      sql`method in ('rule', 'settlement', 'history', 'ai', 'default', 'manual', 'none')`,
     ),
     check('evidence_suggestions_confidence_ck', sql`confidence between 0 and 1`),
     tenantIsolationPolicy(),

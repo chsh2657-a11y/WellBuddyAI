@@ -99,6 +99,8 @@ export const TaxInvoiceSchema = z.object({
   itemSummary: nullableString,
   partnerId: z.uuid().nullable(),
   partnerName: nullableString,
+  /** 외상 대금을 주고받아 반제한 때(P2-27) */
+  settledAt: nullableString,
   ...linked,
 });
 

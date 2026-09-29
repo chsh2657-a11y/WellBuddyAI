@@ -19822,6 +19822,10 @@
                         "nullable": true,
                         "type": "string"
                       },
+                      "settledAt": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "source": {
                         "type": "string"
                       },
@@ -19862,6 +19866,7 @@
                       "itemSummary",
                       "partnerId",
                       "partnerName",
+                      "settledAt",
                       "source",
                       "status",
                       "entryId",
@@ -20792,6 +20797,7 @@
                         "type": "string",
                         "enum": [
                           "rule",
+                          "settlement",
                           "history",
                           "ai",
                           "default",
@@ -20809,6 +20815,11 @@
                       },
                       "edited": {
                         "type": "boolean"
+                      },
+                      "settleCount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
                       },
                       "lines": {
                         "type": "array",
@@ -20867,6 +20878,7 @@
                       "reason",
                       "error",
                       "edited",
+                      "settleCount",
                       "lines"
                     ],
                     "additionalProperties": false
@@ -22026,6 +22038,385 @@
             }
           }
         ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auto-journal"
+        ]
+      }
+    },
+    "/api/auto-journal/rule-suggestions": {
+      "get": {
+        "operationId": "AutoJournalController_ruleSuggestions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "같은 거래를 같은 계정으로 여러 번 승인했으면 규칙으로 만들자고 제안한다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "bank_in",
+                          "bank_out",
+                          "card",
+                          "card_cancel",
+                          "tax_sales",
+                          "tax_purchase",
+                          "cash_sales",
+                          "cash_purchase"
+                        ]
+                      },
+                      "kindLabel": {
+                        "type": "string"
+                      },
+                      "keys": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "partnerId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "partnerName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "keywords": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "accountId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "account": {
+                        "type": "string"
+                      },
+                      "deductible": {
+                        "nullable": true,
+                        "type": "boolean"
+                      },
+                      "useCount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "total": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "kindLabel",
+                      "keys",
+                      "label",
+                      "partnerId",
+                      "partnerName",
+                      "keywords",
+                      "accountId",
+                      "account",
+                      "deductible",
+                      "useCount",
+                      "total",
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auto-journal"
+        ]
+      }
+    },
+    "/api/auto-journal/rule-suggestions/accept": {
+      "post": {
+        "operationId": "AutoJournalController_acceptSuggestion",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "bank_in",
+                      "bank_out",
+                      "card",
+                      "card_cancel",
+                      "tax_sales",
+                      "tax_purchase",
+                      "cash_sales",
+                      "cash_purchase"
+                    ]
+                  },
+                  "keys": {
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 300
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "keys"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "제안대로 규칙을 만든다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "bank_in",
+                          "bank_out",
+                          "card",
+                          "card_cancel",
+                          "tax_sales",
+                          "tax_purchase",
+                          "cash_sales",
+                          "cash_purchase"
+                        ]
+                      }
+                    },
+                    "keywords": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "minAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "account": {
+                      "type": "string"
+                    },
+                    "assignPartnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "assignPartnerName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "deductible": {
+                      "nullable": true,
+                      "type": "boolean"
+                    },
+                    "departmentId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "projectId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "hitCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "lastHitAt": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "priority",
+                    "isActive",
+                    "kinds",
+                    "keywords",
+                    "partnerId",
+                    "partnerName",
+                    "minAmount",
+                    "maxAmount",
+                    "accountId",
+                    "account",
+                    "assignPartnerId",
+                    "assignPartnerName",
+                    "deductible",
+                    "departmentId",
+                    "projectId",
+                    "memo",
+                    "hitCount",
+                    "lastHitAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auto-journal"
+        ]
+      }
+    },
+    "/api/auto-journal/rule-suggestions/dismiss": {
+      "post": {
+        "operationId": "AutoJournalController_dismissSuggestion",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "bank_in",
+                      "bank_out",
+                      "card",
+                      "card_cancel",
+                      "tax_sales",
+                      "tax_purchase",
+                      "cash_sales",
+                      "cash_purchase"
+                    ]
+                  },
+                  "keys": {
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 300
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "keys"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "403": {
             "description": "권한 필요: evidence (write)"

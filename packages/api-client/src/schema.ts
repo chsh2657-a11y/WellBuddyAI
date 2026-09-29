@@ -1876,6 +1876,54 @@ export interface paths {
     patch: operations['AutoJournalController_toggleRule'];
     trace?: never;
   };
+  '/api/auto-journal/rule-suggestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AutoJournalController_ruleSuggestions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/rule-suggestions/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AutoJournalController_acceptSuggestion'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/rule-suggestions/dismiss': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AutoJournalController_dismissSuggestion'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9286,6 +9334,7 @@ export interface operations {
             /** Format: uuid */
             partnerId: string | null;
             partnerName: string | null;
+            settledAt: string | null;
             source: string;
             /** @enum {string} */
             status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
@@ -9685,10 +9734,11 @@ export interface operations {
             memo: string | null;
             confidence: number;
             /** @enum {string} */
-            method: 'rule' | 'history' | 'ai' | 'default' | 'manual' | 'none';
+            method: 'rule' | 'settlement' | 'history' | 'ai' | 'default' | 'manual' | 'none';
             reason: string | null;
             error: string | null;
             edited: boolean;
+            settleCount: number;
             lines: {
               accountCode: string;
               accountName: string;
@@ -10143,6 +10193,171 @@ export interface operations {
           };
         };
       };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_ruleSuggestions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 같은 거래를 같은 계정으로 여러 번 승인했으면 규칙으로 만들자고 제안한다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            kind:
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase';
+            kindLabel: string;
+            keys: string[];
+            label: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            keywords: string | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            deductible: boolean | null;
+            useCount: number;
+            total: number;
+            name: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_acceptSuggestion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          kind:
+            | 'bank_in'
+            | 'bank_out'
+            | 'card'
+            | 'card_cancel'
+            | 'tax_sales'
+            | 'tax_purchase'
+            | 'cash_sales'
+            | 'cash_purchase';
+          keys: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description 제안대로 규칙을 만든다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            priority: number;
+            isActive: boolean;
+            kinds: (
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase'
+            )[];
+            keywords: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            minAmount: number | null;
+            maxAmount: number | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            /** Format: uuid */
+            assignPartnerId: string | null;
+            assignPartnerName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            hitCount: number;
+            lastHitAt: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_dismissSuggestion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          kind:
+            | 'bank_in'
+            | 'bank_out'
+            | 'card'
+            | 'card_cancel'
+            | 'tax_sales'
+            | 'tax_purchase'
+            | 'cash_sales'
+            | 'cash_purchase';
+          keys: string[];
+        };
+      };
+    };
+    responses: {
       /** @description 권한 필요: evidence (write) */
       403: {
         headers: {

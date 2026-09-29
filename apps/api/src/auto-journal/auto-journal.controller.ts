@@ -9,6 +9,8 @@ import {
   AutoJournalRuleToggleSchema,
   type AutoJournalSettings,
   AutoJournalSettingsSchema,
+  type RuleSuggestionRef,
+  RuleSuggestionRefSchema,
   type SuggestionUpdateInput,
   SuggestionUpdateSchema,
   UPLOAD_KINDS,
@@ -21,9 +23,11 @@ import {
   ApproveResultSchema,
   ReviewItemSchema,
   RuleSchema,
+  RuleSuggestionSchema,
   RunSummarySchema,
 } from './auto-journal.schemas.js';
 import { AutoJournalService } from './auto-journal.service.js';
+import { RuleSuggestionsService } from './rule-suggestions.service.js';
 import { AutoJournalRulesService } from './rules.service.js';
 
 const ReviewQuerySchema = z.object({ kind: z.enum(AUTO_JOURNAL_KINDS).optional() });
@@ -35,6 +39,7 @@ export class AutoJournalController {
   constructor(
     private readonly autoJournal: AutoJournalService,
     private readonly rules: AutoJournalRulesService,
+    private readonly suggestions: RuleSuggestionsService,
   ) {}
 
   @RequirePermission('evidence', 'read')
@@ -119,6 +124,29 @@ export class AutoJournalController {
     @ZodBody(AutoJournalRuleToggleSchema) body: z.infer<typeof AutoJournalRuleToggleSchema>,
   ) {
     return this.rules.toggle(id, body);
+  }
+
+  @RequirePermission('evidence', 'read')
+  @Get('rule-suggestions')
+  @ZodResponse(z.array(RuleSuggestionSchema), {
+    description: '같은 거래를 같은 계정으로 여러 번 승인했으면 규칙으로 만들자고 제안한다',
+  })
+  ruleSuggestions() {
+    return this.suggestions.list();
+  }
+
+  @RequirePermission('evidence', 'write')
+  @Post('rule-suggestions/accept')
+  @ZodResponse(RuleSchema, { description: '제안대로 규칙을 만든다' })
+  acceptSuggestion(@ZodBody(RuleSuggestionRefSchema) body: RuleSuggestionRef) {
+    return this.suggestions.accept(body);
+  }
+
+  @RequirePermission('evidence', 'write')
+  @Post('rule-suggestions/dismiss')
+  @HttpCode(204)
+  dismissSuggestion(@ZodBody(RuleSuggestionRefSchema) body: RuleSuggestionRef) {
+    return this.suggestions.dismiss(body);
   }
 
   @RequirePermission('evidence', 'write')

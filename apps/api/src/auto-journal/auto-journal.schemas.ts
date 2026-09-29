@@ -33,6 +33,8 @@ export const ReviewItemSchema = z.object({
   /** 전기하지 못한 이유 */
   error: nullableString,
   edited: z.boolean(),
+  /** 이 입출금으로 반제할 세금계산서 수 */
+  settleCount: int,
   /** 만들 전표 미리보기 */
   lines: z.array(
     z.object({ accountCode: z.string(), accountName: z.string(), debit: int, credit: int }),
@@ -78,4 +80,23 @@ export const RuleSchema = z.object({
   memo: nullableString,
   hitCount: int,
   lastHitAt: nullableString,
+});
+
+export const RuleSuggestionSchema = z.object({
+  kind: z.enum(AUTO_JOURNAL_KINDS),
+  kindLabel: z.string(),
+  /** 바탕이 된 이력 열쇠(수락·무시할 때 그대로 보낸다) */
+  keys: z.array(z.string()),
+  label: z.string(),
+  partnerId: nullableUuid,
+  partnerName: nullableString,
+  keywords: nullableString,
+  accountId: z.uuid(),
+  account: z.string(),
+  deductible: z.boolean().nullable(),
+  /** 그 계정으로 승인한 횟수 / 전체 승인 횟수 */
+  useCount: int,
+  total: int,
+  /** 만들 규칙 이름 */
+  name: z.string(),
 });

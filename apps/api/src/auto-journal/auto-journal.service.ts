@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { STATEMENT_GROUPS } from '@wellbuddy/accounting-core';
+import { STATEMENT_GROUPS, SYSTEM_ACCOUNTS } from '@wellbuddy/accounting-core';
 import {
   accounts,
   autoJournalMemory,
@@ -32,7 +32,7 @@ import {
   type ClassifySuggestion,
   ProviderRegistry,
 } from '@wellbuddy/integrations';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { JournalsService } from '../accounting/journals.service.js';
 import { PartnersService } from '../accounting/partners.service.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -42,10 +42,11 @@ import { DbService } from '../db/db.service.js';
 import { IntegrationsService } from '../integrations/integrations.service.js';
 import { defaultSuggestion } from './engine/defaults.js';
 import { historyKeys, type MemoryRow, recommendFromHistory } from './engine/history.js';
-import { entryDescription } from './engine/items.js';
+import { entryDescription, normalizeName } from './engine/items.js';
 import { buildEntry } from './engine/lines.js';
 import { type CardLike, matchReceipts, pairCancellations } from './engine/matching.js';
 import { findRule } from './engine/rules.js';
+import { matchSettlement, type OpenInvoice } from './engine/settlement.js';
 import { type LoadedItem, loadItems } from './evidence-items.js';
 
 const EVIDENCE_TABLES = {
@@ -98,6 +99,15 @@ export interface Suggestion {
   ruleId: string | null;
   edited: boolean;
   error: string | null;
+  /** 이 입출금으로 반제할 세금계산서(P2-27) */
+  settles: string[] | null;
+}
+
+/** 반제를 기다리는 외상 세금계산서(방향별, 오래된 순) */
+interface OpenInvoiceRow extends OpenInvoice {
+  partnerId: string | null;
+  /** 정규화한 상대 이름 */
+  name: string;
 }
 
 interface AccountInfo {
@@ -116,6 +126,9 @@ interface Context {
   memory: Map<AutoJournalKind, MemoryRow[]>;
   settings: AutoJournalSettings;
   postStatus: 'posted' | 'pending';
+  openInvoices: { sales: OpenInvoiceRow[]; purchase: OpenInvoiceRow[] };
+  /** 이번 실행에서 이미 다른 입출금에 짝지은 세금계산서 */
+  claimed: Set<string>;
 }
 
 const refKey = (r: { evidenceKind: string; evidenceId: string }) =>
@@ -203,6 +216,29 @@ export class AutoJournalService {
       .select({ approval: companies.journalApprovalRequired })
       .from(companies);
     const manager = role === 'owner' || role === 'admin';
+    const invoiceRows = await tx
+      .select({
+        id: taxInvoices.id,
+        direction: taxInvoices.direction,
+        date: taxInvoices.issueDate,
+        total: taxInvoices.totalAmount,
+        partnerId: taxInvoices.partnerId,
+        supplierName: taxInvoices.supplierName,
+        buyerName: taxInvoices.buyerName,
+      })
+      .from(taxInvoices)
+      .where(and(eq(taxInvoices.status, 'posted'), isNull(taxInvoices.settledAt)))
+      .orderBy(asc(taxInvoices.issueDate), asc(taxInvoices.createdAt));
+    const openInvoices = { sales: [] as OpenInvoiceRow[], purchase: [] as OpenInvoiceRow[] };
+    for (const r of invoiceRows) {
+      openInvoices[r.direction].push({
+        id: r.id,
+        date: r.date,
+        total: r.total,
+        partnerId: r.partnerId,
+        name: normalizeName(r.direction === 'sales' ? r.buyerName : r.supplierName),
+      });
+    }
     return {
       accountById: new Map(accountRows.map((a) => [a.id, a])),
       accountByCode: new Map(accountRows.map((a) => [a.code, a])),
@@ -210,10 +246,51 @@ export class AutoJournalService {
       memory,
       settings: await this.settingsIn(tx),
       postStatus: company?.approval && !manager ? 'pending' : 'posted',
+      openInvoices,
+      claimed: new Set(),
     };
   }
 
-  /** 회사 규칙 → 과거 이력 → 기본 추천 순서로 계정을 고른다 */
+  /**
+   * 외상 반제(P2-27): 통장 입금은 매출, 출금은 매입 세금계산서 중 같은 거래처(또는 같은 이름)의
+   * 미결분과 금액을 맞춘다. 맞춘 세금계산서는 이번 실행의 다른 입출금에 다시 쓰지 않는다.
+   */
+  private settle(item: LoadedItem, ctx: Context): Suggestion | null {
+    if (item.kind !== 'bank_in' && item.kind !== 'bank_out') return null;
+    const sales = item.kind === 'bank_in';
+    const name = item.counterparty ? normalizeName(item.counterparty) : '';
+    const candidates = ctx.openInvoices[sales ? 'sales' : 'purchase'].filter(
+      (inv) =>
+        !ctx.claimed.has(inv.id) &&
+        ((item.partnerId && inv.partnerId === item.partnerId) || (!!name && inv.name === name)),
+    );
+    if (candidates.length === 0) return null;
+    const label = sales ? '외상매출금' : '외상매입금';
+    const found = matchSettlement(item.amount, candidates, label);
+    const account = ctx.accountByCode.get(
+      sales ? SYSTEM_ACCOUNTS.accountsReceivable : SYSTEM_ACCOUNTS.accountsPayable,
+    );
+    if (!found || !account?.isActive) return null;
+    for (const id of found.ids) ctx.claimed.add(id);
+    const partnerId = item.partnerId ?? candidates.find((c) => c.partnerId)?.partnerId ?? null;
+    return {
+      accountId: account.id,
+      deductible: null,
+      partnerId,
+      departmentId: null,
+      projectId: null,
+      memo: null,
+      confidence: found.confidence,
+      method: 'settlement',
+      reason: found.reason,
+      ruleId: null,
+      edited: false,
+      error: null,
+      settles: found.ids.length ? found.ids : null,
+    };
+  }
+
+  /** 회사 규칙 → 외상 반제 → 과거 이력 → 기본 추천 순서로 계정을 고른다(AI 는 run 에서) */
   classify(item: LoadedItem, ctx: Context): Suggestion {
     const base = {
       departmentId: null,
@@ -222,6 +299,7 @@ export class AutoJournalService {
       ruleId: null,
       edited: false,
       error: null,
+      settles: null,
     };
     const rule = findRule(ctx.rules, item);
     if (rule) {
@@ -239,6 +317,8 @@ export class AutoJournalService {
         ruleId: rule.id,
       };
     }
+    const settlement = this.settle(item, ctx);
+    if (settlement) return settlement;
     const history = recommendFromHistory(item, ctx.memory.get(item.kind) ?? []);
     if (history && ctx.accountById.get(history.accountId)?.isActive) {
       return {
@@ -291,6 +371,7 @@ export class AutoJournalService {
       ruleId: s.ruleId,
       edited: s.edited,
       error: s.error,
+      settles: s.settles,
       updatedAt: new Date(),
     };
     await tx
@@ -499,6 +580,12 @@ export class AutoJournalService {
       { source: 'evidence', sourceRef: refKey(item) },
     );
     await this.setEvidenceStatus(tx, item.evidenceKind, [item.evidenceId], 'posted', entryId);
+    if (s.settles?.length) {
+      await tx
+        .update(taxInvoices)
+        .set({ settledAt: new Date(), settledEntryId: entryId, updatedAt: new Date() })
+        .where(and(inArray(taxInvoices.id, s.settles), isNull(taxInvoices.settledAt)));
+    }
     return entryId;
   }
 
@@ -507,12 +594,14 @@ export class AutoJournalService {
     const { companyId } = requireCompanyContext();
     if (!s.accountId) return;
     for (const key of historyKeys(item)) {
+      const label = (key.startsWith('desc:') ? item.description : item.counterparty) ?? null;
       await tx
         .insert(autoJournalMemory)
         .values({
           companyId,
           kind: item.kind,
           key,
+          label,
           accountId: s.accountId,
           deductible: s.deductible,
           partnerId: s.partnerId,
@@ -527,6 +616,7 @@ export class AutoJournalService {
           ],
           set: {
             useCount: sql`${autoJournalMemory.useCount} + 1`,
+            label,
             deductible: s.deductible,
             partnerId: s.partnerId,
             lastUsedAt: new Date(),
@@ -777,6 +867,7 @@ export class AutoJournalService {
             reason: s?.reason ?? null,
             error: s?.error ?? null,
             edited: s?.edited ?? false,
+            settleCount: s?.settles?.length ?? 0,
             lines,
           };
         })
@@ -797,8 +888,9 @@ export class AutoJournalService {
     await this.db.tenant(async (tx) => {
       const item = await this.oneItem(tx, ref);
       const prev = (await this.suggestionsFor(tx, [item])).get(refKey(item));
+      const accountId = input.accountId === undefined ? (prev?.accountId ?? null) : input.accountId;
       const s: Suggestion = {
-        accountId: input.accountId === undefined ? (prev?.accountId ?? null) : input.accountId,
+        accountId,
         deductible: input.deductible === undefined ? (prev?.deductible ?? null) : input.deductible,
         partnerId:
           input.partnerId === undefined ? (prev?.partnerId ?? item.partnerId) : input.partnerId,
@@ -812,6 +904,8 @@ export class AutoJournalService {
         ruleId: null,
         edited: true,
         error: null,
+        // 계정을 바꾸면 반제 짝도 버린다
+        settles: accountId === prev?.accountId ? (prev?.settles ?? null) : null,
       };
       await this.saveSuggestion(tx, item, s);
       await this.setEvidenceStatus(tx, item.evidenceKind, [item.evidenceId], 'review');

@@ -37,10 +37,19 @@ export const PURCHASE_KINDS: readonly AutoJournalKind[] = [
   'cash_purchase',
 ];
 
-export const SUGGESTION_METHODS = ['rule', 'history', 'ai', 'default', 'manual', 'none'] as const;
+export const SUGGESTION_METHODS = [
+  'rule',
+  'settlement',
+  'history',
+  'ai',
+  'default',
+  'manual',
+  'none',
+] as const;
 export type SuggestionMethod = (typeof SUGGESTION_METHODS)[number];
 export const SUGGESTION_METHOD_LABELS: Record<SuggestionMethod, string> = {
   rule: '회사 규칙',
+  settlement: '외상 반제',
   history: '과거 이력',
   ai: 'AI 추천',
   default: '기본 추천',
@@ -111,3 +120,10 @@ export const AutoJournalSettingsSchema = z.object({
   threshold: z.number().min(0.5).max(1),
 });
 export type AutoJournalSettings = z.infer<typeof AutoJournalSettingsSchema>;
+
+/** 규칙 제안을 규칙으로 만들거나 무시한다(제안 목록의 종류·열쇠) */
+export const RuleSuggestionRefSchema = z.object({
+  kind: z.enum(AUTO_JOURNAL_KINDS),
+  keys: z.array(z.string().min(1).max(300)).min(1).max(10),
+});
+export type RuleSuggestionRef = z.infer<typeof RuleSuggestionRefSchema>;

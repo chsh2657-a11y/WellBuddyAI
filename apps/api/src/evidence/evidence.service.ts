@@ -163,6 +163,7 @@ export class EvidenceService {
         itemSummary: t.itemSummary,
         partnerId: t.partnerId,
         partnerName,
+        settledAt: t.settledAt?.toISOString() ?? null,
         source: t.source,
         status: t.status,
         entryId: t.entryId,

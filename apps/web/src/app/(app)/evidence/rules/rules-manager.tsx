@@ -6,7 +6,7 @@ import {
   AUTO_JOURNAL_KINDS,
   type AutoJournalKind,
 } from '@wellbuddy/shared';
-import { Plus, Trash2 } from 'lucide-react';
+import { Lightbulb, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Combobox } from '@/components/combobox';
@@ -99,6 +99,7 @@ export function RulesManager() {
   if (!master.ready) return <p className="text-sm text-muted-foreground">불러오는 중…</p>;
   return (
     <div className="grid gap-6">
+      <RuleSuggestions writable={writable} onAccepted={refresh} />
       {writable ? <RuleForm master={master} onCreated={refresh} /> : null}
       <div className="overflow-x-auto rounded-md border">
         <Table aria-label="분개 규칙">
@@ -169,6 +170,104 @@ export function RulesManager() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+interface RuleSuggestion {
+  kind: AutoJournalKind;
+  kindLabel: string;
+  keys: string[];
+  label: string;
+  partnerName: string | null;
+  keywords: string | null;
+  account: string;
+  deductible: boolean | null;
+  useCount: number;
+  total: number;
+  name: string;
+}
+
+const SUGGESTIONS_KEY = ['auto-journal', 'rule-suggestions'];
+
+/** 수정 학습 → 규칙 제안(P2-25): 같은 거래를 같은 계정으로 3번 이상 승인했으면 규칙을 권한다 */
+function RuleSuggestions({ writable, onAccepted }: { writable: boolean; onAccepted: () => void }) {
+  const queryClient = useQueryClient();
+  const list = useQuery({
+    queryKey: SUGGESTIONS_KEY,
+    queryFn: () => apiFetch<RuleSuggestion[]>('/auto-journal/rule-suggestions'),
+  });
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY });
+  const body = (s: RuleSuggestion) => ({ kind: s.kind, keys: s.keys });
+  const accept = useMutation({
+    mutationFn: (s: RuleSuggestion) =>
+      apiFetch<Rule>('/auto-journal/rule-suggestions/accept', { method: 'POST', json: body(s) }),
+    onSuccess: (r) => {
+      toast.success(`'${r.name}' 규칙을 만들었습니다.`);
+      refresh();
+      onAccepted();
+    },
+    onError,
+  });
+  const dismiss = useMutation({
+    mutationFn: (s: RuleSuggestion) =>
+      apiFetch('/auto-journal/rule-suggestions/dismiss', { method: 'POST', json: body(s) }),
+    onSuccess: refresh,
+    onError,
+  });
+  if (!list.data?.length) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lightbulb className="size-4" />
+          추천 규칙
+        </CardTitle>
+        <CardDescription>
+          같은 거래를 같은 계정으로 여러 번 승인했습니다. 규칙으로 만들면 다음부터 검토 없이 분개할
+          수 있습니다.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="grid gap-2" aria-label="추천 규칙">
+          {list.data.map((s) => (
+            <li
+              key={`${s.kind}:${s.keys.join(',')}`}
+              aria-label={s.name}
+              className="flex flex-wrap items-center gap-3 rounded-md border px-3 py-2 text-sm"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">
+                  {s.partnerName ? `거래처 ${s.partnerName}` : `'${s.keywords}'`} → {s.account}
+                  {s.deductible === false ? (
+                    <span className="ml-1 text-xs text-muted-foreground">(불공제)</span>
+                  ) : null}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {s.kindLabel} · {s.total}번 중 {s.useCount}번 이 계정으로 승인
+                </div>
+              </div>
+              {writable ? (
+                <div className="flex gap-1">
+                  <Button size="sm" disabled={accept.isPending} onClick={() => accept.mutate(s)}>
+                    <Plus />
+                    규칙으로 만들기
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={dismiss.isPending}
+                    onClick={() => dismiss.mutate(s)}
+                  >
+                    <X />
+                    무시
+                  </Button>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 

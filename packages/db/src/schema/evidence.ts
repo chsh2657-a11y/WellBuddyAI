@@ -191,6 +191,9 @@ export const taxInvoices = pgTable(
     itemSummary: text(),
     /** 상대 거래처(사업자번호로 찾은 것) */
     partnerId: uuid().references(() => partners.id, { onDelete: 'set null' }),
+    /** 외상 대금을 주고받아 반제한 때와 그 입출금 전표(P2-27) */
+    settledAt: timestamp({ withTimezone: true }),
+    settledEntryId: uuid().references(() => journalEntries.id, { onDelete: 'set null' }),
     ...evidenceColumns(),
   },
   (t) => [

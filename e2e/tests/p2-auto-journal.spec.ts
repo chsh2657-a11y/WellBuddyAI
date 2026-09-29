@@ -161,4 +161,37 @@ test('자동분개: 실행 → 검토함에서 계정 고치고 승인 → 규�
   await expect(
     page.getByRole('table', { name: '카드 승인' }).getByRole('row', { name: /스타벅스/ }),
   ).toContainText('전표 연결');
+
+  // ── 같은 거래를 3번 승인하면 규칙을 제안한다 ──
+  await uploadFile(
+    page,
+    { kind: 'card', sourceId: (await card.json()).id },
+    'card2.csv',
+    csv([
+      ['승인일자', '승인시간', '가맹점명', '업종', '승인금액', '승인번호', '승인구분'],
+      [daysAgo(4), '08:10', 'GS25 역삼점', '편의점', '"3,300"', '30020001', '승인'],
+      [daysAgo(3), '08:10', 'GS25 역삼점', '편의점', '"2,200"', '30020002', '승인'],
+      [daysAgo(2), '08:10', 'GS25 역삼점', '편의점', '"4,400"', '30020003', '승인'],
+    ]),
+  );
+  await tab('자동분개 검토함').click();
+  await page.getByRole('button', { name: '자동분개 실행' }).click();
+  await expect(page.getByText('자동분개: 매칭 0건, 자동 전기 0건, 검토 3건')).toBeVisible();
+  await page.getByRole('checkbox', { name: '모두 선택' }).check();
+  await page.getByRole('button', { name: '선택 승인 (3)' }).click();
+  await expect(page.getByText('3건을 전표로 만들었습니다.')).toBeVisible();
+
+  await tab('분개 규칙').click();
+  const suggestion = page
+    .getByRole('list', { name: '추천 규칙' })
+    .getByRole('listitem', { name: 'GS25 역삼점 → 복리후생비' });
+  await expect(suggestion).toContainText("'GS25 역삼점' → 811 복리후생비");
+  await expect(suggestion).toContainText('카드 승인 · 3번 중 3번 이 계정으로 승인');
+  await snap(page, 'p2-25-rule-suggestion');
+  await suggestion.getByRole('button', { name: '규칙으로 만들기' }).click();
+  await expect(page.getByText("'GS25 역삼점 → 복리후생비' 규칙을 만들었습니다.")).toBeVisible();
+  await expect(page.getByRole('list', { name: '추천 규칙' })).toHaveCount(0);
+  await expect(
+    page.getByRole('table', { name: '분개 규칙' }).getByRole('row', { name: /GS25 역삼점/ }),
+  ).toContainText('811 복리후생비');
 });

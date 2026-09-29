@@ -61,6 +61,7 @@ export interface ReviewItem {
   reason: string | null;
   error: string | null;
   edited: boolean;
+  settleCount: number;
   lines: { accountCode: string; accountName: string; debit: number; credit: number }[];
 }
 
@@ -420,6 +421,9 @@ function ReviewRow({
             {Math.round(item.confidence * 100)}%
           </Badge>
           <span className="text-xs font-medium">{SUGGESTION_METHOD_LABELS[item.method]}</span>
+          {item.settleCount ? (
+            <Badge variant="muted">세금계산서 {item.settleCount}장 반제</Badge>
+          ) : null}
         </div>
         {item.reason ? <p className="mt-1 text-xs text-muted-foreground">{item.reason}</p> : null}
         {item.error ? (
