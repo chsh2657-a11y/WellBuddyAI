@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { formatBizRegNo, type UpdateCompanyInput, UpdateCompanySchema } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ApiError, apiFetch } from '@/lib/api';
 import { can, SESSION_KEY, useSession } from '@/lib/session';
 
@@ -32,6 +33,7 @@ interface Company {
   address: string | null;
   phone: string | null;
   fiscalYearStartMonth: number;
+  journalApprovalRequired: boolean;
 }
 
 type FormValues = z.input<typeof UpdateCompanySchema>;
@@ -46,6 +48,7 @@ function toForm(c: Company): FormValues {
     address: c.address ?? '',
     phone: c.phone ?? '',
     fiscalYearStartMonth: c.fiscalYearStartMonth,
+    journalApprovalRequired: c.journalApprovalRequired,
   };
 }
 
@@ -109,7 +112,11 @@ export function CompanyInfoSection() {
                 <Input id="address" {...form.register('address')} />
               </FormField>
             </div>
-            <FormField id="fiscalYearStartMonth" label="회계연도 시작 월">
+            <FormField
+              id="fiscalYearStartMonth"
+              label="회계연도 시작 월"
+              hint="회계연도를 만든 뒤에는 바꿀 수 없습니다."
+            >
               <Select
                 id="fiscalYearStartMonth"
                 {...form.register('fiscalYearStartMonth', { valueAsNumber: true })}
@@ -121,6 +128,25 @@ export function CompanyInfoSection() {
                 ))}
               </Select>
             </FormField>
+            <Controller
+              control={form.control}
+              name="journalApprovalRequired"
+              render={({ field }) => (
+                <label className="flex items-start gap-3 self-end rounded-md border p-3 text-sm">
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label="전표 승인 사용"
+                  />
+                  <span>
+                    <span className="font-medium">전표 승인 사용</span>
+                    <span className="block text-xs text-muted-foreground">
+                      켜면 경리가 승인요청하고 대표·관리자·결재권자가 승인해야 전기됩니다.
+                    </span>
+                  </span>
+                </label>
+              )}
+            />
           </CardContent>
         </fieldset>
         {writable ? (

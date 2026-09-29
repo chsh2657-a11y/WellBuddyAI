@@ -11,6 +11,7 @@ export const CompanySchema = z.object({
   address: z.string().nullable(),
   phone: z.string().nullable(),
   fiscalYearStartMonth: z.number().int(),
+  journalApprovalRequired: z.boolean(),
 });
 
 export const CreateCompanyResultSchema = z.object({

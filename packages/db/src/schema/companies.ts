@@ -33,6 +33,8 @@ export const companies = pgTable(
     address: text(),
     phone: text(),
     fiscalYearStartMonth: smallint().notNull().default(1),
+    /** 켜면 작성자가 승인요청하고 관리자·결재권자가 승인해야 전기된다 */
+    journalApprovalRequired: boolean().notNull().default(false),
     createdBy: uuid().references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

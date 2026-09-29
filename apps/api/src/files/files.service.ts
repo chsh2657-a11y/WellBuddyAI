@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { fileObjects } from '@wellbuddy/db';
-import { eq } from 'drizzle-orm';
+import { fileObjects, journalAttachments, journalEntries } from '@wellbuddy/db';
+import { and, eq, inArray } from 'drizzle-orm';
 import { fileTypeFromBuffer } from 'file-type';
 import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
@@ -129,6 +129,25 @@ export class FilesService {
       );
     }
     await this.db.tenant(async (tx) => {
+      // 전기한 전표의 증빙은 감사 추적을 위해 남긴다
+      const [posted] = await tx
+        .select({ id: journalEntries.id })
+        .from(journalAttachments)
+        .innerJoin(journalEntries, eq(journalEntries.id, journalAttachments.entryId))
+        .where(
+          and(
+            eq(journalAttachments.fileId, id),
+            inArray(journalEntries.status, ['posted', 'reversed']),
+          ),
+        )
+        .limit(1);
+      if (posted) {
+        throw new AppException(
+          'FILE_IN_USE',
+          '전기한 전표의 증빙 파일은 삭제할 수 없습니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
       await tx.delete(fileObjects).where(eq(fileObjects.id, id));
       await this.audit.record(
         { action: 'file.delete', entity: 'file', entityId: id, before: { filename: row.filename } },

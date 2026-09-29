@@ -41,3 +41,7 @@ export function TableHead({ className, ...props }: ComponentProps<'th'>) {
 export function TableCell({ className, ...props }: ComponentProps<'td'>) {
   return <td className={cn('px-3 py-2.5 align-middle', className)} {...props} />;
 }
+
+export function TableFooter({ className, ...props }: ComponentProps<'tfoot'>) {
+  return <tfoot className={cn('border-t bg-surface-muted font-medium', className)} {...props} />;
+}

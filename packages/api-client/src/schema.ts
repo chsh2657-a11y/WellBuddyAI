@@ -676,6 +676,246 @@ export interface paths {
     patch: operations['MasterController_updateProject'];
     trace?: never;
   };
+  '/api/fiscal-years': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FiscalYearsController_list'];
+    put?: never;
+    post: operations['FiscalYearsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fiscal-years/{id}/opening-balances': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FiscalYearsController_getOpening'];
+    put: operations['FiscalYearsController_setOpening'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fiscal-years/{id}/carry-forward': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['FiscalYearsController_carryForward'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/accounting-periods/{id}/lock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['FiscalYearsController_lock'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/accounting-periods/{id}/unlock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['FiscalYearsController_unlock'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['JournalsController_list'];
+    put?: never;
+    post: operations['JournalsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['JournalsController_get'];
+    put: operations['JournalsController_update'];
+    post?: never;
+    delete: operations['JournalsController_remove'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/submit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_submit'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_withdraw'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_approve'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_reject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/reverse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_reverse'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/attachments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JournalsController_attach'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/journals/{id}/attachments/{fileId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['JournalsController_detach'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1162,6 +1402,7 @@ export interface operations {
               address: string | null;
               phone: string | null;
               fiscalYearStartMonth: number;
+              journalApprovalRequired: boolean;
             };
             accessToken?: string;
           };
@@ -1195,6 +1436,7 @@ export interface operations {
             address: string | null;
             phone: string | null;
             fiscalYearStartMonth: number;
+            journalApprovalRequired: boolean;
           };
         };
       };
@@ -1225,6 +1467,7 @@ export interface operations {
           address?: string | null;
           phone?: string | null;
           fiscalYearStartMonth?: number;
+          journalApprovalRequired?: boolean;
         };
       };
     };
@@ -1246,6 +1489,7 @@ export interface operations {
             address: string | null;
             phone: string | null;
             fiscalYearStartMonth: number;
+            journalApprovalRequired: boolean;
           };
         };
       };
@@ -3095,6 +3339,1546 @@ export interface operations {
           };
         };
       };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 회계연도(최근부터)와 월별 기간. 없으면 올해를 만든다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            startDate: string;
+            endDate: string;
+            carriedForwardAt: string | null;
+            opening: {
+              /** Format: uuid */
+              entryId: string;
+              totalAmount: number;
+            } | null;
+            periods: {
+              /** Format: uuid */
+              id: string;
+              periodNo: number;
+              startDate: string;
+              endDate: string;
+              isLocked: boolean;
+              lockedAt: string | null;
+              lockedByName: string | null;
+              counts: {
+                draft: number;
+                pending: number;
+                posted: number;
+              };
+            }[];
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 날짜가 속한 회계연도 생성 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            startDate: string;
+            endDate: string;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_getOpening: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            fiscalYearId: string;
+            /** Format: uuid */
+            entryId: string | null;
+            source: string | null;
+            locked: boolean;
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              debit: number;
+              credit: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_setOpening: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          lines: {
+            /** Format: uuid */
+            accountId: string;
+            /** Format: uuid */
+            partnerId?: string | null;
+            /** @default 0 */
+            debit?: number;
+            /** @default 0 */
+            credit?: number;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description 기초잔액 전체 교체 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            fiscalYearId: string;
+            /** Format: uuid */
+            entryId: string | null;
+            source: string | null;
+            locked: boolean;
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              debit: number;
+              credit: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_carryForward: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 다음 연도 기초잔액으로 전기이월 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            nextFiscalYearId: string;
+            lines: number;
+            netIncome: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_lock: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 이 기간까지 마감(이전 열린 기간 포함) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            locked: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiscalYearsController_unlock: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 이 기간부터 마감 해제(대표·관리자) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            unlocked: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_list: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        status?: 'draft' | 'pending' | 'posted' | 'reversed';
+        type?: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+        q?: string;
+        accountId?: string;
+        partnerId?: string;
+        order?: 'asc' | 'desc';
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 전표 목록(줄 포함) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              fiscalYearId: string;
+              entryDate: string;
+              entryNo: number;
+              number: string;
+              /** @enum {string} */
+              type:
+                'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+              description: string | null;
+              source: string;
+              sourceRef: string | null;
+              vat: {
+                /** @enum {string} */
+                vatType: 'taxable' | 'zero_rated' | 'exempt';
+                /** @enum {string} */
+                evidenceType:
+                  'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+                supplyAmount: number;
+                vatAmount: number;
+                deductible: boolean;
+                /** Format: uuid */
+                partnerId: string | null;
+                partnerName: string | null;
+              } | null;
+              totalAmount: number;
+              /** Format: uuid */
+              reversalOfId: string | null;
+              /** Format: uuid */
+              reversedById: string | null;
+              createdByName: string | null;
+              submittedAt: string | null;
+              submittedByName: string | null;
+              rejectionReason: string | null;
+              postedAt: string | null;
+              postedByName: string | null;
+              createdAt: string;
+              updatedAt: string;
+              lines: {
+                /** Format: uuid */
+                id: string;
+                lineNo: number;
+                /** Format: uuid */
+                accountId: string;
+                accountCode: string;
+                accountName: string;
+                debit: number;
+                credit: number;
+                /** Format: uuid */
+                partnerId: string | null;
+                partnerName: string | null;
+                /** Format: uuid */
+                departmentId: string | null;
+                departmentName: string | null;
+                /** Format: uuid */
+                projectId: string | null;
+                projectName: string | null;
+                memo: string | null;
+              }[];
+              attachments: {
+                /** Format: uuid */
+                id: string;
+                filename: string;
+                mimeType: string;
+                sizeBytes: number;
+              }[];
+            }[];
+            total: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          entry: {
+            /** Format: date */
+            entryDate: string;
+            /**
+             * @default general
+             * @enum {string}
+             */
+            type?: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment';
+            description?: string | null;
+            lines: {
+              /** Format: uuid */
+              accountId: string;
+              /** @default 0 */
+              debit?: number;
+              /** @default 0 */
+              credit?: number;
+              /** Format: uuid */
+              partnerId?: string | null;
+              /** Format: uuid */
+              departmentId?: string | null;
+              /** Format: uuid */
+              projectId?: string | null;
+              memo?: string | null;
+            }[];
+            vat?: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              /** @default true */
+              deductible?: boolean;
+              /** Format: uuid */
+              partnerId?: string | null;
+            } | null;
+            attachmentIds?: string[];
+          };
+          /**
+           * @default draft
+           * @enum {string}
+           */
+          status?: 'draft' | 'pending' | 'posted';
+        };
+      };
+    };
+    responses: {
+      /** @description 전표 저장. status 로 바로 승인요청·전기할 수 있다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          entryDate: string;
+          /**
+           * @default general
+           * @enum {string}
+           */
+          type?: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment';
+          description?: string | null;
+          lines: {
+            /** Format: uuid */
+            accountId: string;
+            /** @default 0 */
+            debit?: number;
+            /** @default 0 */
+            credit?: number;
+            /** Format: uuid */
+            partnerId?: string | null;
+            /** Format: uuid */
+            departmentId?: string | null;
+            /** Format: uuid */
+            projectId?: string | null;
+            memo?: string | null;
+          }[];
+          vat?: {
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            /** @enum {string} */
+            evidenceType:
+              'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+            supplyAmount: number;
+            vatAmount: number;
+            /** @default true */
+            deductible?: boolean;
+            /** Format: uuid */
+            partnerId?: string | null;
+          } | null;
+          attachmentIds?: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description 작성중 전표 수정 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_submit: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 승인요청 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_withdraw: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 승인요청 회수 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_approve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 승인(대표·관리자·결재권자) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_reject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 반려(대표·관리자·결재권자) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바로 전기 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_reverse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          entryDate?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 역분개 전표 생성 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_attach: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          fileIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description 증빙 파일 첨부 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fiscalYearId: string;
+            entryDate: string;
+            entryNo: number;
+            number: string;
+            /** @enum {string} */
+            type: 'general' | 'sales' | 'purchase' | 'receipt' | 'payment' | 'opening' | 'closing';
+            /** @enum {string} */
+            status: 'draft' | 'pending' | 'posted' | 'reversed';
+            description: string | null;
+            source: string;
+            sourceRef: string | null;
+            vat: {
+              /** @enum {string} */
+              vatType: 'taxable' | 'zero_rated' | 'exempt';
+              /** @enum {string} */
+              evidenceType:
+                'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'simple_receipt' | 'none';
+              supplyAmount: number;
+              vatAmount: number;
+              deductible: boolean;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+            } | null;
+            totalAmount: number;
+            /** Format: uuid */
+            reversalOfId: string | null;
+            /** Format: uuid */
+            reversedById: string | null;
+            createdByName: string | null;
+            submittedAt: string | null;
+            submittedByName: string | null;
+            rejectionReason: string | null;
+            postedAt: string | null;
+            postedByName: string | null;
+            createdAt: string;
+            updatedAt: string;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              /** Format: uuid */
+              departmentId: string | null;
+              departmentName: string | null;
+              /** Format: uuid */
+              projectId: string | null;
+              projectName: string | null;
+              memo: string | null;
+            }[];
+            attachments: {
+              /** Format: uuid */
+              id: string;
+              filename: string;
+              mimeType: string;
+              sizeBytes: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JournalsController_detach: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
       /** @description 권한 필요: accounting (write) */
       403: {
         headers: {

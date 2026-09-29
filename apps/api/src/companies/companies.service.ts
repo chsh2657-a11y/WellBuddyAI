@@ -1,6 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { businessPlaces, companies, companyMembers, companySettings, users } from '@wellbuddy/db';
+import {
+  businessPlaces,
+  companies,
+  companyMembers,
+  companySettings,
+  fiscalYears,
+  users,
+} from '@wellbuddy/db';
 import type { BusinessPlaceInput, CreateCompanyInput, UpdateCompanyInput } from '@wellbuddy/shared';
 import { and, asc, eq } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
@@ -19,6 +26,7 @@ const companyColumns = {
   address: companies.address,
   phone: companies.phone,
   fiscalYearStartMonth: companies.fiscalYearStartMonth,
+  journalApprovalRequired: companies.journalApprovalRequired,
 };
 
 const placeColumns = {
@@ -91,6 +99,20 @@ export class CompaniesService {
         .select(companyColumns)
         .from(companies)
         .where(eq(companies.id, companyId));
+      if (
+        before &&
+        input.fiscalYearStartMonth !== undefined &&
+        input.fiscalYearStartMonth !== before.fiscalYearStartMonth
+      ) {
+        const [year] = await tx.select({ id: fiscalYears.id }).from(fiscalYears).limit(1);
+        if (year) {
+          throw new AppException(
+            'FISCAL_YEAR_IN_USE',
+            '회계연도가 이미 만들어져 있어 시작 월을 바꿀 수 없습니다.',
+            HttpStatus.CONFLICT,
+          );
+        }
+      }
       const [after] = await tx
         .update(companies)
         .set(input)

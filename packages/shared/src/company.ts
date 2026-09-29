@@ -30,6 +30,8 @@ export const UpdateCompanySchema = CreateCompanySchema.partial().extend({
   address: optionalText(200),
   phone: optionalText(30),
   fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
+  /** 전표를 전기하려면 관리자 승인이 필요한지 */
+  journalApprovalRequired: z.boolean().optional(),
 });
 export type UpdateCompanyInput = z.infer<typeof UpdateCompanySchema>;
 

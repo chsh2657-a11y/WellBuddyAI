@@ -36,6 +36,27 @@
       "when": 1790638283873,
       "tag": "0004_accounting_master",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790638941636,
+      "tag": "0005_journal",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790638942563,
+      "tag": "0006_journal_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790639321440,
+      "tag": "0007_journal_approval",
+      "breakpoints": true
     }
   ]
 }
