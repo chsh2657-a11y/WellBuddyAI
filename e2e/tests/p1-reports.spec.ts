@@ -123,6 +123,7 @@ test('장부·보고서: 시산표 대차 일치, 재무제표, 엑셀·PDF, 거
 
   // ── 거래처원장 → 거래처를 누르면 줄 단위 원장 ──
   await page.getByRole('link', { name: '거래처원장' }).click();
+  await expect(page).toHaveURL(/\/accounting\/reports\/partners/);
   await expect(page.getByRole('row', { name: /한빛상사/ })).toContainText('500,000');
   await page.getByRole('link', { name: '한빛상사' }).click();
   await expect(page).toHaveURL(/\/accounting\/reports\/ledger\?.*partnerId=/);
@@ -131,6 +132,7 @@ test('장부·보고서: 시산표 대차 일치, 재무제표, 엑셀·PDF, 거
 
   // ── 채권 연령분석 ──
   await page.getByRole('link', { name: '채권·채무' }).click();
+  await expect(page).toHaveURL(/\/accounting\/reports\/aging/);
   await expect(page.getByRole('row', { name: /한빛상사/ })).toContainText('500,000');
 
   // ── 대시보드 ──

@@ -71,6 +71,9 @@ test('전표: 키보드로 일반전표 입력, 매입매출전표, 입금 간�
 
   // ── 입금 간편입력: 외상대금 회수 ──
   await page.getByRole('link', { name: '입금·출금' }).click();
+  // 전표입력 화면에도 같은 이름의 칸이 있으므로 간편입력 화면이 뜬 뒤에 입력한다
+  await expect(page).toHaveURL(/\/accounting\/journals\/quick/);
+  await expect(page.getByLabel('1행 금액')).toBeVisible();
   const counter = combo(page, '1행 계정과목');
   await counter.fill('108');
   await counter.press('Enter');
