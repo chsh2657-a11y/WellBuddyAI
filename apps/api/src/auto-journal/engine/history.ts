@@ -2,7 +2,7 @@ import { type EvidenceItem, normalizeName } from './items.js';
 
 /**
  * 과거 이력 열쇠: 사업자번호 → 거래처 → 이름 → 적요 순으로 정확하다.
- * 통장은 거래처 이름이 없으면 적요(급여·임대료 등)로도 찾는다.
+ * 적요는 상대 이름이 없을 때만 쓴다('타행이체'처럼 흔한 적요로 엉뚱한 계정을 배우지 않게).
  */
 export function historyKeys(item: EvidenceItem): string[] {
   const keys: string[] = [];
@@ -11,7 +11,7 @@ export function historyKeys(item: EvidenceItem): string[] {
   const name = item.counterparty ? normalizeName(item.counterparty) : '';
   if (name) keys.push(`name:${name}`);
   const desc = normalizeName(item.description);
-  if (desc && (item.evidenceKind === 'bank' || !name)) keys.push(`desc:${desc}`);
+  if (desc && !name) keys.push(`desc:${desc}`);
   return keys;
 }
 

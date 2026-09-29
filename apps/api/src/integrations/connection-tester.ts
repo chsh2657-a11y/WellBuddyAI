@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { ProviderRegistry } from '@wellbuddy/integrations';
 import { type ConnectionTestResult, getProvider, type IntegrationChannel } from '@wellbuddy/shared';
+import { requireCompanyContext } from '../common/request-context.js';
 
 /**
  * 공급자별 연결 테스트.
- * P0 단계에서는 파일 업로드·모의 데이터·내장 규칙만 실제로 동작하고,
- * 외부 API(CODEF·팝빌·OCR·Claude) 연동은 P2 에서 packages/integrations 의 구현체로 교체한다.
+ * 파일 업로드·모의 데이터·내장 규칙은 바로 준비되고, 외부 API 는 구현체가 있으면(Claude AI 분류 등)
+ * 실제로 호출해 본다. 아직 구현체가 없는 외부 API(CODEF·팝빌·OCR)는 P2-10~18 에서 더한다.
  */
 @Injectable()
 export class ConnectionTester {
+  constructor(private readonly registry: ProviderRegistry) {}
+
   async test(
     channel: IntegrationChannel,
     provider: string,
@@ -32,6 +36,19 @@ export class ConnectionTester {
       case 'builtin':
         return { ok: true, message: '내장 기능이라 외부 연결이 필요 없습니다.' };
       case 'external':
+        if (this.registry.has(channel, provider)) {
+          const { companyId } = requireCompanyContext();
+          try {
+            const impl = this.registry.resolve(
+              channel,
+              { provider, enabled: true, credentials },
+              { companyId, companyName: '', bizNo: null },
+            );
+            return await impl.testConnection();
+          } catch (e) {
+            return { ok: false, message: e instanceof Error ? e.message : String(e) };
+          }
+        }
         return {
           ok: false,
           message: `${def.label} 실연동은 P2 단계에서 제공됩니다. 자격증명은 안전하게 저장되었습니다.`,

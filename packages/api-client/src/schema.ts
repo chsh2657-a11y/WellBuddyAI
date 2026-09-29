@@ -9609,6 +9609,8 @@ export interface operations {
             posted: number;
             review: number;
             failed: number;
+            aiClassified: number;
+            aiError: string | null;
           };
         };
       };

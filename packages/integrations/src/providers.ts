@@ -110,6 +110,11 @@ export interface ClassifySuggestion {
 
 export interface AiClassifier extends Connectable {
   classify(input: ClassifyInput, context: ClassifyContext): Promise<ClassifySuggestion>;
+  /** 여러 거래를 한 번에(결과는 입력 순서, 못 고르면 null) */
+  classifyMany(
+    inputs: ClassifyInput[],
+    context: ClassifyContext,
+  ): Promise<(ClassifySuggestion | null)[]>;
 }
 
 export interface ChannelProviders {

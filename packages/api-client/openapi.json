@@ -20614,6 +20614,15 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "aiClassified": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "aiError": {
+                      "nullable": true,
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -20621,7 +20630,9 @@
                     "matched",
                     "posted",
                     "review",
-                    "failed"
+                    "failed",
+                    "aiClassified",
+                    "aiError"
                   ],
                   "additionalProperties": false
                 }

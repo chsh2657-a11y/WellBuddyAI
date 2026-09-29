@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { createProviderRegistry, ProviderRegistry } from '@wellbuddy/integrations';
 import { IntegrationsModule } from '../integrations/integrations.module.js';
 import { CollectionService } from './collection.service.js';
 import { EvidenceStore } from './evidence-store.service.js';
@@ -13,14 +12,7 @@ import { UploadService } from './upload.service.js';
 @Module({
   imports: [IntegrationsModule],
   controllers: [SourcesController, EvidenceController],
-  providers: [
-    SourcesService,
-    EvidenceStore,
-    EvidenceService,
-    UploadService,
-    CollectionService,
-    { provide: ProviderRegistry, useFactory: createProviderRegistry },
-  ],
+  providers: [SourcesService, EvidenceStore, EvidenceService, UploadService, CollectionService],
   exports: [SourcesService, EvidenceStore, EvidenceService],
 })
 export class EvidenceModule {}

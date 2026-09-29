@@ -1,3 +1,4 @@
+import { ClaudeClassifier } from '../ai/claude.js';
 import { ProviderRegistry } from '../registry.js';
 import { MockBankProvider } from './bank.js';
 import { MockCardProvider } from './card.js';
@@ -14,7 +15,14 @@ export function registerMockProviders(registry: ProviderRegistry): ProviderRegis
     .register('hometax', 'mock', (_, ctx) => new MockHometaxProvider(ctx));
 }
 
-/** 수집 공급자 레지스트리. 실연동(CODEF·팝빌)은 P2-10~13 에서 여기에 더한다 */
+/**
+ * 공급자 레지스트리: 모의 공급자와 AI 분류(Claude).
+ * 실연동(CODEF·팝빌)·OCR 은 P2-10~18 에서 여기에 더한다.
+ */
 export function createProviderRegistry(): ProviderRegistry {
-  return registerMockProviders(new ProviderRegistry());
+  return registerMockProviders(new ProviderRegistry()).register(
+    'ai',
+    'claude',
+    (credentials) => new ClaudeClassifier({ apiKey: credentials.apiKey ?? '' }),
+  );
 }

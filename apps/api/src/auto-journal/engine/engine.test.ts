@@ -105,7 +105,7 @@ describe('과거 이력', () => {
   it('사업자번호 → 거래처 → 이름 → 적요 순서', () => {
     expect(
       historyKeys(item({ bizNo: '1234567890', partnerId: 'p1', evidenceKind: 'bank' })),
-    ).toEqual(['biz:1234567890', 'partner:p1', 'name:스타벅스역삼점', 'desc:스타벅스역삼점']);
+    ).toEqual(['biz:1234567890', 'partner:p1', 'name:스타벅스역삼점']);
     expect(historyKeys(item())).toEqual(['name:스타벅스역삼점']);
     expect(
       historyKeys(item({ counterparty: null, evidenceKind: 'bank', description: '급여' })),

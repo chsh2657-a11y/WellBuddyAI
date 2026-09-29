@@ -1,7 +1,13 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { addDays, todayInKorea } from '@wellbuddy/accounting-core';
 import { truncateAll } from '@wellbuddy/db/testing';
-import { bizNo } from '@wellbuddy/integrations';
+import {
+  type AiClassifier,
+  bizNo,
+  type ClassifyInput,
+  ClaudeClassifier,
+  ProviderRegistry,
+} from '@wellbuddy/integrations';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, inviteAndJoin, ownerWithCompany } from './helpers.js';
 
@@ -205,7 +211,15 @@ describe('자동분개: 매칭·분류·검토함·승인·학습·규칙·자�
     });
     await employee.post('/api/auto-journal/run').expect(403);
     const summary = (await owner.post('/api/auto-journal/run').expect(200)).body;
-    expect(summary).toEqual({ total: 8, matched: 2, posted: 0, review: 6, failed: 0 });
+    expect(summary).toEqual({
+      total: 8,
+      matched: 2,
+      posted: 0,
+      review: 6,
+      failed: 0,
+      aiClassified: 0,
+      aiError: null,
+    });
 
     const cards = (await owner.get('/api/evidence/card-transactions').expect(200)).body as {
       merchantName: string;
@@ -549,5 +563,79 @@ describe('자동분개: 매칭·분류·검토함·승인·학습·규칙·자�
       status: 'review',
       partnerName: null,
     });
+  });
+  it('AI 분류: 규칙·이력이 없는 거래만 AI 에 묻고, 기준 이상이면 자동 전기, AI 가 실패해도 실행은 끝난다', async () => {
+    await upload(
+      'bank',
+      csv([
+        BANK_HEADER,
+        [`${d(1)} 15:00:00`, '타행이체', '낯선상호', '', '"88,000"', '0', '"6,492,000"', '강남'],
+      ]),
+      'bank3.csv',
+      { sourceId: bankId },
+    );
+    const sent: ClassifyInput[][] = [];
+    let fail = false;
+    const fake: AiClassifier = {
+      testConnection: async () => ({ ok: true, message: 'Claude 연결 확인' }),
+      classify: async () => {
+        throw new Error('not used');
+      },
+      classifyMany: async (inputs) => {
+        sent.push(inputs);
+        if (fail) throw new Error('rate limited');
+        return inputs.map((i) =>
+          i.counterparty === '낯선상호'
+            ? {
+                accountCode: '831',
+                vatType: 'none' as const,
+                confidence: 0.95,
+                reason: '수수료로 보입니다',
+              }
+            : null,
+        );
+      },
+    };
+    const registry = app.get(ProviderRegistry);
+    registry.register('ai', 'claude', () => fake);
+    await owner
+      .put('/api/integrations/ai')
+      .send({ enabled: true, provider: 'claude', credentials: { apiKey: 'sk-test' } })
+      .expect(200);
+    try {
+      // 연동관리의 연결 테스트는 구현체를 실제로 불러 본다
+      expect((await owner.post('/api/integrations/ai/test').expect(200)).body).toEqual({
+        ok: true,
+        message: 'Claude 연결 확인',
+      });
+      const summary = (await owner.post('/api/auto-journal/run').expect(200)).body;
+      expect(summary).toMatchObject({ aiClassified: 1, aiError: null });
+      const asked = sent.flat();
+      expect(asked.some((i) => i.counterparty === '낯선상호' && i.amount === -88_000)).toBe(true);
+      // 과거 이력(임대료)·회사 규칙(미지의거래처, 작년자재)은 AI 에 보내지 않는다
+      expect(asked.map((i) => i.description)).not.toContain('임대료');
+      expect(asked.map((i) => i.counterparty)).not.toContain('미지의거래처');
+      expect(asked.map((i) => i.description)).not.toContain('작년자재');
+
+      const bank = (await owner.get('/api/evidence/bank-transactions').expect(200)).body;
+      const stranger = bank.find((t: { counterparty: string }) => t.counterparty === '낯선상호');
+      expect(stranger.status).toBe('posted');
+      const entry = await journal(stranger.entryId);
+      expect(lineCodes(entry)).toEqual([
+        ['831', 88_000, 0],
+        ['103', 0, 88_000],
+      ]);
+
+      fail = true;
+      const failed = (await owner.post('/api/auto-journal/run').expect(200)).body;
+      expect(failed).toMatchObject({ aiClassified: 0, aiError: 'rate limited' });
+      expect(find(await review(), '제품').method).toBe('default');
+    } finally {
+      registry.register('ai', 'claude', (c) => new ClaudeClassifier({ apiKey: c.apiKey ?? '' }));
+      await owner
+        .put('/api/integrations/ai')
+        .send({ enabled: false, provider: 'rules' })
+        .expect(200);
+    }
   });
 });

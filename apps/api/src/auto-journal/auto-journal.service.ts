@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { STATEMENT_GROUPS } from '@wellbuddy/accounting-core';
 import {
   accounts,
   autoJournalMemory,
@@ -25,6 +26,12 @@ import {
   type SuggestionUpdateInput,
   type UploadKind,
 } from '@wellbuddy/shared';
+import {
+  type AiClassifier,
+  type ClassifyInput,
+  type ClassifySuggestion,
+  ProviderRegistry,
+} from '@wellbuddy/integrations';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { JournalsService } from '../accounting/journals.service.js';
 import { PartnersService } from '../accounting/partners.service.js';
@@ -32,6 +39,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
+import { IntegrationsService } from '../integrations/integrations.service.js';
 import { defaultSuggestion } from './engine/defaults.js';
 import { historyKeys, type MemoryRow, recommendFromHistory } from './engine/history.js';
 import { entryDescription } from './engine/items.js';
@@ -60,6 +68,22 @@ const ENTRY_LABEL: Record<AutoJournalKind, string> = {
 };
 
 const DEFAULT_SETTINGS: AutoJournalSettings = { autoPost: false, threshold: 0.9 };
+/** 한 번에 AI 에 보내는 거래 수 */
+const AI_BATCH = 50;
+
+/** AI 에 보내는 거래: 들어온 돈은 +, 나간 돈은 − */
+function classifyInput(item: LoadedItem): ClassifyInput {
+  const inflow = ['bank_in', 'tax_sales', 'cash_sales'].includes(item.kind);
+  const sign = (inflow ? 1 : -1) * (item.reversal ? -1 : 1);
+  return {
+    kind: item.evidenceKind,
+    date: item.date,
+    description: item.description,
+    counterparty: item.counterparty === item.description ? null : item.counterparty,
+    amount: sign * item.amount,
+    vatAmount: item.vat,
+  };
+}
 
 export interface Suggestion {
   accountId: string | null;
@@ -82,6 +106,7 @@ interface AccountInfo {
   name: string;
   isActive: boolean;
   requiresPartner: boolean;
+  category: string;
 }
 
 interface Context {
@@ -109,6 +134,8 @@ export class AutoJournalService {
     private readonly journals: JournalsService,
     private readonly partnersService: PartnersService,
     private readonly audit: AuditService,
+    private readonly integrations: IntegrationsService,
+    private readonly registry: ProviderRegistry,
   ) {}
 
   // ── 설정 ───────────────────────────────────────────
@@ -151,15 +178,18 @@ export class AutoJournalService {
 
   private async context(tx: Transaction): Promise<Context> {
     const { role } = requireCompanyContext();
-    const accountRows = await tx
-      .select({
-        id: accounts.id,
-        code: accounts.code,
-        name: accounts.name,
-        isActive: accounts.isActive,
-        requiresPartner: accounts.requiresPartner,
-      })
-      .from(accounts);
+    const accountRows = (
+      await tx
+        .select({
+          id: accounts.id,
+          code: accounts.code,
+          name: accounts.name,
+          isActive: accounts.isActive,
+          requiresPartner: accounts.requiresPartner,
+          group: accounts.group,
+        })
+        .from(accounts)
+    ).map(({ group, ...a }) => ({ ...a, category: STATEMENT_GROUPS[group].category }));
     const rules = await tx
       .select()
       .from(autoJournalRules)
@@ -507,27 +537,134 @@ export class AutoJournalService {
 
   // ── 실행·검토·승인 ────────────────────────────────
 
-  /** 분개 전 증빙(검토함에 있는 것 포함)을 매칭·분류하고, 기준 이상이면 자동 전기한다 */
+  /** 연동관리에서 AI 분류(Claude)를 켰으면 분류기를 만든다 */
+  private async aiClassifier(): Promise<{ ai: AiClassifier | null; error: string | null }> {
+    const setting = await this.integrations.providerSetting('ai');
+    if (!setting.enabled || !this.registry.has('ai', setting.provider)) {
+      return { ai: null, error: null };
+    }
+    const { companyId } = requireCompanyContext();
+    try {
+      const ai = this.registry.resolve('ai', setting, { companyId, companyName: '', bizNo: null });
+      return { ai, error: null };
+    } catch (e) {
+      return { ai: null, error: message(e) };
+    }
+  }
+
+  /**
+   * 분개 전 증빙(검토함에 있는 것 포함)을 매칭·분류하고, 기준 이상이면 자동 전기한다.
+   *  ① 매칭·분류(트랜잭션) → ② 규칙·이력이 없는 거래만 AI 분류(트랜잭션 밖, 실패해도 계속)
+   *  → ③ 자동 전기 또는 검토함(트랜잭션)
+   */
   async run() {
-    return this.db.tenant(async (tx) => {
+    const { ai, error: aiSetupError } = await this.aiClassifier();
+    const plan = await this.db.tenant(async (tx) => {
       const ctx = await this.context(tx);
       const items = await loadItems(tx, { statuses: ['pending', 'review'] });
       const matched = await this.match(tx, items);
       const existing = await this.suggestionsFor(tx, items);
-      const summary = {
+      const planned = items
+        .filter((item) => !matched.has(refKey(item)))
+        .map((item) => {
+          const prev = existing.get(refKey(item));
+          const s: Suggestion = prev?.edited ? { ...prev, error: null } : this.classify(item, ctx);
+          return { item, s, edited: !!prev?.edited };
+        });
+      const examples = [...ctx.memory.values()]
+        .flat()
+        .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime())
+        .flatMap((m) => {
+          const code = ctx.accountById.get(m.accountId)?.code;
+          return code
+            ? [
+                {
+                  description: m.key.slice(m.key.indexOf(':') + 1),
+                  counterparty: null,
+                  accountCode: code,
+                },
+              ]
+            : [];
+        })
+        .slice(0, 30);
+      const accountsForAi = [...ctx.accountById.values()]
+        .filter((a) => a.isActive)
+        .map((a) => ({ code: a.code, name: a.name, category: a.category }));
+      const accountIdByCode = new Map(
+        [...ctx.accountById.values()].filter((a) => a.isActive).map((a) => [a.code, a.id]),
+      );
+      return {
+        planned,
         total: items.length,
         matched: matched.size,
+        examples,
+        accountsForAi,
+        accountIdByCode,
+      };
+    });
+
+    let aiClassified = 0;
+    let aiError = aiSetupError;
+    if (ai) {
+      const candidates = plan.planned.filter(
+        (p) => !p.edited && (p.s.method === 'none' || p.s.method === 'default'),
+      );
+      try {
+        const results: (ClassifySuggestion | null)[] = [];
+        for (let i = 0; i < candidates.length; i += AI_BATCH) {
+          const chunk = candidates.slice(i, i + AI_BATCH);
+          results.push(
+            ...(await ai.classifyMany(
+              chunk.map((p) => classifyInput(p.item)),
+              { accounts: plan.accountsForAi, examples: plan.examples },
+            )),
+          );
+        }
+        candidates.forEach((p, i) => {
+          const r = results[i];
+          const accountId = r ? plan.accountIdByCode.get(r.accountCode) : undefined;
+          if (!r || !accountId || (p.s.accountId && r.confidence <= p.s.confidence)) return;
+          p.s = {
+            ...p.s,
+            accountId,
+            deductible: r.vatType === 'non_deductible' ? false : p.s.deductible,
+            confidence: r.confidence,
+            method: 'ai',
+            reason: `AI: ${r.reason}`,
+          };
+          aiClassified++;
+        });
+      } catch (e) {
+        aiError = message(e);
+      }
+    }
+
+    return this.db.tenant(async (tx) => {
+      const ctx = await this.context(tx);
+      // ①과 ③ 사이에 다른 사람이 처리한 증빙은 건너뛴다
+      const current = new Map(
+        (
+          await loadItems(tx, {
+            refs: plan.planned.map((p) => p.item),
+            statuses: ['pending', 'review'],
+          })
+        ).map((i) => [refKey(i), i]),
+      );
+      const summary = {
+        total: plan.total,
+        matched: plan.matched,
         posted: 0,
         review: 0,
         failed: 0,
+        aiClassified,
+        aiError,
       };
       const ruleHits = new Map<string, number>();
-
-      for (const item of items) {
-        if (matched.has(refKey(item))) continue;
-        const prev = existing.get(refKey(item));
-        const s = prev?.edited ? { ...prev, error: null } : this.classify(item, ctx);
-        if (s.ruleId && !prev?.edited) ruleHits.set(s.ruleId, (ruleHits.get(s.ruleId) ?? 0) + 1);
+      for (const planned of plan.planned) {
+        const item = current.get(refKey(planned.item));
+        if (!item) continue;
+        const s = planned.s;
+        if (s.ruleId && !planned.edited) ruleHits.set(s.ruleId, (ruleHits.get(s.ruleId) ?? 0) + 1);
         const auto =
           ctx.settings.autoPost && !!s.accountId && s.confidence >= ctx.settings.threshold;
         if (auto) {

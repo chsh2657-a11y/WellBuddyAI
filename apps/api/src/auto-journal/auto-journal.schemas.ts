@@ -45,6 +45,10 @@ export const RunSummarySchema = z.object({
   posted: int,
   review: int,
   failed: int,
+  /** AI 가 추천한 거래 수 */
+  aiClassified: int,
+  /** AI 분류를 못 했으면 이유(나머지는 규칙·이력·기본 추천대로) */
+  aiError: nullableString,
 });
 
 const RefSchema = z.object({ evidenceKind: z.enum(UPLOAD_KINDS), evidenceId: z.uuid() });

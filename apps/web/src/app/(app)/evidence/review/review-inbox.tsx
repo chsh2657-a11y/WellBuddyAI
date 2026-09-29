@@ -70,6 +70,8 @@ interface RunSummary {
   posted: number;
   review: number;
   failed: number;
+  aiClassified: number;
+  aiError: string | null;
 }
 
 interface ApproveResult {
@@ -123,9 +125,10 @@ export function ReviewInbox() {
     onSuccess: (s) => {
       toast.success(
         `자동분개: 매칭 ${s.matched}건, 자동 전기 ${s.posted}건, 검토 ${s.review}건${
-          s.failed ? ` (전기 실패 ${s.failed}건)` : ''
-        }`,
+          s.aiClassified ? `, AI 추천 ${s.aiClassified}건` : ''
+        }${s.failed ? ` (전기 실패 ${s.failed}건)` : ''}`,
       );
+      if (s.aiError) toast.warning(`AI 분류를 하지 못했습니다: ${s.aiError}`);
       refresh();
     },
     onError,
