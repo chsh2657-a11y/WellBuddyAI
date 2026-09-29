@@ -6,6 +6,8 @@ test.describe.configure({ mode: 'serial' });
 test('회계 기초정보: 표준 계정과목 확인, 거래처·부서 등록', async ({ page }) => {
   await signupWithCompany(page, 'p1', '회계상사');
   await page.getByRole('link', { name: '회계' }).click();
+  await expect(page).toHaveURL(/\/accounting\/journals\/new/);
+  await page.getByRole('link', { name: '계정과목' }).click();
   await expect(page).toHaveURL(/\/accounting\/accounts/);
   await expect(page.getByRole('cell', { name: '외상매출금', exact: true })).toBeVisible();
   await page.getByLabel('계정 검색').fill('복리');

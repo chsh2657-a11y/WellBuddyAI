@@ -43,21 +43,6 @@ export const JOURNAL_STATUS_LABELS: Record<JournalStatus, string> = {
 /** 장부·보고서에 반영되는 상태 */
 export const LEDGER_STATUSES = ['posted', 'reversed'] as const satisfies readonly JournalStatus[];
 
-export const VAT_TYPE_LABELS = {
-  taxable: '과세',
-  zero_rated: '영세',
-  exempt: '면세',
-} as const;
-
-export const EVIDENCE_TYPE_LABELS = {
-  tax_invoice: '세금계산서',
-  invoice: '계산서',
-  card: '신용카드',
-  cash_receipt: '현금영수증',
-  simple_receipt: '간이영수증',
-  none: '증빙없음',
-} as const;
-
 /** 전표번호 표시: 2026-09-28-3 (기초잔액 전표는 "기초") */
 export function formatJournalNo(entryDate: string, entryNo: number): string {
   return entryNo === 0 ? `${entryDate} 기초` : `${entryDate}-${entryNo}`;

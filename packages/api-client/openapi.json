@@ -763,12 +763,16 @@
                         },
                         "bizRegNo": {
                           "type": "string"
+                        },
+                        "journalApprovalRequired": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "id",
                         "name",
-                        "bizRegNo"
+                        "bizRegNo",
+                        "journalApprovalRequired"
                       ],
                       "additionalProperties": false
                     },
@@ -920,12 +924,16 @@
                         },
                         "bizRegNo": {
                           "type": "string"
+                        },
+                        "journalApprovalRequired": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "id",
                         "name",
-                        "bizRegNo"
+                        "bizRegNo",
+                        "journalApprovalRequired"
                       ],
                       "additionalProperties": false
                     },

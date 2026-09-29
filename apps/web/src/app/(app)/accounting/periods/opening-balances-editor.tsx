@@ -77,7 +77,7 @@ export function OpeningBalancesEditor({
     queryFn: () => apiFetch<Account[]>('/accounts?includeInactive=false'),
   });
   const partners = useQuery({
-    queryKey: ['partners', '', ''],
+    queryKey: ['partners', 'active'],
     queryFn: () => apiFetch<Partner[]>('/partners'),
   });
   const bsAccounts = useMemo(

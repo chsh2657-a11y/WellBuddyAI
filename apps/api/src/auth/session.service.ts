@@ -53,7 +53,12 @@ export class SessionService {
     const [company, settings] = await this.db.as({ userId, companyId }, async (tx) => [
       (
         await tx
-          .select({ id: companies.id, name: companies.name, bizRegNo: companies.bizRegNo })
+          .select({
+            id: companies.id,
+            name: companies.name,
+            bizRegNo: companies.bizRegNo,
+            journalApprovalRequired: companies.journalApprovalRequired,
+          })
           .from(companies)
           .where(eq(companies.id, companyId))
       )[0],

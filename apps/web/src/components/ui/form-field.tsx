@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { Label } from './label';
 
 /** 라벨 + 입력 + 오류/도움말을 한 묶음으로 배치한다. */
@@ -7,16 +8,18 @@ export function FormField({
   label,
   error,
   hint,
+  className,
   children,
 }: {
   id: string;
   label: string;
   error?: string;
   hint?: string;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-1.5">
+    <div className={cn('grid content-start gap-1.5', className)}>
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error ? (

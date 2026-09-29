@@ -1287,6 +1287,7 @@ export interface operations {
               id: string;
               name: string;
               bizRegNo: string;
+              journalApprovalRequired: boolean;
             } | null;
             /** @enum {string|null} */
             role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee' | null;
@@ -1342,6 +1343,7 @@ export interface operations {
               id: string;
               name: string;
               bizRegNo: string;
+              journalApprovalRequired: boolean;
             } | null;
             /** @enum {string|null} */
             role: 'owner' | 'admin' | 'accountant' | 'approver' | 'employee' | null;

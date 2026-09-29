@@ -37,7 +37,15 @@ export type PermissionLevel = z.infer<typeof PermissionLevelSchema>;
 /** 로그인한 사용자의 현재 세션(GET /auth/me) */
 export const SessionSchema = z.object({
   user: z.object({ id: z.uuid(), email: z.string(), name: z.string() }),
-  company: z.object({ id: z.uuid(), name: z.string(), bizRegNo: z.string() }).nullable(),
+  company: z
+    .object({
+      id: z.uuid(),
+      name: z.string(),
+      bizRegNo: z.string(),
+      /** 전표 승인 사용(켜면 대표·관리자 외에는 승인요청 후 승인받아 전기) */
+      journalApprovalRequired: z.boolean(),
+    })
+    .nullable(),
   role: z.enum(ROLES).nullable(),
   companies: z.array(z.object({ id: z.uuid(), name: z.string(), role: z.enum(ROLES) })),
   permissions: z.record(z.string(), PermissionLevelSchema),
