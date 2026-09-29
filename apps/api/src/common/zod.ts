@@ -112,3 +112,8 @@ export class ZodSerializerInterceptor implements NestInterceptor {
 export function UuidParam(name: string): ParameterDecorator {
   return Param(name, new ZodValidationPipe(z.uuid({ error: '잘못된 ID 형식입니다.' })));
 }
+
+/** 경로 파라미터를 임의 zod 스키마로 검증(예: YYYY-MM 월) */
+export function ZodParam(name: string, schema: z.ZodType): ParameterDecorator {
+  return Param(name, new ZodValidationPipe(schema));
+}

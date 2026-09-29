@@ -3,6 +3,8 @@ import { AccountsService } from './accounts.service.js';
 import { DimensionsService } from './dimensions.service.js';
 import { FiscalYearsController } from './fiscal-years.controller.js';
 import { FiscalYearsService } from './fiscal-years.service.js';
+import { FixedAssetsController } from './fixed-assets.controller.js';
+import { FixedAssetsService } from './fixed-assets.service.js';
 import { JournalsController } from './journals.controller.js';
 import { JournalsService } from './journals.service.js';
 import { MasterController } from './master.controller.js';
@@ -12,7 +14,13 @@ import { ReportsController } from './reports.controller.js';
 import { ReportsService } from './reports.service.js';
 
 @Module({
-  controllers: [MasterController, FiscalYearsController, JournalsController, ReportsController],
+  controllers: [
+    MasterController,
+    FiscalYearsController,
+    JournalsController,
+    ReportsController,
+    FixedAssetsController,
+  ],
   providers: [
     AccountsService,
     PartnersService,
@@ -21,6 +29,7 @@ import { ReportsService } from './reports.service.js';
     FiscalYearsService,
     JournalsService,
     ReportsService,
+    FixedAssetsService,
   ],
   exports: [
     AccountsService,

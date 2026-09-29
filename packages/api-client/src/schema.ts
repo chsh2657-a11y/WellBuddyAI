@@ -1076,6 +1076,102 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/fixed-assets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FixedAssetsController_list'];
+    put?: never;
+    post: operations['FixedAssetsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fixed-assets/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['FixedAssetsController_remove'];
+    options?: never;
+    head?: never;
+    patch: operations['FixedAssetsController_update'];
+    trace?: never;
+  };
+  '/api/fixed-assets/{id}/schedule': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FixedAssetsController_schedule'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fixed-assets/{id}/dispose': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['FixedAssetsController_dispose'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/depreciation-runs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FixedAssetsController_listRuns'];
+    put?: never;
+    post: operations['FixedAssetsController_run'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/depreciation-runs/{month}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['FixedAssetsController_cancelRun'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5737,6 +5833,444 @@ export interface operations {
     };
     responses: {
       /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 고정자산 대장(코드순) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** Format: uuid */
+            assetAccountId: string;
+            assetAccountName: string;
+            /** Format: uuid */
+            accumulatedAccountId: string;
+            /** Format: uuid */
+            expenseAccountId: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            departmentName: string | null;
+            acquisitionDate: string;
+            cost: number;
+            residualValue: number;
+            usefulLifeYears: number;
+            /** @enum {string} */
+            method: 'straight_line' | 'declining_balance';
+            priorAccumulated: number;
+            accumulated: number;
+            bookValue: number;
+            locked: boolean;
+            disposedOn: string | null;
+            disposalProceeds: number | null;
+            /** Format: uuid */
+            disposalEntryId: string | null;
+            memo: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name: string;
+          /** Format: uuid */
+          assetAccountId: string;
+          /** Format: uuid */
+          accumulatedAccountId: string;
+          /** Format: uuid */
+          expenseAccountId: string;
+          /** Format: uuid */
+          departmentId?: string | null;
+          /** Format: date */
+          acquisitionDate: string;
+          cost: number;
+          /** @default 0 */
+          residualValue?: number;
+          usefulLifeYears: number;
+          /** @enum {string} */
+          method: 'straight_line' | 'declining_balance';
+          /** @default 0 */
+          priorAccumulated?: number;
+          memo?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** Format: uuid */
+            assetAccountId: string;
+            assetAccountName: string;
+            /** Format: uuid */
+            accumulatedAccountId: string;
+            /** Format: uuid */
+            expenseAccountId: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            departmentName: string | null;
+            acquisitionDate: string;
+            cost: number;
+            residualValue: number;
+            usefulLifeYears: number;
+            /** @enum {string} */
+            method: 'straight_line' | 'declining_balance';
+            priorAccumulated: number;
+            accumulated: number;
+            bookValue: number;
+            locked: boolean;
+            disposedOn: string | null;
+            disposalProceeds: number | null;
+            /** Format: uuid */
+            disposalEntryId: string | null;
+            memo: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name?: string;
+          /** Format: uuid */
+          departmentId?: string | null;
+          memo?: string | null;
+          /** Format: date */
+          acquisitionDate?: string;
+          cost?: number;
+          residualValue?: number;
+          usefulLifeYears?: number;
+          /** @enum {string} */
+          method?: 'straight_line' | 'declining_balance';
+          priorAccumulated?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description 상각 전표가 생긴 뒤에는 이름·부서·메모만 바꿀 수 있다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** Format: uuid */
+            assetAccountId: string;
+            assetAccountName: string;
+            /** Format: uuid */
+            accumulatedAccountId: string;
+            /** Format: uuid */
+            expenseAccountId: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            departmentName: string | null;
+            acquisitionDate: string;
+            cost: number;
+            residualValue: number;
+            usefulLifeYears: number;
+            /** @enum {string} */
+            method: 'straight_line' | 'declining_balance';
+            priorAccumulated: number;
+            accumulated: number;
+            bookValue: number;
+            locked: boolean;
+            disposedOn: string | null;
+            disposalProceeds: number | null;
+            /** Format: uuid */
+            disposalEntryId: string | null;
+            memo: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_schedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 내용연수 전체 월별 상각 일정과 반영액 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            amount: number;
+            accumulated: number;
+            bookValue: number;
+            booked: number | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_dispose: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          disposedOn: string;
+          /** @default 0 */
+          proceeds?: number;
+          /** Format: uuid */
+          proceedsAccountId?: string | null;
+          /** Format: uuid */
+          partnerId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 매각·폐기 처분 전표(처분손익 자동 계산) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** Format: uuid */
+            assetAccountId: string;
+            assetAccountName: string;
+            /** Format: uuid */
+            accumulatedAccountId: string;
+            /** Format: uuid */
+            expenseAccountId: string;
+            /** Format: uuid */
+            departmentId: string | null;
+            departmentName: string | null;
+            acquisitionDate: string;
+            cost: number;
+            residualValue: number;
+            usefulLifeYears: number;
+            /** @enum {string} */
+            method: 'straight_line' | 'declining_balance';
+            priorAccumulated: number;
+            accumulated: number;
+            bookValue: number;
+            locked: boolean;
+            disposedOn: string | null;
+            disposalProceeds: number | null;
+            /** Format: uuid */
+            disposalEntryId: string | null;
+            memo: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_listRuns: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 월 감가상각 실행 이력(최근 달부터) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            month: string;
+            totalAmount: number;
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_run: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          month: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 그 달의 감가상각 전표를 전기한다(달마다 한 번, 달 순서대로) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            totalAmount: number;
+            assets: number;
+            /** Format: uuid */
+            entryId: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FixedAssetsController_cancelRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        month: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
       403: {
         headers: {
           [name: string]: unknown;

@@ -5,6 +5,8 @@ import {
   STATEMENT_GROUPS,
   SYSTEM_ACCOUNTS,
 } from './chart-of-accounts.js';
+import { depreciationSchedule, disposalProfit } from './depreciation.js';
+import { type FxSide, revaluationLines, settlementLines } from './fx.js';
 import { reverseLines, validateJournal } from './journal.js';
 import { type BalanceRow, carryForwardLines } from './periods.js';
 import { type AccountTotals, balanceSheet, incomeStatement, trialBalance } from './statements.js';
@@ -89,6 +91,48 @@ function generate(seed: number, count: number): Line[][] {
         paymentLines(amount(), pick(counterCodes), pick(['101', '103'])),
         pick(PARTNERS),
       );
+    } else if (kind < 0.74) {
+      // 기말 외화평가(외화예금·외화채권·외화채무)
+      const [code, side] = pick<[string, FxSide]>([
+        ['103', 'asset'],
+        ['108', 'asset'],
+        ['251', 'liability'],
+      ]);
+      const adjustment = (r() < 0.5 ? -1 : 1) * amount(300_000);
+      lines = toLines(revaluationLines(code, side, adjustment), pick(PARTNERS));
+    } else if (kind < 0.78) {
+      // 외화 채권 회수·채무 상환(외환차익·차손)
+      const side = pick<FxSide>(['asset', 'liability']);
+      lines = toLines(
+        settlementLines({
+          side,
+          accountCode: side === 'asset' ? '108' : '251',
+          bookKrw: amount(),
+          settledKrw: amount(),
+        }),
+        pick(PARTNERS),
+      );
+    } else if (kind < 0.82) {
+      // 월 감가상각 + 처분: (차) 누계액·대금·처분손실 / (대) 자산·처분이익
+      const cost = 1_001 + amount(20_000_000);
+      const schedule = depreciationSchedule({
+        method: pick(['straight_line', 'declining_balance'] as const),
+        cost,
+        usefulLifeYears: 1 + Math.floor(r() * 10),
+        acquisitionDate: '2026-01-01',
+      });
+      const accumulated = schedule[Math.floor(r() * schedule.length)]!.accumulated;
+      const proceeds = r() < 0.3 ? 0 : amount(cost);
+      const profit = disposalProfit(cost, accumulated, proceeds);
+      lines = [
+        { accountCode: '818', debit: accumulated, credit: 0, partnerId: null },
+        { accountCode: '213', debit: 0, credit: accumulated, partnerId: null },
+        { accountCode: '213', debit: accumulated, credit: 0, partnerId: null },
+        { accountCode: '103', debit: proceeds, credit: 0, partnerId: null },
+        { accountCode: '970', debit: profit < 0 ? -profit : 0, credit: 0, partnerId: null },
+        { accountCode: '212', debit: 0, credit: cost, partnerId: null },
+        { accountCode: '914', debit: 0, credit: profit > 0 ? profit : 0, partnerId: null },
+      ].filter((l) => l.debit > 0 || l.credit > 0);
     } else if (kind < 0.9 || entries.length === 0) {
       // 여러 줄 대체전표: 마지막 줄로 차대를 맞춘다(차감 계정·매출할인 포함 아무 계정)
       const n = 2 + Math.floor(r() * 4);

@@ -65,6 +65,9 @@ const submittedByUser = alias(users, 'submitted_by_user');
 const postedByUser = alias(users, 'posted_by_user');
 const vatPartner = alias(partners, 'vat_partner');
 
+/** 다른 모듈이 만든 자동 전표(그 모듈에서만 취소한다) */
+export const SYSTEM_SOURCES = new Set(['depreciation', 'asset_disposal', 'fx_revaluation', 'note']);
+
 const STATUS_LABEL: Record<JournalStatus, string> = {
   draft: '작성중',
   pending: '승인요청',
@@ -244,37 +247,49 @@ export class JournalsService {
   // ── 작성·수정·삭제 ───────────────────────────────────
 
   async create(input: JournalCreateInput) {
+    const id = await this.db.tenant((tx) => this.createIn(tx, input));
+    return this.get(id);
+  }
+
+  /**
+   * 트랜잭션 안에서 전표를 만든다. 고정자산 상각·외화평가·어음처럼 다른 모듈이 만드는
+   * 자동 전표도 이 경로를 써서 같은 검증(차대·계정·마감·승인)을 거친다.
+   */
+  async createIn(
+    tx: Transaction,
+    input: JournalCreateInput,
+    origin: { source?: string; sourceRef?: string | null } = {},
+  ): Promise<string> {
     const { companyId, userId } = requireCompanyContext();
     const { entry, status } = input;
-    const id = await this.db.tenant(async (tx) => {
-      const year = await this.fiscal.ensureFor(tx, entry.entryDate);
-      await this.fiscal.assertOpen(tx, entry.entryDate);
-      const lines = await this.validate(tx, entry);
-      const [row] = await tx
-        .insert(journalEntries)
-        .values({
-          companyId,
-          fiscalYearId: year.id,
-          entryDate: entry.entryDate,
-          entryNo: await this.nextNo(tx, entry.entryDate),
-          type: entry.type,
-          status: 'draft',
-          ...this.header(entry),
-          createdBy: userId,
-          updatedBy: userId,
-        })
-        .returning();
-      await this.insertLines(tx, row!.id, lines);
-      if (entry.attachmentIds?.length) await this.attach(tx, row!.id, entry.attachmentIds);
-      await this.audit.record(
-        { action: 'journal.create', entity: 'journal', entityId: row!.id, after: { entry } },
-        tx,
-      );
-      if (status === 'pending') await this.toPending(tx, row!);
-      if (status === 'posted') await this.toPosted(tx, row!, 'post');
-      return row!.id;
-    });
-    return this.get(id);
+    const year = await this.fiscal.ensureFor(tx, entry.entryDate);
+    await this.fiscal.assertOpen(tx, entry.entryDate);
+    const lines = await this.validate(tx, entry);
+    const [row] = await tx
+      .insert(journalEntries)
+      .values({
+        companyId,
+        fiscalYearId: year.id,
+        entryDate: entry.entryDate,
+        entryNo: await this.nextNo(tx, entry.entryDate),
+        type: entry.type,
+        status: 'draft',
+        ...this.header(entry),
+        source: origin.source ?? 'manual',
+        sourceRef: origin.sourceRef ?? null,
+        createdBy: userId,
+        updatedBy: userId,
+      })
+      .returning();
+    await this.insertLines(tx, row!.id, lines);
+    if (entry.attachmentIds?.length) await this.attach(tx, row!.id, entry.attachmentIds);
+    await this.audit.record(
+      { action: 'journal.create', entity: 'journal', entityId: row!.id, after: { entry } },
+      tx,
+    );
+    if (status === 'pending') await this.toPending(tx, row!);
+    if (status === 'posted') await this.toPosted(tx, row!, 'post');
+    return row!.id;
   }
 
   /** 작성중 전표를 통째로 바꾼다(날짜가 바뀌면 전표번호를 새로 받는다). */
@@ -427,13 +442,47 @@ export class JournalsService {
 
   /** 전기한 전표를 취소하는 역분개 전표(차대 반대)를 만들고 원래 전표를 역분개됨으로 표시한다. */
   async reverse(id: string, input: JournalReverseInput) {
+    const reversalId = await this.db.tenant((tx) => this.reverseIn(tx, id, input));
+    return this.get(reversalId);
+  }
+
+  /**
+   * 트랜잭션 안에서 역분개한다. 자동 전표(상각·외화평가·어음)는 그 메뉴에서만 취소할 수 있어
+   * 일반 역분개로는 막고, 해당 모듈이 system=true 로 부른다.
+   */
+  async reverseIn(
+    tx: Transaction,
+    id: string,
+    input: JournalReverseInput,
+    opts: { system?: boolean } = {},
+  ): Promise<string> {
     const { companyId, userId } = requireCompanyContext();
-    const reversalId = await this.db.tenant(async (tx) => {
+    {
       const original = await this.lockEntry(tx, id);
       if (original.type === 'opening' || original.type === 'closing') {
         throw new AppException(
           'JOURNAL_NOT_REVERSIBLE',
           '기초잔액·결산 전표는 역분개할 수 없습니다.',
+        );
+      }
+      // 자동 전표의 취소 전표를 다시 뒤집는 것도 자동 전표를 되살리는 일이므로 같이 막는다
+      const reversedSource =
+        original.source === 'reversal' && original.reversalOfId
+          ? (
+              await tx
+                .select({ source: journalEntries.source })
+                .from(journalEntries)
+                .where(eq(journalEntries.id, original.reversalOfId))
+            )[0]?.source
+          : undefined;
+      if (
+        !opts.system &&
+        (SYSTEM_SOURCES.has(original.source) || SYSTEM_SOURCES.has(reversedSource ?? ''))
+      ) {
+        throw new AppException(
+          'SYSTEM_ENTRY',
+          '자동으로 만든 전표는 만든 메뉴(고정자산·외화평가·어음)에서 취소해 주세요.',
+          HttpStatus.CONFLICT,
         );
       }
       this.assertStatus(original, ['posted'], '역분개');
@@ -502,8 +551,7 @@ export class JournalsService {
         tx,
       );
       return reversal!.id;
-    });
-    return this.get(reversalId);
+    }
   }
 
   // ── 첨부 ─────────────────────────────────────────────

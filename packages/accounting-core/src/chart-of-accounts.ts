@@ -169,6 +169,7 @@ export const STANDARD_ACCOUNTS: readonly StandardAccount[] = [
   A('227', '소프트웨어', 'intangible_assets'),
   // 기타비유동자산
   A('232', '임차보증금', 'other_noncurrent_assets', partner),
+  A('246', '부도어음과수표', 'other_noncurrent_assets', partner),
   // 유동부채
   A('251', '외상매입금', 'current_liabilities', partner),
   A('252', '지급어음', 'current_liabilities', partner),
@@ -255,6 +256,7 @@ export const STANDARD_ACCOUNTS: readonly StandardAccount[] = [
   A('952', '외환차손', 'non_operating_expense'),
   A('953', '기부금', 'non_operating_expense'),
   A('955', '외화환산손실', 'non_operating_expense'),
+  A('956', '매출채권처분손실', 'non_operating_expense'),
   A('970', '유형자산처분손실', 'non_operating_expense'),
   A('980', '잡손실', 'non_operating_expense'),
   // 법인세

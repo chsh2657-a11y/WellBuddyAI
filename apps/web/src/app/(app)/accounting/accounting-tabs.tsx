@@ -31,6 +31,7 @@ export const ACCOUNTING_TABS: Tab[] = [
     match: (p) => p === '/accounting/journals/quick',
   },
   { href: '/accounting/reports', label: '장부·보고서' },
+  { href: '/accounting/assets', label: '고정자산' },
   { href: '/accounting/accounts', label: '계정과목' },
   { href: '/accounting/partners', label: '거래처' },
   { href: '/accounting/dimensions', label: '부서·프로젝트' },
