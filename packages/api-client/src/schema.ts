@@ -452,6 +452,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/integrations/{channel}/connect-account': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['IntegrationsController_connectAccount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/files': {
     parameters: {
       query?: never;
@@ -3360,6 +3376,47 @@ export interface operations {
         content: {
           'application/json': {
             ok: boolean;
+            message: string;
+          };
+        };
+      };
+      /** @description 권한 필요: settings.integrations (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  IntegrationsController_connectAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        channel: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @default  */
+          organization?: string;
+          loginId: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 실연동 기관 계정 연결(CODEF Connected ID 발급, 비밀번호는 저장하지 않음) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            connectedId: string;
             message: string;
           };
         };

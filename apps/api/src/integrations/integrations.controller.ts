@@ -1,6 +1,9 @@
 import { Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  type ConnectAccountInput,
+  ConnectAccountResultSchema,
+  ConnectAccountSchema,
   ConnectionTestResultSchema,
   INTEGRATION_CHANNELS,
   type IntegrationChannel,
@@ -45,5 +48,18 @@ export class IntegrationsController {
   @ZodResponse(ConnectionTestResultSchema, { description: '저장된 설정으로 연결 테스트' })
   test(@Param('channel', ChannelParam) channel: IntegrationChannel) {
     return this.integrations.test(channel);
+  }
+
+  @RequirePermission('settings.integrations', 'write')
+  @Post(':channel/connect-account')
+  @HttpCode(200)
+  @ZodResponse(ConnectAccountResultSchema, {
+    description: '실연동 기관 계정 연결(CODEF Connected ID 발급, 비밀번호는 저장하지 않음)',
+  })
+  connectAccount(
+    @Param('channel', ChannelParam) channel: IntegrationChannel,
+    @ZodBody(ConnectAccountSchema) body: ConnectAccountInput,
+  ) {
+    return this.integrations.connectAccount(channel, body);
   }
 }

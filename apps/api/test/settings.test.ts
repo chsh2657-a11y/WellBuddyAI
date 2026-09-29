@@ -1,6 +1,11 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createDb, type Database, integrationSettings } from '@wellbuddy/db';
 import { TEST_DATABASE_URL_OWNER, truncateAll } from '@wellbuddy/db/testing';
+import {
+  createProviderRegistry,
+  type HometaxProvider,
+  ProviderRegistry,
+} from '@wellbuddy/integrations';
 import { and, eq, ne } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, inviteAndJoin, ownerWithCompany } from './helpers.js';
@@ -129,13 +134,48 @@ describe('설정: 메뉴 사용 여부·연동관리', () => {
       expect(res.body.credentials.clientSecret).toMatch(/^su\*+34$/);
     });
 
-    it('실연동 연결 테스트는 P2 안내와 함께 실패로 기록된다', async () => {
-      const res = await owner.post('/api/integrations/hometax/test').expect(200);
-      expect(res.body).toMatchObject({ ok: false });
-      expect(res.body.message).toMatch(/P2/);
-      const list = await owner.get('/api/integrations').expect(200);
-      const hometax = list.body.find((c: { channel: string }) => c.channel === 'hometax');
-      expect(hometax).toMatchObject({ lastStatus: 'error', enabled: true, provider: 'codef' });
+    it('실연동 연결 테스트는 저장한 자격증명으로 공급자를 불러 보고, 실패도 기록한다', async () => {
+      // 외부로 나가지 않게 CODEF 홈택스 공급자를 대역으로 바꾼다
+      const registry = app.get(ProviderRegistry);
+      const received: Record<string, string>[] = [];
+      registry.register('hometax', 'codef', (credentials) => {
+        received.push(credentials);
+        return {
+          testConnection: async () => ({
+            ok: false,
+            message: 'CODEF Client ID·Secret 이 올바르지 않습니다.',
+          }),
+        } as unknown as HometaxProvider;
+      });
+      try {
+        const res = await owner.post('/api/integrations/hometax/test').expect(200);
+        expect(res.body).toEqual({
+          ok: false,
+          message: 'CODEF Client ID·Secret 이 올바르지 않습니다.',
+        });
+        expect(received).toEqual([
+          {
+            clientId: 'client-new',
+            clientSecret: 'super-secret-value-1234',
+            publicKey: 'PUBKEY-XYZ-123',
+          },
+        ]);
+        const list = await owner.get('/api/integrations').expect(200);
+        const hometax = list.body.find((c: { channel: string }) => c.channel === 'hometax');
+        expect(hometax).toMatchObject({ lastStatus: 'error', enabled: true, provider: 'codef' });
+      } finally {
+        registry.register('hometax', 'codef', (c) =>
+          createProviderRegistry().resolve(
+            'hometax',
+            { provider: 'codef', enabled: true, credentials: c },
+            {
+              companyId: '',
+              companyName: '',
+              bizNo: null,
+            },
+          ),
+        );
+      }
     });
 
     it('채널에 없는 공급자는 고를 수 없다', async () => {

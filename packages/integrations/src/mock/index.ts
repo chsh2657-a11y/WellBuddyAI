@@ -1,5 +1,7 @@
 import { ClaudeClassifier } from '../ai/claude.js';
 import { FormatBizCheckProvider, NtsBizCheckProvider } from '../bizcheck/index.js';
+import { CodefBankProvider, CodefCardProvider, CodefHometaxProvider } from '../codef/index.js';
+import type { CodefOptions } from '../codef/client.js';
 import { ClaudeOcrProvider } from '../ocr/claude.js';
 import { ClovaOcrProvider } from '../ocr/clova.js';
 import { MockOcrProvider } from '../ocr/mock.js';
@@ -22,11 +24,21 @@ export function registerMockProviders(registry: ProviderRegistry): ProviderRegis
 }
 
 /**
- * 공급자 레지스트리: 모의 공급자, 영수증 OCR(Claude·Upstage·CLOVA), 사업자 상태 조회, AI 분류(Claude).
- * 실연동(CODEF·팝빌)은 P2-10~16 에서 여기에 더한다.
+ * 공급자 레지스트리: 모의 공급자, CODEF(은행·카드·홈택스), 영수증 OCR(Claude·Upstage·CLOVA),
+ * 사업자 상태 조회, AI 분류(Claude).
  */
 export function createProviderRegistry(): ProviderRegistry {
+  const codef = (c: Record<string, string>): CodefOptions => ({
+    clientId: c.clientId ?? '',
+    clientSecret: c.clientSecret ?? '',
+    publicKey: c.publicKey,
+    environment: c.environment,
+    connectedId: c.connectedId,
+  });
   return registerMockProviders(new ProviderRegistry())
+    .register('bank', 'codef', (c) => new CodefBankProvider(codef(c)))
+    .register('card', 'codef', (c) => new CodefCardProvider(codef(c)))
+    .register('hometax', 'codef', (c) => new CodefHometaxProvider(codef(c)))
     .register('ocr', 'claude', (c) => new ClaudeOcrProvider({ apiKey: c.apiKey ?? '' }))
     .register('ocr', 'upstage', (c) => new UpstageOcrProvider({ apiKey: c.apiKey ?? '' }))
     .register(

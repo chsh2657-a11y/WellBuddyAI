@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { integrationSettings } from '@wellbuddy/db';
+import { canConnectAccount, ProviderError, ProviderRegistry } from '@wellbuddy/integrations';
 import {
+  type ConnectAccountInput,
   getChannel,
   getProvider,
   type IntegrationChannel,
@@ -34,6 +36,7 @@ export class IntegrationsService {
     private readonly crypto: FieldCrypto,
     private readonly tester: ConnectionTester,
     private readonly audit: AuditService,
+    private readonly registry: ProviderRegistry,
   ) {}
 
   /** 자격증명은 회사·채널에 묶어 암호화한다(다른 회사·채널 행으로 옮겨도 복호화되지 않음). */
@@ -70,6 +73,12 @@ export class IntegrationsService {
     const credentials: Record<string, string> = {};
     for (const field of provider.credentials) {
       const value = input.credentials?.[field.key]?.trim();
+      if (value && field.choices && !field.choices.some((c) => c.value === value)) {
+        throw new AppException(
+          'VALIDATION_ERROR',
+          `${field.label}은(는) ${field.choices.map((c) => c.label).join(', ')} 중에서 골라 주세요.`,
+        );
+      }
       const next = value ? value : previous[field.key];
       if (next) credentials[field.key] = next;
     }
@@ -175,6 +184,69 @@ export class IntegrationsService {
         }),
     );
     return result;
+  }
+
+  /**
+   * 실연동 기관 계정 연결(CODEF Connected ID 발급). 받은 ID 는 자격증명에 더해 암호화 저장하고,
+   * 기관 비밀번호는 공급자가 RSA 로 암호화해 보내기만 한다(저장하지 않음).
+   */
+  async connectAccount(channel: IntegrationChannel, input: ConnectAccountInput) {
+    const { companyId } = requireCompanyContext();
+    const row = await this.findRow(channel);
+    if (!row || !this.registry.has(channel, row.provider)) {
+      throw new AppException(
+        'ACCOUNT_CONNECT_UNSUPPORTED',
+        '계정 연결이 필요한 실연동 공급자를 먼저 저장해 주세요.',
+      );
+    }
+    const credentials = row.credentialsEnc
+      ? this.decrypt(companyId, channel, row.credentialsEnc)
+      : {};
+    let connected: { connectedId: string; message: string };
+    try {
+      const provider = this.registry.resolve(
+        channel,
+        { provider: row.provider, enabled: true, credentials },
+        { companyId, companyName: '', bizNo: null },
+      );
+      if (!canConnectAccount(provider)) {
+        throw new AppException(
+          'ACCOUNT_CONNECT_UNSUPPORTED',
+          '이 공급자는 계정 연결이 필요 없습니다.',
+        );
+      }
+      connected = await provider.connectAccount(input);
+    } catch (e) {
+      if (e instanceof ProviderError) {
+        throw new AppException(e.code, e.message, HttpStatus.BAD_GATEWAY);
+      }
+      throw e;
+    }
+    await this.db.tenant(async (tx) => {
+      await tx
+        .update(integrationSettings)
+        .set({
+          credentialsEnc: this.crypto.encryptJson(
+            { ...credentials, connectedId: connected.connectedId },
+            this.purpose(companyId, channel),
+          ),
+          lastStatus: 'success',
+          lastMessage: connected.message,
+          lastRunAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(integrationSettings.id, row.id));
+      await this.audit.record(
+        {
+          action: 'integration.connect_account',
+          entity: 'integration',
+          entityId: channel,
+          after: { provider: row.provider, organization: input.organization || null },
+        },
+        tx,
+      );
+    });
+    return connected;
   }
 
   private async findRow(channel: string): Promise<Row | undefined> {

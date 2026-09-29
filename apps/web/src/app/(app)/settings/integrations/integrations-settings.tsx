@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  BANKS,
+  CARD_COMPANIES,
   type ChannelDefinition,
   type ConnectionTestResult,
   INTEGRATIONS,
@@ -9,8 +11,8 @@ import {
   type SchedulePreset,
 } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, PlugZap, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, KeyRound, PlugZap, XCircle } from 'lucide-react';
+import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -151,25 +153,51 @@ function IntegrationCard({
 
         {def.credentials.map((field) => {
           const saved = sameProvider ? status.credentials[field.key] : undefined;
+          const id = `${channel.key}-${field.key}`;
           return (
             <FormField
               key={field.key}
-              id={`${channel.key}-${field.key}`}
+              id={id}
               label={`${field.label}${field.required ? ' *' : ''}`}
-              hint={saved ? `저장됨: ${saved} (바꿀 때만 입력)` : field.help}
+              hint={
+                field.choices
+                  ? field.help
+                  : saved
+                    ? `저장됨: ${saved} (바꿀 때만 입력)`
+                    : field.help
+              }
             >
-              <Input
-                id={`${channel.key}-${field.key}`}
-                type={field.secret ? 'password' : 'text'}
-                autoComplete="off"
-                placeholder={saved ? '••••••••' : field.placeholder}
-                disabled={!writable}
-                value={credentials[field.key] ?? ''}
-                onChange={(e) => setCredentials((c) => ({ ...c, [field.key]: e.target.value }))}
-              />
+              {field.choices ? (
+                <Select
+                  id={id}
+                  disabled={!writable}
+                  value={credentials[field.key] ?? saved ?? field.choices[0]!.value}
+                  onChange={(e) => setCredentials((c) => ({ ...c, [field.key]: e.target.value }))}
+                >
+                  {field.choices.map((choice) => (
+                    <option key={choice.value} value={choice.value}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </Select>
+              ) : (
+                <Input
+                  id={id}
+                  type={field.secret ? 'password' : 'text'}
+                  autoComplete="off"
+                  placeholder={saved ? '••••••••' : field.placeholder}
+                  disabled={!writable}
+                  value={credentials[field.key] ?? ''}
+                  onChange={(e) => setCredentials((c) => ({ ...c, [field.key]: e.target.value }))}
+                />
+              )}
             </FormField>
           );
         })}
+
+        {writable && sameProvider && provider === 'codef' && status.credentials.clientId ? (
+          <AccountConnect channel={channel} connectedId={status.credentials.connectedId} />
+        ) : null}
 
         {def.schedulable ? (
           <FormField id={`${channel.key}-schedule`} label="자동 수집 주기">
@@ -230,5 +258,110 @@ function IntegrationCard({
         </CardFooter>
       ) : null}
     </Card>
+  );
+}
+
+/** 기관 코드 목록(은행·카드사). 홈택스는 국세청 하나라 고르지 않는다 */
+const ORGANIZATIONS: Partial<Record<string, readonly { code: string; name: string }[]>> = {
+  bank: BANKS,
+  card: CARD_COMPANIES,
+};
+
+/** CODEF 기관 계정 연결: 아이디·비밀번호를 암호화해 보내고 Connected ID 만 저장한다 */
+function AccountConnect({
+  channel,
+  connectedId,
+}: {
+  channel: ChannelDefinition;
+  connectedId: string | undefined;
+}) {
+  const queryClient = useQueryClient();
+  const organizations = ORGANIZATIONS[channel.key];
+  const [organization, setOrganization] = useState(organizations?.[0]?.code ?? '');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const connect = useMutation({
+    mutationFn: () =>
+      apiFetch<{ connectedId: string; message: string }>(
+        `/integrations/${channel.key}/connect-account`,
+        { method: 'POST', json: { organization, loginId, password } },
+      ),
+    onSuccess: (r) => {
+      setPassword('');
+      void queryClient.invalidateQueries({ queryKey: KEY });
+      toast.success(r.message);
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : '계정을 연결하지 못했습니다.'),
+  });
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    connect.mutate();
+  };
+  const prefix = `${channel.key}-connect`;
+
+  return (
+    <form
+      onSubmit={submit}
+      className="grid gap-3 rounded-md border bg-surface-muted p-3"
+      aria-label={`${channel.label} 계정 연결`}
+    >
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <KeyRound className="size-4" aria-hidden />
+        계정 연결
+        {connectedId ? (
+          <Badge variant="success">연결됨</Badge>
+        ) : (
+          <Badge variant="muted">연결 안 됨</Badge>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {organizations ? '인터넷뱅킹·카드사' : '홈택스'} 아이디로 CODEF 에 계정을 등록합니다.
+        비밀번호는 암호화해 보내기만 하고 저장하지 않습니다.
+        {connectedId ? ` 다른 기관을 더 연결할 수 있습니다.` : ''}
+      </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {organizations ? (
+          <FormField id={`${prefix}-org`} label="기관">
+            <Select
+              id={`${prefix}-org`}
+              value={organization}
+              onChange={(e) => setOrganization(e.target.value)}
+            >
+              {organizations.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        ) : null}
+        <FormField id={`${prefix}-id`} label="아이디">
+          <Input
+            id={`${prefix}-id`}
+            autoComplete="off"
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
+          />
+        </FormField>
+        <FormField id={`${prefix}-pw`} label="비밀번호">
+          <Input
+            id={`${prefix}-pw`}
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </FormField>
+      </div>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={!loginId || !password || connect.isPending}
+        >
+          {connect.isPending ? '연결 중…' : '계정 연결'}
+        </Button>
+      </div>
+    </form>
   );
 }

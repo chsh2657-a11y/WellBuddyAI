@@ -27,6 +27,8 @@ export interface CredentialField {
   required: boolean;
   placeholder?: string;
   help?: string;
+  /** 고르는 항목(있으면 입력칸 대신 선택 상자) */
+  choices?: { value: string; label: string }[];
 }
 
 export interface ProviderDefinition {
@@ -72,7 +74,7 @@ const CODEF: ProviderDefinition = {
   label: 'CODEF API',
   kind: 'external',
   description:
-    '은행·카드·홈택스 데이터를 자동 수집합니다. CODEF 사업자 계약과 API 키가 필요합니다.',
+    '은행·카드·홈택스 데이터를 자동 수집합니다. CODEF 사업자 계약과 API 키가 필요합니다. 저장한 뒤 [계정 연결]로 기관 계정을 등록합니다.',
   credentials: [
     { key: 'clientId', label: 'Client ID', secret: false, required: true },
     { key: 'clientSecret', label: 'Client Secret', secret: true, required: true },
@@ -82,6 +84,24 @@ const CODEF: ProviderDefinition = {
       secret: true,
       required: true,
       help: '기관 로그인 비밀번호 암호화용 (CODEF 콘솔에서 발급)',
+    },
+    {
+      key: 'environment',
+      label: '서버',
+      secret: false,
+      required: false,
+      choices: [
+        { value: 'development', label: '데모(개발용 실데이터)' },
+        { value: 'production', label: '정식(운영)' },
+        { value: 'sandbox', label: '샌드박스(고정 샘플)' },
+      ],
+    },
+    {
+      key: 'connectedId',
+      label: 'Connected ID',
+      secret: false,
+      required: false,
+      help: '[계정 연결]로 발급됩니다. 이미 발급받은 값이 있으면 입력해도 됩니다.',
     },
   ],
   schedulable: true,
@@ -281,3 +301,17 @@ export type IntegrationStatus = z.infer<typeof IntegrationStatusSchema>;
 
 export const ConnectionTestResultSchema = z.object({ ok: z.boolean(), message: z.string() });
 export type ConnectionTestResult = z.infer<typeof ConnectionTestResultSchema>;
+
+/** 실연동 기관 계정 연결(CODEF Connected ID 발급). 비밀번호는 암호화해 전송만 하고 저장하지 않는다 */
+export const ConnectAccountSchema = z.object({
+  /** 기관 코드(은행·카드사). 홈택스는 비운다 */
+  organization: z.string().trim().max(10).default(''),
+  loginId: z.string().trim().min(1, { error: '아이디를 입력해 주세요.' }).max(100),
+  password: z.string().min(1, { error: '비밀번호를 입력해 주세요.' }).max(200),
+});
+export type ConnectAccountInput = z.infer<typeof ConnectAccountSchema>;
+
+export const ConnectAccountResultSchema = z.object({
+  connectedId: z.string(),
+  message: z.string(),
+});

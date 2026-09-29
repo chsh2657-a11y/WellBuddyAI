@@ -34,6 +34,26 @@ interface Connectable {
   testConnection(): Promise<ConnectionResult>;
 }
 
+/** 실연동 계정 연결(CODEF Connected ID 발급 등). 기관 아이디·비밀번호는 저장하지 않는다 */
+export interface AccountConnectInput {
+  /** 기관 코드(은행·카드사). 홈택스는 공급자가 정한다 */
+  organization: string;
+  loginId: string;
+  password: string;
+}
+
+export interface AccountConnectable {
+  connectAccount(input: AccountConnectInput): Promise<{ connectedId: string; message: string }>;
+}
+
+export function canConnectAccount(provider: unknown): provider is AccountConnectable {
+  return (
+    typeof provider === 'object' &&
+    provider !== null &&
+    typeof (provider as AccountConnectable).connectAccount === 'function'
+  );
+}
+
 export interface BankProvider extends Connectable {
   fetchTransactions(account: BankAccountRef, range: DateRange): Promise<BankTransactionRecord[]>;
 }
