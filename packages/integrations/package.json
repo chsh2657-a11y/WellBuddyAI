@@ -21,7 +21,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@wellbuddy/accounting-core": "workspace:*"
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@wellbuddy/accounting-core": "workspace:*",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.19.0"
