@@ -14,6 +14,8 @@ export const REPORTS = [
   { href: '/accounting/reports/statements', label: '재무제표' },
   { href: '/accounting/reports/aging', label: '채권·채무' },
   { href: '/accounting/reports/budget', label: '예산 대비 실적' },
+  { href: '/accounting/reports/daily-cash', label: '일일자금일보' },
+  { href: '/accounting/reports/cash-plan', label: '자금계획' },
 ];
 
 export function ReportsNav() {

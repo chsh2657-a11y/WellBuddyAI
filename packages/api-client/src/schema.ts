@@ -1428,6 +1428,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/cash-plans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CashController_list'];
+    put?: never;
+    post: operations['CashController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/cash-plans/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['CashController_remove'];
+    options?: never;
+    head?: never;
+    patch: operations['CashController_update'];
+    trace?: never;
+  };
+  '/api/reports/cash-plan': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CashController_planReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/daily-cash': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CashController_daily'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7817,6 +7881,305 @@ export interface operations {
               budgetToDate: number;
               actualToDate: number;
             };
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_list: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 기간 안의 예정 입출금 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            planDate: string;
+            /** @enum {string} */
+            direction: 'in' | 'out';
+            amount: number;
+            description: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            done: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          planDate: string;
+          /** @enum {string} */
+          direction: 'in' | 'out';
+          amount: number;
+          description: string;
+          /** Format: uuid */
+          partnerId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            planDate: string;
+            /** @enum {string} */
+            direction: 'in' | 'out';
+            amount: number;
+            description: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            done: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          planDate?: string;
+          /** @enum {string} */
+          direction?: 'in' | 'out';
+          amount?: number;
+          description?: string;
+          /** Format: uuid */
+          partnerId?: string | null;
+          done?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description 수정·처리 완료 표시 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            planDate: string;
+            /** @enum {string} */
+            direction: 'in' | 'out';
+            amount: number;
+            description: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            done: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_planReport: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 자금계획: 현재 잔액 + 예정 입출금·어음 만기로 일자별 예상 잔액 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            from: string;
+            to: string;
+            opening: number;
+            days: {
+              date: string;
+              inflow: number;
+              outflow: number;
+              balance: number;
+              items: {
+                /** @enum {string} */
+                source: 'plan' | 'note';
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: 'in' | 'out';
+                amount: number;
+                description: string;
+                partnerName: string | null;
+                date: string;
+              }[];
+            }[];
+            inflow: number;
+            outflow: number;
+            closing: number;
+            minBalance: number;
+            minDate: string | null;
+            shortageDate: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CashController_daily: {
+    parameters: {
+      query: {
+        date: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 일일자금일보: 현금·예금 계정별 전일 잔액·입금·출금·금일 잔액과 내역 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            previousDate: string;
+            accounts: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              opening: number;
+              receipts: number;
+              payments: number;
+              closing: number;
+              rows: {
+                /** Format: uuid */
+                lineId: string;
+                /** Format: uuid */
+                entryId: string;
+                number: string;
+                description: string | null;
+                partnerName: string | null;
+                counterAccount: string;
+                receipt: number;
+                payment: number;
+                balance: number;
+              }[];
+            }[];
+            totals: {
+              opening: number;
+              receipts: number;
+              payments: number;
+              closing: number;
+            };
+            scheduled: {
+              /** @enum {string} */
+              source: 'plan' | 'note';
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              direction: 'in' | 'out';
+              amount: number;
+              description: string;
+              partnerName: string | null;
+            }[];
           };
         };
       };

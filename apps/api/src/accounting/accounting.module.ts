@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AccountsService } from './accounts.service.js';
 import { BudgetsController } from './budgets.controller.js';
 import { BudgetsService } from './budgets.service.js';
+import { CashController } from './cash.controller.js';
+import { CashService } from './cash.service.js';
 import { DimensionsService } from './dimensions.service.js';
 import { FiscalYearsController } from './fiscal-years.controller.js';
 import { FiscalYearsService } from './fiscal-years.service.js';
@@ -30,6 +32,7 @@ import { ReportsService } from './reports.service.js';
     FxController,
     NotesController,
     BudgetsController,
+    CashController,
   ],
   providers: [
     AccountsService,
@@ -44,6 +47,7 @@ import { ReportsService } from './reports.service.js';
     ExchangeRatesImport,
     NotesService,
     BudgetsService,
+    CashService,
   ],
   exports: [
     AccountsService,
