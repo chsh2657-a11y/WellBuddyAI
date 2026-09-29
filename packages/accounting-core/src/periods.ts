@@ -119,3 +119,10 @@ export function carryForwardLines(
     }));
   return { lines, netIncome };
 }
+
+/** b - a 일수 */
+export function daysBetween(a: IsoDate, b: IsoDate): number {
+  const [ay, am, ad] = parts(a);
+  const [by, bm, bd] = parts(b);
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000);
+}

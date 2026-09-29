@@ -27,7 +27,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], launchOptions: { executablePath } },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          executablePath,
+          // 로캘이 POSIX 인 환경에서는 브라우저가 한글 다운로드 파일 이름을 버리므로 UTF-8 로 띄운다
+          env: { ...process.env, LANG: process.env.LANG || 'C.UTF-8' },
+        },
+      },
     },
   ],
   webServer: [

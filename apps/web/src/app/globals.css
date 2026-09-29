@@ -19,6 +19,9 @@
   --warning: #b46b00;
   --warning-soft: #fff4e0;
   --ring: #1b5ed6;
+  /* 차트 계열색(검증된 범주 팔레트 1·2번: 파랑·주황) */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,6 +42,8 @@
     --warning: #f0a93a;
     --warning-soft: #33260f;
     --ring: #4d8bf0;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
   }
 }
 
@@ -59,6 +64,8 @@
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
   --font-sans:
     'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
 }
@@ -77,4 +84,26 @@ body {
 
 * {
   border-color: var(--border);
+}
+
+/* 보고서 인쇄·PDF: 메뉴는 숨기고(print:hidden) 흰 배경의 A4 로 */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+  table {
+    break-inside: auto;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
 }

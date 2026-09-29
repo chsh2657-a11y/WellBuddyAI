@@ -59,3 +59,36 @@ export async function apiFetch<T>(
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+/** 파일 응답(엑셀 등)을 받아 브라우저 다운로드로 저장한다. */
+export async function apiDownload(
+  path: string,
+  filename: string,
+  init: RequestInit & { json?: unknown; retry?: boolean } = {},
+): Promise<void> {
+  const { json, retry = true, headers, ...rest } = init;
+  const res = await fetch(`/api${path}`, {
+    credentials: 'include',
+    ...rest,
+    headers: {
+      ...(json === undefined ? {} : { 'content-type': 'application/json' }),
+      ...headers,
+    },
+    body: json === undefined ? rest.body : JSON.stringify(json),
+  });
+  if (res.status === 401 && retry && (await refreshSession())) {
+    return apiDownload(path, filename, { ...init, retry: false });
+  }
+  if (!res.ok) throw await toApiError(res);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.append(a);
+  a.click();
+  // 바로 치우면 브라우저가 파일 이름(download 속성)을 잃으므로 조금 뒤에 정리한다
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
+}

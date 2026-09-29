@@ -30,6 +30,7 @@ export const ACCOUNTING_TABS: Tab[] = [
     label: '입금·출금',
     match: (p) => p === '/accounting/journals/quick',
   },
+  { href: '/accounting/reports', label: '장부·보고서' },
   { href: '/accounting/accounts', label: '계정과목' },
   { href: '/accounting/partners', label: '거래처' },
   { href: '/accounting/dimensions', label: '부서·프로젝트' },

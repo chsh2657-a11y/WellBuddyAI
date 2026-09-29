@@ -14,11 +14,11 @@ import { ApiBody, type ApiBodyOptions, ApiConsumes, ApiProduces, ApiTags } from 
 import type { Response } from 'express';
 import { z } from 'zod';
 import { AppException } from '../common/errors.js';
+import { sendXlsx, XLSX_MIME } from '../common/xlsx.js';
 import { ZodResponse } from '../common/zod.js';
 import { ImportsService } from './imports.service.js';
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
-const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 const FileBody: ApiBodyOptions = {
   schema: {
@@ -43,15 +43,6 @@ const PreviewSchema = z.object({
 });
 
 const CommitSchema = z.object({ created: z.number(), updated: z.number(), skipped: z.number() });
-
-function sendXlsx(res: Response, filename: string, buffer: Buffer) {
-  res.setHeader('Content-Type', XLSX_MIME);
-  res.setHeader(
-    'Content-Disposition',
-    `attachment; filename="download.xlsx"; filename*=UTF-8''${encodeURIComponent(filename)}`,
-  );
-  res.send(buffer);
-}
 
 function requireFile(file: Express.Multer.File | undefined): Express.Multer.File {
   if (!file) throw new AppException('FILE_REQUIRED', '파일을 선택해 주세요.');

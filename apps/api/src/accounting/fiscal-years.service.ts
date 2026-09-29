@@ -86,6 +86,24 @@ export class FiscalYearsService {
     return created;
   }
 
+  /**
+   * 날짜가 속한 회계연도 기간(조회용, 새로 만들지 않는다).
+   * 아직 회계연도가 없으면 회사의 시작월로 계산한 기간을 돌려준다.
+   */
+  async rangeFor(
+    tx: Transaction,
+    date: string,
+  ): Promise<{ startDate: string; endDate: string; label: string }> {
+    const found = await this.findFor(tx, date);
+    if (found) return found;
+    const { companyId } = requireCompanyContext();
+    const [company] = await tx
+      .select({ startMonth: companies.fiscalYearStartMonth })
+      .from(companies)
+      .where(eq(companies.id, companyId));
+    return fiscalYearOf(date, company!.startMonth);
+  }
+
   private async findFor(tx: Transaction, date: string) {
     const [row] = await tx
       .select()

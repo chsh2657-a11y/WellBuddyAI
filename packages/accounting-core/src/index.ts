@@ -1,3 +1,4 @@
+export * from './aging.js';
 export * from './chart-of-accounts.js';
 export * from './journal.js';
 export * from './money.js';

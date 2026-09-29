@@ -916,6 +916,166 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/reports/daily-summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_dailySummary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/account-ledger': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_accountLedger'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/general-ledger': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_generalLedger'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/partner-balances': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_partnerBalances'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/trial-balance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_trialBalance'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/income-statement': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_incomeStatement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/balance-sheet': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_balanceSheet'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/aging': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_aging'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/dashboard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReportsController_dashboard'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/reports/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['ReportsController_export'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4882,6 +5042,701 @@ export interface operations {
     requestBody?: never;
     responses: {
       /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_dailySummary: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 일계표·월계표(현금·대체 구분) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            from: string;
+            to: string;
+            rows: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              groupLabel: string;
+              debitCash: number;
+              debitTransfer: number;
+              creditCash: number;
+              creditTransfer: number;
+            }[];
+            totals: {
+              debitCash: number;
+              debitTransfer: number;
+              creditCash: number;
+              creditTransfer: number;
+            };
+            cash: {
+              opening: number;
+              receipts: number;
+              payments: number;
+              closing: number;
+            };
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_accountLedger: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        accountId: string;
+        partnerId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 계정별원장(partnerId 를 주면 거래처원장, 현금 계정이면 현금출납장) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            account: {
+              /** Format: uuid */
+              id: string;
+              code: string;
+              name: string;
+            };
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            partner: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            } | null;
+            from: string;
+            to: string;
+            opening: number;
+            rows: {
+              /** Format: uuid */
+              lineId: string;
+              /** Format: uuid */
+              entryId: string;
+              entryDate: string;
+              entryNo: number;
+              number: string;
+              description: string | null;
+              memo: string | null;
+              partnerName: string | null;
+              counterAccount: string;
+              debit: number;
+              credit: number;
+              balance: number;
+            }[];
+            totals: {
+              debit: number;
+              credit: number;
+            };
+            closing: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_generalLedger: {
+    parameters: {
+      query: {
+        date: string;
+        accountId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 총계정원장(회계연도 월별) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            account: {
+              /** Format: uuid */
+              id: string;
+              code: string;
+              name: string;
+            };
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            fiscalYear: {
+              startDate: string;
+              endDate: string;
+              label: string;
+            };
+            opening: number;
+            months: {
+              month: string;
+              debit: number;
+              credit: number;
+              balance: number;
+            }[];
+            totals: {
+              debit: number;
+              credit: number;
+            };
+            closing: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_partnerBalances: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        accountId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 거래처별 잔액(계정 하나) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            account: {
+              /** Format: uuid */
+              id: string;
+              code: string;
+              name: string;
+            };
+            /** @enum {string} */
+            normalBalance: 'debit' | 'credit';
+            from: string;
+            to: string;
+            rows: {
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerCode: string | null;
+              partnerName: string;
+              opening: number;
+              debit: number;
+              credit: number;
+              closing: number;
+            }[];
+            totals: {
+              opening: number;
+              debit: number;
+              credit: number;
+              closing: number;
+            };
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_trialBalance: {
+    parameters: {
+      query: {
+        date: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 합계잔액시산표(회계연도 누적) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            fiscalYear: {
+              startDate: string;
+              endDate: string;
+              label: string;
+            };
+            rows: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              groupLabel: string;
+              /** @enum {string} */
+              normalBalance: 'debit' | 'credit';
+              debit: number;
+              credit: number;
+              debitBalance: number;
+              creditBalance: number;
+            }[];
+            totals: {
+              debitBalance: number;
+              debit: number;
+              credit: number;
+              creditBalance: number;
+            };
+            balanced: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_incomeStatement: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 손익계산서(기간) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            from: string;
+            to: string;
+            fiscalYear: {
+              startDate: string;
+              endDate: string;
+              label: string;
+            };
+            sections: {
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              label: string;
+              lines: {
+                accountId: string;
+                code: string;
+                name: string;
+                amount: number;
+              }[];
+              total: number;
+            }[];
+            revenue: number;
+            costOfSales: number;
+            grossProfit: number;
+            sga: number;
+            operatingIncome: number;
+            nonOperatingIncome: number;
+            nonOperatingExpense: number;
+            incomeBeforeTax: number;
+            incomeTax: number;
+            netIncome: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_balanceSheet: {
+    parameters: {
+      query: {
+        date: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 재무상태표(기준일) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            fiscalYear: {
+              startDate: string;
+              endDate: string;
+              label: string;
+            };
+            assets: {
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              label: string;
+              lines: {
+                accountId: string;
+                code: string;
+                name: string;
+                amount: number;
+              }[];
+              total: number;
+            }[];
+            liabilities: {
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              label: string;
+              lines: {
+                accountId: string;
+                code: string;
+                name: string;
+                amount: number;
+              }[];
+              total: number;
+            }[];
+            equity: {
+              /** @enum {string} */
+              group:
+                | 'quick_assets'
+                | 'inventories'
+                | 'investments'
+                | 'tangible_assets'
+                | 'intangible_assets'
+                | 'other_noncurrent_assets'
+                | 'current_liabilities'
+                | 'noncurrent_liabilities'
+                | 'capital'
+                | 'capital_surplus'
+                | 'capital_adjustment'
+                | 'accumulated_oci'
+                | 'retained_earnings'
+                | 'revenue'
+                | 'cost_of_sales'
+                | 'manufacturing_cost'
+                | 'sga'
+                | 'non_operating_income'
+                | 'non_operating_expense'
+                | 'income_tax';
+              label: string;
+              lines: {
+                accountId: string;
+                code: string;
+                name: string;
+                amount: number;
+              }[];
+              total: number;
+            }[];
+            totalAssets: number;
+            totalLiabilities: number;
+            totalEquity: number;
+            undistributedIncome: {
+              priorPeriods: number;
+              currentPeriod: number;
+            };
+            balanced: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_aging: {
+    parameters: {
+      query: {
+        date: string;
+        kind: 'receivable' | 'payable';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 채권·채무 잔액과 연령분석 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            kind: 'receivable' | 'payable';
+            date: string;
+            accounts: {
+              /** Format: uuid */
+              id: string;
+              code: string;
+              name: string;
+            }[];
+            bucketLabels: string[];
+            rows: {
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string;
+              balance: number;
+              buckets: number[];
+            }[];
+            totals: {
+              balance: number;
+              buckets: number[];
+            };
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_dashboard: {
+    parameters: {
+      query?: {
+        date?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 대시보드 지표(현금·예금·채권·채무·월별 손익) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            fiscalYear: {
+              startDate: string;
+              endDate: string;
+              label: string;
+            };
+            cash: number;
+            deposits: number;
+            receivables: number;
+            payables: number;
+            revenue: number;
+            expense: number;
+            netIncome: number;
+            months: {
+              month: string;
+              revenue: number;
+              expense: number;
+            }[];
+            drafts: number;
+            pending: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReportsController_export: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          title: string;
+          subtitle?: string | null;
+          columns: {
+            header: string;
+            /** @enum {string} */
+            type?: 'text' | 'won';
+            width?: number;
+          }[];
+          rows: (string | number | null)[][];
+          boldRows?: number[];
+        };
+      };
+    };
+    responses: {
+      /** @description 권한 필요: accounting (read) */
       403: {
         headers: {
           [name: string]: unknown;

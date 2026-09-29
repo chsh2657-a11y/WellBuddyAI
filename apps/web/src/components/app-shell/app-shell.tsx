@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh">
-      <aside className="hidden w-60 shrink-0 border-r bg-surface md:block">
+      <aside className="hidden w-60 shrink-0 border-r bg-surface md:block print:hidden">
         <div className="flex h-14 items-center border-b px-5 font-semibold">WellBuddy ERP</div>
         {nav}
       </aside>
@@ -123,7 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-2 border-b bg-surface px-4">
+        <header className="flex h-14 items-center gap-2 border-b bg-surface px-4 print:hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -188,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 print:p-0">{children}</main>
       </div>
     </div>
   );

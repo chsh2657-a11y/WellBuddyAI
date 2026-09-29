@@ -8,9 +8,11 @@ import { JournalsService } from './journals.service.js';
 import { MasterController } from './master.controller.js';
 import { PartnersImport } from './partners.import.js';
 import { PartnersService } from './partners.service.js';
+import { ReportsController } from './reports.controller.js';
+import { ReportsService } from './reports.service.js';
 
 @Module({
-  controllers: [MasterController, FiscalYearsController, JournalsController],
+  controllers: [MasterController, FiscalYearsController, JournalsController, ReportsController],
   providers: [
     AccountsService,
     PartnersService,
@@ -18,6 +20,7 @@ import { PartnersService } from './partners.service.js';
     PartnersImport,
     FiscalYearsService,
     JournalsService,
+    ReportsService,
   ],
   exports: [
     AccountsService,
@@ -25,6 +28,7 @@ import { PartnersService } from './partners.service.js';
     DimensionsService,
     FiscalYearsService,
     JournalsService,
+    ReportsService,
   ],
 })
 export class AccountingModule {}
