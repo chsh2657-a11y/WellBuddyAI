@@ -7,7 +7,15 @@ import { z } from 'zod';
  *         mock     — 샘플 데이터를 만든다(개발·데모·교육용)
  *         external — CODEF·팝빌·AI 등 외부 API (계약·API 키 필요)
  */
-export const INTEGRATION_CHANNELS = ['bank', 'card', 'hometax', 'taxinvoice', 'ocr', 'ai'] as const;
+export const INTEGRATION_CHANNELS = [
+  'bank',
+  'card',
+  'hometax',
+  'taxinvoice',
+  'ocr',
+  'bizcheck',
+  'ai',
+] as const;
 export type IntegrationChannel = (typeof INTEGRATION_CHANNELS)[number];
 
 export type ProviderKind = 'file' | 'mock' | 'external' | 'builtin';
@@ -167,6 +175,40 @@ export const INTEGRATIONS: ChannelDefinition[] = [
         credentials: [
           { key: 'invokeUrl', label: 'API Gateway Invoke URL', secret: false, required: true },
           { key: 'secretKey', label: 'Secret Key', secret: true, required: true },
+        ],
+        schedulable: false,
+      },
+    ],
+  },
+  {
+    key: 'bizcheck',
+    label: '사업자 상태 조회',
+    description: '영수증·거래처의 사업자번호가 올바른지, 휴업·폐업하지 않았는지 확인합니다.',
+    phase: 'P2',
+    defaultProvider: 'format',
+    providers: [
+      {
+        key: 'format',
+        label: '번호 형식만 확인',
+        kind: 'builtin',
+        description: '국세청 검증번호 공식으로 번호가 올바른지만 봅니다(외부 전송 없음).',
+        credentials: [],
+        schedulable: false,
+      },
+      {
+        key: 'nts',
+        label: '국세청 사업자 상태조회',
+        kind: 'external',
+        description:
+          '공공데이터포털의 국세청 사업자등록 상태조회 API 로 계속·휴업·폐업 여부를 확인합니다.',
+        credentials: [
+          {
+            key: 'serviceKey',
+            label: '공공데이터포털 인증키',
+            secret: true,
+            required: true,
+            help: "data.go.kr 에서 '국세청_사업자등록정보 진위확인 및 상태조회 서비스'를 신청해 받은 인증키",
+          },
         ],
         schedulable: false,
       },

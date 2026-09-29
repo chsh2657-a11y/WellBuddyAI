@@ -1,17 +1,11 @@
+import { bizNoCheckDigit } from '@wellbuddy/accounting-core';
+
 /**
  * 모의 거래에 쓰는 가상의 거래처·가맹점. 사업자번호는 국세청 검증 공식을 통과하도록 끝자리를 계산한다.
  */
-const WEIGHTS = [1, 3, 7, 1, 3, 7, 1, 3, 5];
-
 /** 앞 9자리로 검증번호를 붙인 10자리 사업자번호 */
 export function bizNo(first9: string): string {
-  const nums = [...first9].map(Number);
-  let sum = 0;
-  WEIGHTS.forEach((w, i) => {
-    sum += nums[i]! * w;
-  });
-  sum += Math.floor((nums[8]! * 5) / 10);
-  return `${first9}${(10 - (sum % 10)) % 10}`;
+  return `${first9}${bizNoCheckDigit(first9)}`;
 }
 
 export interface MockParty {

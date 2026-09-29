@@ -1,4 +1,10 @@
-import { EVIDENCE_STATUS_LABELS, type EvidenceStatus, type UploadKind } from '@wellbuddy/shared';
+import {
+  BIZ_NO_STATUS_LABELS,
+  type BizNoStatus,
+  EVIDENCE_STATUS_LABELS,
+  type EvidenceStatus,
+  type UploadKind,
+} from '@wellbuddy/shared';
 import { formatWon } from '@wellbuddy/accounting-core';
 
 export type CellType = 'text' | 'won' | 'bool' | 'direction' | 'invoiceKind' | 'usage';
@@ -39,7 +45,17 @@ export const STATUS_VARIANTS: Record<
   ignored: 'danger',
   matched: 'default',
 };
-export { EVIDENCE_STATUS_LABELS };
+export { BIZ_NO_STATUS_LABELS, EVIDENCE_STATUS_LABELS };
+
+export const BIZ_NO_STATUS_VARIANTS: Record<BizNoStatus, 'success' | 'danger' | 'muted'> = {
+  valid: 'success',
+  active: 'success',
+  suspended: 'danger',
+  closed: 'danger',
+  unregistered: 'danger',
+  invalid: 'danger',
+  unknown: 'muted',
+};
 
 /** 업로드 미리보기 표에 보여 줄 읽은 값 */
 export const SAMPLE_COLUMNS: Record<UploadKind, DisplayColumn[]> = {
@@ -133,4 +149,28 @@ export function columnChoices(
     const name = header[index]?.trim();
     return { index, label: `${columnLetter(index)}열 · ${name || '(빈 머리글)'}` };
   });
+}
+
+/** 금액 입력(12,000 · 12000원) → 원 단위 정수. 비우면 null, 읽을 수 없으면 NaN */
+export function parseWonInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const digits = trimmed.replace(/[,\s원₩]/g, '');
+  return /^\d+$/.test(digits) ? Number(digits) : Number.NaN;
+}
+
+/** 영수증 여러 장을 올린 결과 한 줄 요약 */
+export function receiptUploadSummary(
+  results: { duplicate: boolean; status: EvidenceStatus }[],
+  failed: number,
+): string {
+  const added = results.filter((r) => !r.duplicate);
+  const parts = [`영수증 ${added.length}장을 올렸습니다`];
+  const details = [
+    [added.filter((r) => r.status === 'review').length, '검토 필요'],
+    [results.length - added.length, '이미 올린 영수증'],
+    [failed, '실패'],
+  ] as const;
+  const extra = details.filter(([n]) => n > 0).map(([n, label]) => `${label} ${n}장`);
+  return `${parts.join('')}${extra.length ? `(${extra.join(', ')})` : ''}.`;
 }

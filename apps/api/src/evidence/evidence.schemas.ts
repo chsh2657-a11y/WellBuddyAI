@@ -1,4 +1,9 @@
-import { COLLECT_CHANNELS, EVIDENCE_STATUSES, UPLOAD_KINDS } from '@wellbuddy/shared';
+import {
+  BIZ_NO_STATUSES,
+  COLLECT_CHANNELS,
+  EVIDENCE_STATUSES,
+  UPLOAD_KINDS,
+} from '@wellbuddy/shared';
 import { z } from 'zod';
 
 const int = z.number().int();
@@ -119,6 +124,45 @@ export const CashReceiptSchema = z.object({
   partnerId: z.uuid().nullable(),
   partnerName: nullableString,
   ...linked,
+});
+
+/** 영수증(사진 → OCR 또는 직접 입력, P2-18) */
+export const ReceiptSchema = z.object({
+  id: z.uuid(),
+  fileId: z.uuid().nullable(),
+  filename: nullableString,
+  mimeType: nullableString,
+  txDate: nullableString,
+  merchantName: nullableString,
+  bizNo: nullableString,
+  bizNoStatus: z.enum(BIZ_NO_STATUSES).nullable(),
+  totalAmount: int.nullable(),
+  vatAmount: int.nullable(),
+  /** 읽은 OCR 공급자(직접 입력이면 null) */
+  ocrProvider: nullableString,
+  /** 읽지 못했을 때의 오류 */
+  ocrError: nullableString,
+  /** 인식 신뢰도 0~1 */
+  confidence: z.number().nullable(),
+  /** 짝지은 카드 승인 */
+  card: z
+    .object({
+      id: z.uuid(),
+      merchantName: z.string(),
+      approvalNo: z.string(),
+      approvedDate: z.string(),
+      amount: int,
+    })
+    .nullable(),
+  ...linked,
+  createdAt: z.string(),
+});
+
+/** 등록·수정 결과(안내 메시지 포함) */
+export const ReceiptResultSchema = ReceiptSchema.extend({ message: nullableString });
+export const ReceiptUploadSchema = ReceiptResultSchema.extend({
+  /** 같은 파일을 이미 올렸으면 true(기존 영수증을 돌려준다) */
+  duplicate: z.boolean(),
 });
 
 export const CollectionRunSchema = z.object({

@@ -82,6 +82,27 @@ export interface OcrProvider extends Connectable {
   }): Promise<ReceiptFields>;
 }
 
+/**
+ * 사업자번호 확인 결과
+ *  valid 형식·검증번호만 확인 · active 계속사업자 · suspended 휴업 · closed 폐업
+ *  unregistered 국세청 미등록 · invalid 검증번호 불일치 · unknown 확인하지 못함
+ */
+export const BIZ_NO_STATUSES = [
+  'valid',
+  'active',
+  'suspended',
+  'closed',
+  'unregistered',
+  'invalid',
+  'unknown',
+] as const;
+export type BizNoStatus = (typeof BIZ_NO_STATUSES)[number];
+
+export interface BizCheckProvider extends Connectable {
+  /** 검증번호가 맞는 숫자 10자리 번호들의 상태 */
+  check(bizNos: string[]): Promise<Map<string, BizNoStatus>>;
+}
+
 /** AI 분류에 넘기는 거래와 회사 맥락 */
 export interface ClassifyInput {
   kind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt' | 'receipt';
@@ -123,6 +144,7 @@ export interface ChannelProviders {
   hometax: HometaxProvider;
   taxinvoice: TaxInvoiceIssuer;
   ocr: OcrProvider;
+  bizcheck: BizCheckProvider;
   ai: AiClassifier;
 }
 export type ProviderChannel = keyof ChannelProviders;

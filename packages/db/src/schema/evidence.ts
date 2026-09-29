@@ -250,7 +250,7 @@ export const receipts = pgTable(
     ocrProvider: text(),
     ocrResult: jsonb().$type<Record<string, unknown>>(),
     confidence: real(),
-    /** 사업자번호 확인 결과: valid(형식·검증번호 통과)·active(국세청 계속사업자)·closed·invalid·unknown */
+    /** 사업자번호 확인 결과(shared BIZ_NO_STATUSES): valid·active·suspended·closed·unregistered·invalid·unknown */
     bizNoStatus: text(),
     /** 짝지은 카드 승인 */
     cardTransactionId: uuid().references(() => cardTransactions.id, { onDelete: 'set null' }),

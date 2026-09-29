@@ -188,3 +188,55 @@ export type EvidenceCenterQuery = z.infer<typeof EvidenceCenterQuerySchema>;
 
 /** 통장 잔액 대사 기준일(비우면 오늘) */
 export const ReconcileQuerySchema = z.object({ date: z.iso.date().optional() });
+
+/**
+ * 사업자번호 확인 결과(P2-18)
+ *  valid 형식·검증번호만 확인 · active 계속사업자 · suspended 휴업 · closed 폐업
+ *  unregistered 국세청 미등록 · invalid 검증번호 불일치 · unknown 확인하지 못함
+ */
+export const BIZ_NO_STATUSES = [
+  'valid',
+  'active',
+  'suspended',
+  'closed',
+  'unregistered',
+  'invalid',
+  'unknown',
+] as const;
+export type BizNoStatus = (typeof BIZ_NO_STATUSES)[number];
+export const BIZ_NO_STATUS_LABELS: Record<BizNoStatus, string> = {
+  valid: '번호 확인',
+  active: '계속사업자',
+  suspended: '휴업',
+  closed: '폐업',
+  unregistered: '미등록',
+  invalid: '번호 오류',
+  unknown: '확인 못함',
+};
+/** 공제·증빙으로 쓰면 안 되는 상태 */
+export const BAD_BIZ_NO_STATUSES: readonly BizNoStatus[] = [
+  'suspended',
+  'closed',
+  'unregistered',
+  'invalid',
+];
+
+/** 영수증 인식값 수정(비우면 null). 합계가 있으면 부가세는 합계보다 클 수 없다 */
+export const ReceiptUpdateSchema = z
+  .object({
+    txDate: z.iso.date().nullable().optional(),
+    merchantName: z.string().trim().max(100).nullable().optional(),
+    bizNo: z.string().trim().max(20).nullable().optional(),
+    totalAmount: z.number().int().min(0).max(1_000_000_000_000).nullable().optional(),
+    vatAmount: z.number().int().min(0).max(1_000_000_000_000).nullable().optional(),
+  })
+  .refine((v) => v.totalAmount == null || v.vatAmount == null || v.vatAmount <= v.totalAmount, {
+    error: '부가세가 합계보다 큽니다.',
+    path: ['vatAmount'],
+  });
+export type ReceiptUpdateInput = z.infer<typeof ReceiptUpdateSchema>;
+
+export const ReceiptListQuerySchema = z.object({
+  status: z.enum(EVIDENCE_STATUSES).optional(),
+});
+export type ReceiptListQuery = z.infer<typeof ReceiptListQuerySchema>;

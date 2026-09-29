@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { columnChoices, columnLetter, formatCell, rowLabel } from './evidence-format';
+import {
+  columnChoices,
+  columnLetter,
+  formatCell,
+  parseWonInput,
+  receiptUploadSummary,
+  rowLabel,
+} from './evidence-format';
 
 describe('증빙 화면 표시 도우미', () => {
   it('엑셀 열 이름', () => {
@@ -44,5 +51,29 @@ describe('증빙 화면 표시 도우미', () => {
     expect(formatCell('expense_proof', 'usage')).toBe('지출증빙');
     expect(formatCell(null)).toBe('');
     expect(formatCell(3)).toBe('3');
+  });
+
+  it('금액 입력을 읽는다', () => {
+    expect(parseWonInput(' 12,000원 ')).toBe(12_000);
+    expect(parseWonInput('₩3300')).toBe(3_300);
+    expect(parseWonInput('')).toBeNull();
+    expect(parseWonInput('12.5')).toBeNaN();
+    expect(parseWonInput('-100')).toBeNaN();
+  });
+
+  it('영수증 업로드 요약', () => {
+    expect(
+      receiptUploadSummary(
+        [
+          { duplicate: false, status: 'pending' },
+          { duplicate: false, status: 'review' },
+          { duplicate: true, status: 'matched' },
+        ],
+        1,
+      ),
+    ).toBe('영수증 2장을 올렸습니다(검토 필요 1장, 이미 올린 영수증 1장, 실패 1장).');
+    expect(receiptUploadSummary([{ duplicate: false, status: 'pending' }], 0)).toBe(
+      '영수증 1장을 올렸습니다.',
+    );
   });
 });

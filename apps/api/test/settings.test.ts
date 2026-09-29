@@ -60,6 +60,7 @@ describe('설정: 메뉴 사용 여부·연동관리', () => {
         'hometax',
         'taxinvoice',
         'ocr',
+        'bizcheck',
         'ai',
       ]);
       expect(res.body[0]).toMatchObject({ enabled: false, provider: 'file', schedule: 'manual' });

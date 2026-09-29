@@ -1,3 +1,4 @@
+import { isValidBizNo } from '@wellbuddy/accounting-core';
 import { describe, expect, it } from 'vitest';
 import { bankTransactionHash, cardApprovalHash, taxInvoiceHash } from '../hash.js';
 import { ProviderError } from '../registry.js';
@@ -9,13 +10,6 @@ import {
   MockHometaxProvider,
 } from './index.js';
 
-const WEIGHTS = [1, 3, 7, 1, 3, 7, 1, 3, 5];
-function validBizNo(v: string) {
-  const n = [...v].map(Number);
-  const sum = WEIGHTS.reduce((s, w, i) => s + n[i]! * w, 0) + Math.floor((n[8]! * 5) / 10);
-  return v.length === 10 && (10 - (sum % 10)) % 10 === n[9];
-}
-
 const account = { id: 'acc-1', bankCode: '0004', accountNo: '12345678901234' };
 const card = { id: 'card-1', cardCompany: '0306', cardNo: '4518123456789012' };
 const ctx = { companyId: 'company-1', companyName: '모의상사', bizNo: '1248100998' };
@@ -24,7 +18,7 @@ describe('모의 공급자', () => {
   it('가상 거래처 사업자번호는 모두 검증 공식을 통과한다', () => {
     expect(bizNo('124810099')).toBe('1248100998');
     for (const p of [...CUSTOMERS, ...SUPPLIERS, ...MERCHANTS, ...CASH_MERCHANTS]) {
-      expect(validBizNo(p.bizNo), p.name).toBe(true);
+      expect(isValidBizNo(p.bizNo), p.name).toBe(true);
     }
   });
 

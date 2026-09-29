@@ -1572,6 +1572,54 @@ export interface paths {
     patch: operations['SourcesController_updateCard'];
     trace?: never;
   };
+  '/api/evidence/receipts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReceiptsController_list'];
+    put?: never;
+    post: operations['ReceiptsController_upload'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/receipts/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReceiptsController_get'];
+    put?: never;
+    post?: never;
+    delete: operations['ReceiptsController_remove'];
+    options?: never;
+    head?: never;
+    patch: operations['ReceiptsController_update'];
+    trace?: never;
+  };
+  '/api/evidence/receipts/{id}/verify-biz-no': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['ReceiptsController_verifyBizNo'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/evidence/uploads/preview': {
     parameters: {
       query?: never;
@@ -3212,7 +3260,7 @@ export interface operations {
         content: {
           'application/json': {
             /** @enum {string} */
-            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'ai';
+            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'bizcheck' | 'ai';
             enabled: boolean;
             provider: string;
             credentials: {
@@ -3268,7 +3316,7 @@ export interface operations {
         content: {
           'application/json': {
             /** @enum {string} */
-            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'ai';
+            channel: 'bank' | 'card' | 'hometax' | 'taxinvoice' | 'ocr' | 'bizcheck' | 'ai';
             enabled: boolean;
             provider: string;
             credentials: {
@@ -9042,6 +9090,391 @@ export interface operations {
             ledgerAccountId: string;
             ledgerAccount: string;
             isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_list: {
+    parameters: {
+      query?: {
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 영수증(최근 500건) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string | null;
+            filename: string | null;
+            mimeType: string | null;
+            txDate: string | null;
+            merchantName: string | null;
+            bizNo: string | null;
+            /** @enum {string|null} */
+            bizNoStatus:
+              | 'valid'
+              | 'active'
+              | 'suspended'
+              | 'closed'
+              | 'unregistered'
+              | 'invalid'
+              | 'unknown'
+              | null;
+            totalAmount: number | null;
+            vatAmount: number | null;
+            ocrProvider: string | null;
+            ocrError: string | null;
+            confidence: number | null;
+            card: {
+              /** Format: uuid */
+              id: string;
+              merchantName: string;
+              approvalNo: string;
+              approvedDate: string;
+              amount: number;
+            } | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_upload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 영수증 사진·PDF 를 저장하고 OCR 로 읽어 등록한다(같은 파일은 기존 것을 돌려준다) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string | null;
+            filename: string | null;
+            mimeType: string | null;
+            txDate: string | null;
+            merchantName: string | null;
+            bizNo: string | null;
+            /** @enum {string|null} */
+            bizNoStatus:
+              | 'valid'
+              | 'active'
+              | 'suspended'
+              | 'closed'
+              | 'unregistered'
+              | 'invalid'
+              | 'unknown'
+              | null;
+            totalAmount: number | null;
+            vatAmount: number | null;
+            ocrProvider: string | null;
+            ocrError: string | null;
+            confidence: number | null;
+            card: {
+              /** Format: uuid */
+              id: string;
+              merchantName: string;
+              approvalNo: string;
+              approvedDate: string;
+              amount: number;
+            } | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+            message: string | null;
+            duplicate: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string | null;
+            filename: string | null;
+            mimeType: string | null;
+            txDate: string | null;
+            merchantName: string | null;
+            bizNo: string | null;
+            /** @enum {string|null} */
+            bizNoStatus:
+              | 'valid'
+              | 'active'
+              | 'suspended'
+              | 'closed'
+              | 'unregistered'
+              | 'invalid'
+              | 'unknown'
+              | null;
+            totalAmount: number | null;
+            vatAmount: number | null;
+            ocrProvider: string | null;
+            ocrError: string | null;
+            confidence: number | null;
+            card: {
+              /** Format: uuid */
+              id: string;
+              merchantName: string;
+              approvalNo: string;
+              approvedDate: string;
+              amount: number;
+            } | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          txDate?: string | null;
+          merchantName?: string | null;
+          bizNo?: string | null;
+          totalAmount?: number | null;
+          vatAmount?: number | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 인식값 수정(사업자번호가 바뀌면 다시 확인) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string | null;
+            filename: string | null;
+            mimeType: string | null;
+            txDate: string | null;
+            merchantName: string | null;
+            bizNo: string | null;
+            /** @enum {string|null} */
+            bizNoStatus:
+              | 'valid'
+              | 'active'
+              | 'suspended'
+              | 'closed'
+              | 'unregistered'
+              | 'invalid'
+              | 'unknown'
+              | null;
+            totalAmount: number | null;
+            vatAmount: number | null;
+            ocrProvider: string | null;
+            ocrError: string | null;
+            confidence: number | null;
+            card: {
+              /** Format: uuid */
+              id: string;
+              merchantName: string;
+              approvalNo: string;
+              approvedDate: string;
+              amount: number;
+            } | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+            message: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ReceiptsController_verifyBizNo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 사업자번호 상태를 다시 조회 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string | null;
+            filename: string | null;
+            mimeType: string | null;
+            txDate: string | null;
+            merchantName: string | null;
+            bizNo: string | null;
+            /** @enum {string|null} */
+            bizNoStatus:
+              | 'valid'
+              | 'active'
+              | 'suspended'
+              | 'closed'
+              | 'unregistered'
+              | 'invalid'
+              | 'unknown'
+              | null;
+            totalAmount: number | null;
+            vatAmount: number | null;
+            ocrProvider: string | null;
+            ocrError: string | null;
+            confidence: number | null;
+            card: {
+              /** Format: uuid */
+              id: string;
+              merchantName: string;
+              approvalNo: string;
+              approvedDate: string;
+              amount: number;
+            } | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            createdAt: string;
+            message: string | null;
           };
         };
       };

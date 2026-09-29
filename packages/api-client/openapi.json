@@ -2976,6 +2976,7 @@
                           "hometax",
                           "taxinvoice",
                           "ocr",
+                          "bizcheck",
                           "ai"
                         ]
                       },
@@ -3118,6 +3119,7 @@
                         "hometax",
                         "taxinvoice",
                         "ocr",
+                        "bizcheck",
                         "ai"
                       ]
                     },
@@ -18906,6 +18908,1070 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
+    "/api/evidence/receipts": {
+      "post": {
+        "operationId": "ReceiptsController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "영수증 사진·PDF 를 저장하고 OCR 로 읽어 등록한다(같은 파일은 기존 것을 돌려준다)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "fileId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "filename": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "mimeType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "txDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "merchantName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNoStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "active",
+                        "suspended",
+                        "closed",
+                        "unregistered",
+                        "invalid",
+                        "unknown"
+                      ]
+                    },
+                    "totalAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "ocrProvider": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ocrError": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "card": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "merchantName": {
+                          "type": "string"
+                        },
+                        "approvalNo": {
+                          "type": "string"
+                        },
+                        "approvedDate": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "merchantName",
+                        "approvalNo",
+                        "approvedDate",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "entryId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "entryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fileId",
+                    "filename",
+                    "mimeType",
+                    "txDate",
+                    "merchantName",
+                    "bizNo",
+                    "bizNoStatus",
+                    "totalAmount",
+                    "vatAmount",
+                    "ocrProvider",
+                    "ocrError",
+                    "confidence",
+                    "card",
+                    "source",
+                    "status",
+                    "entryId",
+                    "entryNumber",
+                    "createdAt",
+                    "message",
+                    "duplicate"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      },
+      "get": {
+        "operationId": "ReceiptsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "review",
+                "posted",
+                "ignored",
+                "matched"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "영수증(최근 500건)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "fileId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "filename": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "mimeType": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "txDate": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "merchantName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "bizNo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "bizNoStatus": {
+                        "nullable": true,
+                        "type": "string",
+                        "enum": [
+                          "valid",
+                          "active",
+                          "suspended",
+                          "closed",
+                          "unregistered",
+                          "invalid",
+                          "unknown"
+                        ]
+                      },
+                      "totalAmount": {
+                        "nullable": true,
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "vatAmount": {
+                        "nullable": true,
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "ocrProvider": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "ocrError": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "confidence": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "card": {
+                        "nullable": true,
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "merchantName": {
+                            "type": "string"
+                          },
+                          "approvalNo": {
+                            "type": "string"
+                          },
+                          "approvedDate": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "merchantName",
+                          "approvalNo",
+                          "approvedDate",
+                          "amount"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "review",
+                          "posted",
+                          "ignored",
+                          "matched"
+                        ]
+                      },
+                      "entryId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "entryNumber": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "fileId",
+                      "filename",
+                      "mimeType",
+                      "txDate",
+                      "merchantName",
+                      "bizNo",
+                      "bizNoStatus",
+                      "totalAmount",
+                      "vatAmount",
+                      "ocrProvider",
+                      "ocrError",
+                      "confidence",
+                      "card",
+                      "source",
+                      "status",
+                      "entryId",
+                      "entryNumber",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
+    "/api/evidence/receipts/{id}": {
+      "get": {
+        "operationId": "ReceiptsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "fileId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "filename": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "mimeType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "txDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "merchantName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNoStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "active",
+                        "suspended",
+                        "closed",
+                        "unregistered",
+                        "invalid",
+                        "unknown"
+                      ]
+                    },
+                    "totalAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "ocrProvider": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ocrError": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "card": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "merchantName": {
+                          "type": "string"
+                        },
+                        "approvalNo": {
+                          "type": "string"
+                        },
+                        "approvedDate": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "merchantName",
+                        "approvalNo",
+                        "approvedDate",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "entryId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "entryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fileId",
+                    "filename",
+                    "mimeType",
+                    "txDate",
+                    "merchantName",
+                    "bizNo",
+                    "bizNoStatus",
+                    "totalAmount",
+                    "vatAmount",
+                    "ocrProvider",
+                    "ocrError",
+                    "confidence",
+                    "card",
+                    "source",
+                    "status",
+                    "entryId",
+                    "entryNumber",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      },
+      "patch": {
+        "operationId": "ReceiptsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "txDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "merchantName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "bizNo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "totalAmount": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000000000000
+                  },
+                  "vatAmount": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000000000000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인식값 수정(사업자번호가 바뀌면 다시 확인)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "fileId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "filename": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "mimeType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "txDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "merchantName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNoStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "active",
+                        "suspended",
+                        "closed",
+                        "unregistered",
+                        "invalid",
+                        "unknown"
+                      ]
+                    },
+                    "totalAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "ocrProvider": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ocrError": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "card": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "merchantName": {
+                          "type": "string"
+                        },
+                        "approvalNo": {
+                          "type": "string"
+                        },
+                        "approvedDate": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "merchantName",
+                        "approvalNo",
+                        "approvedDate",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "entryId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "entryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fileId",
+                    "filename",
+                    "mimeType",
+                    "txDate",
+                    "merchantName",
+                    "bizNo",
+                    "bizNoStatus",
+                    "totalAmount",
+                    "vatAmount",
+                    "ocrProvider",
+                    "ocrError",
+                    "confidence",
+                    "card",
+                    "source",
+                    "status",
+                    "entryId",
+                    "entryNumber",
+                    "createdAt",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      },
+      "delete": {
+        "operationId": "ReceiptsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
+    "/api/evidence/receipts/{id}/verify-biz-no": {
+      "post": {
+        "operationId": "ReceiptsController_verifyBizNo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "사업자번호 상태를 다시 조회",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "fileId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "filename": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "mimeType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "txDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "merchantName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bizNoStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "active",
+                        "suspended",
+                        "closed",
+                        "unregistered",
+                        "invalid",
+                        "unknown"
+                      ]
+                    },
+                    "totalAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "ocrProvider": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "ocrError": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "card": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "merchantName": {
+                          "type": "string"
+                        },
+                        "approvalNo": {
+                          "type": "string"
+                        },
+                        "approvedDate": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "merchantName",
+                        "approvalNo",
+                        "approvedDate",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "entryId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "entryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "fileId",
+                    "filename",
+                    "mimeType",
+                    "txDate",
+                    "merchantName",
+                    "bizNo",
+                    "bizNoStatus",
+                    "totalAmount",
+                    "vatAmount",
+                    "ocrProvider",
+                    "ocrError",
+                    "confidence",
+                    "card",
+                    "source",
+                    "status",
+                    "entryId",
+                    "entryNumber",
+                    "createdAt",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
           "403": {
             "description": "권한 필요: evidence (write)"
           }
