@@ -241,4 +241,56 @@ describe('자동 수집(모의 공급자)', () => {
     const again = (await collect(owner, 'hometax', range).expect(200)).body;
     expect(again).toMatchObject({ inserted: 0, duplicates: done.inserted });
   });
+  it('홈택스 카드매입은 카드 승인과 대조해 가맹점 사업자번호·부가세를 채운다', async () => {
+    // 카드사 파일에는 사업자번호·부가세가 없다
+    const file = Buffer.from(
+      [
+        '승인일자,승인시간,가맹점명,승인금액,승인번호,승인구분',
+        '2025-03-20,12:00,동네식당,"33,000",77770001,승인',
+      ].join('\n'),
+    );
+    await owner
+      .post('/api/evidence/uploads/commit')
+      .field('options', JSON.stringify({ kind: 'card', sourceId: cardId }))
+      .attach('file', file, 'card.csv')
+      .expect(200);
+    const registry = app.get(ProviderRegistry);
+    registry.register('hometax', 'mock', (_, ctx) =>
+      Object.assign(new MockHometaxProvider(ctx), {
+        fetchCardPurchases: async () => [
+          {
+            date: '2025-03-21',
+            approvalNo: '77770001',
+            amount: 33_000,
+            cancelled: false,
+            merchantName: '동네식당',
+            merchantBizNo: '1234567891',
+            vatAmount: 3_000,
+          },
+          {
+            date: '2025-03-02',
+            approvalNo: '00000000',
+            amount: 1,
+            cancelled: false,
+            merchantName: '없음',
+          },
+        ],
+      }),
+    );
+    try {
+      const done = (await collect(owner, 'hometax', MARCH).expect(200)).body;
+      expect(done.message).toContain('카드매입 2건 중 1건 카드 승인과 대조');
+      const cards = (await owner.get('/api/evidence/card-transactions').expect(200)).body as {
+        approvalNo: string;
+        merchantBizNo: string | null;
+        vatAmount: number | null;
+      }[];
+      expect(cards.find((c) => c.approvalNo === '77770001')).toMatchObject({
+        merchantBizNo: '1234567891',
+        vatAmount: 3_000,
+      });
+    } finally {
+      registry.register('hometax', 'mock', (_, ctx) => new MockHometaxProvider(ctx));
+    }
+  });
 });

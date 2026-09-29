@@ -21,7 +21,8 @@ import {
   type TaxInvoiceRecord,
   withSequence,
 } from '@wellbuddy/integrations';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
+import { matchCardPurchases } from '../auto-journal/engine/matching.js';
 import { requireCompanyContext } from '../common/request-context.js';
 
 export interface InsertResult {
@@ -179,6 +180,42 @@ export class EvidenceStore {
         .onConflictDoNothing({ target: [cardTransactions.companyId, cardTransactions.dedupeHash] })
         .returning({ id: cardTransactions.id }),
     );
+  }
+
+  /**
+   * 홈택스 카드매입(P2-19)을 카드 승인과 맞춰, 카드사 자료에 없던 가맹점 사업자번호·부가세를 채운다.
+   * 이미 값이 있으면 그대로 둔다. 맞춘 건수를 돌려준다.
+   */
+  async enrichCards(tx: Transaction, purchases: CardApprovalRecord[]): Promise<number> {
+    if (purchases.length === 0) return 0;
+    const approvalNos = [...new Set(purchases.map((p) => p.approvalNo))];
+    const cards = await tx
+      .select()
+      .from(cardTransactions)
+      .where(inArray(cardTransactions.approvalNo, approvalNos));
+    const matches = matchCardPurchases(
+      purchases,
+      cards.map((c) => ({
+        id: c.id,
+        cardId: c.cardId,
+        approvalNo: c.approvalNo,
+        amount: c.amount,
+        cancelled: c.cancelled,
+        date: c.approvedDate,
+        merchantBizNo: c.merchantBizNo,
+      })),
+    );
+    for (const m of matches) {
+      await tx
+        .update(cardTransactions)
+        .set({
+          merchantBizNo: sql`coalesce(${cardTransactions.merchantBizNo}, ${m.merchantBizNo})`,
+          vatAmount: sql`coalesce(${cardTransactions.vatAmount}, ${m.vatAmount}::bigint)`,
+          updatedAt: new Date(),
+        })
+        .where(eq(cardTransactions.id, m.cardTransactionId));
+    }
+    return matches.length;
   }
 
   /** 사업자번호 → 거래처 */

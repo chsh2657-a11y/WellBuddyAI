@@ -9,3 +9,4 @@ export * from './fx.js';
 export * from './journal.js';
 export * from './notes.js';
 export * from './system.js';
+export * from './auto-journal.js';

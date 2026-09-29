@@ -170,6 +170,40 @@ export class PartnersService {
     });
   }
 
+  /**
+   * 증빙에서 만난 상대를 거래처로 찾고, 없으면 만든다(자동분개: 세금계산서 상대, 카드사).
+   * 사업자번호가 있으면 사업자번호로, 없으면 같은 이름으로 찾는다.
+   */
+  async ensureIn(
+    tx: Transaction,
+    input: { name: string; bizRegNo?: string | null; kind: 'customer' | 'supplier' | 'other' },
+  ): Promise<string> {
+    const { companyId } = requireCompanyContext();
+    const bizRegNo = input.bizRegNo && /^\d{10}$/.test(input.bizRegNo) ? input.bizRegNo : null;
+    const [found] = await tx
+      .select({ id: partners.id })
+      .from(partners)
+      .where(bizRegNo ? eq(partners.bizRegNo, bizRegNo) : eq(partners.name, input.name))
+      .limit(1);
+    if (found) return found.id;
+    const [row] = await tx
+      .insert(partners)
+      .values({
+        companyId,
+        code: await this.nextCode(tx),
+        name: input.name,
+        bizRegNo,
+        kind: input.kind,
+        memo: '자동분개에서 자동 등록',
+      })
+      .returning();
+    await this.audit.record(
+      { action: 'partner.create', entity: 'partner', entityId: row!.id, after: this.toDto(row!) },
+      tx,
+    );
+    return row!.id;
+  }
+
   /** 숫자 코드 중 가장 큰 값 + 1 (5자리, 예: 00001) */
   private async nextCode(tx: Transaction): Promise<string> {
     const [row] = await tx

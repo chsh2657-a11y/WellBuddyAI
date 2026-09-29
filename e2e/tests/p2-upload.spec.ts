@@ -35,7 +35,9 @@ test('증빙: 통장 파일 올리기 → 미리보기 → 등록, 처음 보는
     page.getByRole('navigation', { name: '증빙 메뉴' }).getByRole('link', { name, exact: true });
   await signupWithCompany(page, 'p2-upload', '업로드상사');
   await page.getByRole('link', { name: '증빙·자동분개' }).click();
-  await expect(page).toHaveURL(/\/evidence\/records/);
+  await expect(page).toHaveURL(/\/evidence\/review/);
+  await expect(page.getByText('검토할 거래가 없습니다.', { exact: false })).toBeVisible();
+  await tab('수집 내역').click();
   await expect(page.getByText('수집한 통장 자료가 없습니다.')).toBeVisible();
 
   await tab('계좌·카드').click();

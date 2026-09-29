@@ -1764,6 +1764,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/auto-journal/settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AutoJournalController_settings'];
+    put: operations['AutoJournalController_updateSettings'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/run': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AutoJournalController_run'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/review': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AutoJournalController_review'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/review/{evidenceKind}/{evidenceId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['AutoJournalController_updateSuggestion'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AutoJournalController_approve'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/rules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AutoJournalController_listRules'];
+    put?: never;
+    post: operations['AutoJournalController_createRule'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/auto-journal/rules/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['AutoJournalController_updateRule'];
+    post?: never;
+    delete: operations['AutoJournalController_removeRule'];
+    options?: never;
+    head?: never;
+    patch: operations['AutoJournalController_toggleRule'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9401,6 +9513,635 @@ export interface operations {
         };
       };
       /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_settings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            autoPost: boolean;
+            threshold: number;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_updateSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          autoPost: boolean;
+          threshold: number;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            autoPost: boolean;
+            threshold: number;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_run: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 분개 전 증빙을 매칭·분류하고, 신뢰도가 기준 이상이면 자동 전기한다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            total: number;
+            matched: number;
+            posted: number;
+            review: number;
+            failed: number;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_review: {
+    parameters: {
+      query?: {
+        kind?:
+          | 'bank_in'
+          | 'bank_out'
+          | 'card'
+          | 'card_cancel'
+          | 'tax_sales'
+          | 'tax_purchase'
+          | 'cash_sales'
+          | 'cash_purchase';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 자동분개 검토함 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            evidenceKind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+            /** Format: uuid */
+            evidenceId: string;
+            /** @enum {string} */
+            kind:
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase';
+            kindLabel: string;
+            date: string;
+            description: string;
+            counterparty: string | null;
+            sourceLabel: string | null;
+            amount: number;
+            reversal: boolean;
+            /** Format: uuid */
+            accountId: string | null;
+            accountCode: string | null;
+            accountName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            confidence: number;
+            /** @enum {string} */
+            method: 'rule' | 'history' | 'ai' | 'default' | 'manual' | 'none';
+            reason: string | null;
+            error: string | null;
+            edited: boolean;
+            lines: {
+              accountCode: string;
+              accountName: string;
+              debit: number;
+              credit: number;
+            }[];
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_updateSuggestion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        evidenceKind: string;
+        evidenceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          accountId?: string | null;
+          deductible?: boolean | null;
+          /** Format: uuid */
+          partnerId?: string | null;
+          /** Format: uuid */
+          departmentId?: string | null;
+          /** Format: uuid */
+          projectId?: string | null;
+          memo?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_approve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          items: {
+            /** @enum {string} */
+            evidenceKind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+            /** Format: uuid */
+            evidenceId: string;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description 고른 추천을 전표로 만든다(하나씩 처리) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            posted: {
+              /** @enum {string} */
+              evidenceKind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+              /** Format: uuid */
+              evidenceId: string;
+              /** Format: uuid */
+              entryId: string;
+            }[];
+            failed: {
+              /** @enum {string} */
+              evidenceKind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+              /** Format: uuid */
+              evidenceId: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_listRules: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            priority: number;
+            isActive: boolean;
+            kinds: (
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase'
+            )[];
+            keywords: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            minAmount: number | null;
+            maxAmount: number | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            /** Format: uuid */
+            assignPartnerId: string | null;
+            assignPartnerName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            hitCount: number;
+            lastHitAt: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_createRule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          /** @default 100 */
+          priority?: number;
+          /** @default true */
+          isActive?: boolean;
+          /** @default [] */
+          kinds?: (
+            | 'bank_in'
+            | 'bank_out'
+            | 'card'
+            | 'card_cancel'
+            | 'tax_sales'
+            | 'tax_purchase'
+            | 'cash_sales'
+            | 'cash_purchase'
+          )[];
+          keywords?: string | null;
+          /** Format: uuid */
+          partnerId?: string | null;
+          minAmount?: number | null;
+          maxAmount?: number | null;
+          /** Format: uuid */
+          accountId: string;
+          /** Format: uuid */
+          assignPartnerId?: string | null;
+          deductible?: boolean | null;
+          /** Format: uuid */
+          departmentId?: string | null;
+          /** Format: uuid */
+          projectId?: string | null;
+          memo?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            priority: number;
+            isActive: boolean;
+            kinds: (
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase'
+            )[];
+            keywords: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            minAmount: number | null;
+            maxAmount: number | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            /** Format: uuid */
+            assignPartnerId: string | null;
+            assignPartnerName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            hitCount: number;
+            lastHitAt: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_updateRule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          /** @default 100 */
+          priority?: number;
+          /** @default true */
+          isActive?: boolean;
+          /** @default [] */
+          kinds?: (
+            | 'bank_in'
+            | 'bank_out'
+            | 'card'
+            | 'card_cancel'
+            | 'tax_sales'
+            | 'tax_purchase'
+            | 'cash_sales'
+            | 'cash_purchase'
+          )[];
+          keywords?: string | null;
+          /** Format: uuid */
+          partnerId?: string | null;
+          minAmount?: number | null;
+          maxAmount?: number | null;
+          /** Format: uuid */
+          accountId: string;
+          /** Format: uuid */
+          assignPartnerId?: string | null;
+          deductible?: boolean | null;
+          /** Format: uuid */
+          departmentId?: string | null;
+          /** Format: uuid */
+          projectId?: string | null;
+          memo?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            priority: number;
+            isActive: boolean;
+            kinds: (
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase'
+            )[];
+            keywords: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            minAmount: number | null;
+            maxAmount: number | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            /** Format: uuid */
+            assignPartnerId: string | null;
+            assignPartnerName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            hitCount: number;
+            lastHitAt: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_removeRule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AutoJournalController_toggleRule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          isActive?: boolean;
+          priority?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            priority: number;
+            isActive: boolean;
+            kinds: (
+              | 'bank_in'
+              | 'bank_out'
+              | 'card'
+              | 'card_cancel'
+              | 'tax_sales'
+              | 'tax_purchase'
+              | 'cash_sales'
+              | 'cash_purchase'
+            )[];
+            keywords: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            minAmount: number | null;
+            maxAmount: number | null;
+            /** Format: uuid */
+            accountId: string;
+            account: string;
+            /** Format: uuid */
+            assignPartnerId: string | null;
+            assignPartnerName: string | null;
+            deductible: boolean | null;
+            /** Format: uuid */
+            departmentId: string | null;
+            /** Format: uuid */
+            projectId: string | null;
+            memo: string | null;
+            hitCount: number;
+            lastHitAt: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
       403: {
         headers: {
           [name: string]: unknown;

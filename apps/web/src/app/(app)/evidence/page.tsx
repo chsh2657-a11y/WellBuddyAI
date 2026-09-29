@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function EvidenceIndexPage() {
-  redirect('/evidence/records');
+  redirect('/evidence/review');
 }

@@ -1,4 +1,5 @@
 export * from './accounting.js';
+export * from './auto-journal.js';
 export * from './assets.js';
 export * from './auth.js';
 export * from './biz-reg-no.js';

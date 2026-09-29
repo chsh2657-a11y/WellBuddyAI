@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export const EVIDENCE_TABS = [
+  { href: '/evidence/review', label: '자동분개 검토함' },
   { href: '/evidence/records', label: '수집 내역' },
   { href: '/evidence/upload', label: '파일 올리기' },
   { href: '/evidence/collect', label: '자동 수집' },
+  { href: '/evidence/rules', label: '분개 규칙' },
   { href: '/evidence/sources', label: '계좌·카드' },
 ];
 

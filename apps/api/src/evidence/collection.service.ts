@@ -191,12 +191,18 @@ export class CollectionService {
           ...(await hometax.fetchCashReceipts('sales', range)),
           ...(await hometax.fetchCashReceipts('purchase', range)),
         ];
+        const cardPurchases = await hometax.fetchCardPurchases(range);
         save = async (tx, run) => {
           const inv = await this.store.insertTaxInvoices(tx, invoices, source, run);
           const cash = await this.store.insertCashReceipts(tx, receipts, source, run);
+          const enriched = await this.store.enrichCards(tx, cardPurchases);
           return {
             result: sum([inv, cash]),
-            detail: `세금계산서 ${counts(inv)}, 현금영수증 ${counts(cash)}`,
+            detail: `세금계산서 ${counts(inv)}, 현금영수증 ${counts(cash)}${
+              cardPurchases.length
+                ? `, 카드매입 ${cardPurchases.length}건 중 ${enriched}건 카드 승인과 대조`
+                : ''
+            }`,
           };
         };
       }

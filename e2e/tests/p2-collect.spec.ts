@@ -26,7 +26,7 @@ test('증빙: 모의 데이터로 통장·카드·홈택스를 수집하고, 다
   await useMock(page, 'hometax', '홈택스 증빙');
 
   await page.getByRole('link', { name: '증빙·자동분개' }).click();
-  await expect(page).toHaveURL(/\/evidence\/records/);
+  await expect(page).toHaveURL(/\/evidence\/review/);
   await tab('자동 수집').click();
   await expect(page).toHaveURL(/\/evidence\/collect/);
   // 계좌가 없으면 수집하지 않는다

@@ -6,7 +6,7 @@ test.describe.configure({ mode: 'serial' });
 test('증빙: 은행 계좌·법인카드 등록(번호는 끝 4자리만 표시)', async ({ page }) => {
   await signupWithCompany(page, 'p2-sources', '수집상사');
   await page.getByRole('link', { name: '증빙·자동분개' }).click();
-  await expect(page).toHaveURL(/\/evidence\/records/);
+  await expect(page).toHaveURL(/\/evidence\/review/);
   await page.getByRole('link', { name: '계좌·카드' }).click();
   await expect(page).toHaveURL(/\/evidence\/sources/);
 
