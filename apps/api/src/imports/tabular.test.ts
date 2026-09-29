@@ -5,10 +5,29 @@ import {
   mapRows,
   missingHeaders,
   parseCsv,
+  parseHtmlTable,
   parseTabular,
 } from './tabular.js';
 
 describe('CSV·엑셀 읽기', () => {
+  it('확장자만 .xls 인 HTML 표(은행 엑셀 저장)를 읽는다', async () => {
+    const html = `<html><body><table border=1>
+      <tr><th colspan="2">거래내역</th></tr>
+      <tr><td>거래일시</td><td>적요</td><td>입금액</td></tr>
+      <tr><td>2026.03.10&nbsp;09:00</td><td>이자<br/>입금</td><td>1,200</td></tr>
+      <!-- <tr><td>주석</td></tr> -->
+    </table></body></html>`;
+    expect(parseHtmlTable(html)).toEqual([
+      ['거래내역', ''],
+      ['거래일시', '적요', '입금액'],
+      ['2026.03.10 09:00', '이자 입금', '1,200'],
+    ]);
+    expect(await parseTabular(Buffer.from(html), '거래내역.xls')).toHaveLength(3);
+    await expect(parseTabular(Buffer.from([0xd0, 0xcf, 0x11, 0xe0]), 'old.xls')).rejects.toThrow(
+      /\.xlsx 로 다시 저장/,
+    );
+  });
+
   it('따옴표 안의 쉼표·줄바꿈·이스케이프를 처리한다', () => {
     expect(parseCsv('a,b,c\n"1,000","줄\n바꿈","say ""hi"""\r\n\n')).toEqual([
       ['a', 'b', 'c'],

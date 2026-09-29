@@ -17,3 +17,13 @@ export function formatDate(value: string | Date): string {
 export function todayIso(): string {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date());
 }
+
+const dateTimeFormat = new Intl.DateTimeFormat('ko-KR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+  timeZone: 'Asia/Seoul',
+});
+
+export function formatDateTime(value: string | Date): string {
+  return dateTimeFormat.format(typeof value === 'string' ? new Date(value) : value);
+}

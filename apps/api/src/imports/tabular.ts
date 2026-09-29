@@ -12,6 +12,11 @@ export async function parseTabular(buffer: Buffer, filename: string): Promise<Ta
   const lower = filename.toLowerCase();
   if (lower.endsWith('.csv') || lower.endsWith('.txt')) return parseCsv(decodeText(buffer));
   if (lower.endsWith('.xlsx')) return parseXlsx(buffer);
+  // 은행·카드사 "엑셀 저장"은 확장자만 .xls 인 HTML 표인 경우가 많다
+  if (lower.endsWith('.xls') || lower.endsWith('.html') || lower.endsWith('.htm')) {
+    const text = decodeText(buffer);
+    if (/<table[\s>]/i.test(text)) return parseHtmlTable(text);
+  }
   if (lower.endsWith('.xls')) {
     throw new TabularParseError(
       '예전 엑셀 형식(.xls)은 지원하지 않습니다. .xlsx 로 다시 저장해 주세요.',
@@ -29,6 +34,45 @@ export function decodeText(buffer: Buffer): string {
   } catch {
     return new TextDecoder('euc-kr').decode(buffer);
   }
+}
+
+const ENTITIES: Record<string, string> = {
+  nbsp: ' ',
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+};
+
+function decodeEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, code: string) => {
+    if (code[0] === '#') {
+      const n =
+        code[1] === 'x' || code[1] === 'X' ? parseInt(code.slice(2), 16) : Number(code.slice(1));
+      return Number.isFinite(n) ? String.fromCodePoint(n) : whole;
+    }
+    return ENTITIES[code.toLowerCase()] ?? whole;
+  });
+}
+
+/** HTML 표(<tr><td>)를 줄·칸으로 읽는다(colspan 은 빈 칸으로 채운다) */
+export function parseHtmlTable(html: string): Table {
+  const rows: Table = [];
+  const body = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style)[\s\S]*?<\/\1>/gi, '');
+  for (const tr of body.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const row: string[] = [];
+    for (const td of tr[1]!.matchAll(/<(td|th)([^>]*)>([\s\S]*?)<\/\1>/gi)) {
+      const text = decodeEntities(td[3]!.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ''))
+        .replace(/\s+/g, ' ')
+        .trim();
+      row.push(text);
+      const span = Number(/colspan\s*=\s*["']?(\d+)/i.exec(td[2] ?? '')?.[1] ?? 1);
+      for (let i = 1; i < span; i++) row.push('');
+    }
+    if (row.length > 0) rows.push(row);
+  }
+  return rows;
 }
 
 /** RFC 4180 CSV(따옴표 안의 쉼표·줄바꿈·"" 이스케이프 지원) */

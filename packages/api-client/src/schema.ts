@@ -1572,6 +1572,166 @@ export interface paths {
     patch: operations['SourcesController_updateCard'];
     trace?: never;
   };
+  '/api/evidence/uploads/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['EvidenceController_preview'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/uploads/commit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['EvidenceController_commit'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/mappings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_mappings'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/mappings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['EvidenceController_removeMapping'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/bank-transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_bankTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/card-transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_cardTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/tax-invoices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_taxInvoices'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/cash-receipts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_cashReceipts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/{kind}/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['EvidenceController_setStatus'];
+    trace?: never;
+  };
+  '/api/evidence/runs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_runs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8662,6 +8822,463 @@ export interface operations {
         };
       };
       /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_preview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+          /** @description UploadOptions JSON */
+          options: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 파일을 읽어 열 매핑·미리보기·중복 건수를 돌려준다(저장하지 않음) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            kind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+            headerRow: number;
+            headers: string[];
+            topRows: string[][];
+            mapping: {
+              [key: string]: number;
+            };
+            fields: {
+              key: string;
+              label: string;
+              required: boolean;
+            }[];
+            savedMappingName: string | null;
+            total: number;
+            duplicates: number;
+            issues: {
+              row: number;
+              message: string;
+            }[];
+            issueCount: number;
+            sample: {
+              [key: string]: unknown;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_commit: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+          /** @description UploadOptions JSON */
+          options: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 읽은 거래를 등록(중복은 건너뜀) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            runId: string;
+            fetched: number;
+            inserted: number;
+            duplicates: number;
+            issueCount: number;
+            message: string;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_mappings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 저장한 열 매핑 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+            name: string;
+            headerRow: number;
+            mapping: {
+              [key: string]: number;
+            };
+            updatedAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_removeMapping: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_bankTransactions: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+        sourceId?: string;
+        direction?: 'sales' | 'purchase';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bankAccountId: string;
+            accountAlias: string;
+            txDate: string;
+            txTime: string | null;
+            description: string;
+            counterparty: string | null;
+            deposit: number;
+            withdrawal: number;
+            balance: number | null;
+            memo: string | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_cardTransactions: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+        sourceId?: string;
+        direction?: 'sales' | 'purchase';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            cardId: string;
+            cardAlias: string;
+            approvedDate: string;
+            approvedTime: string | null;
+            merchantName: string;
+            merchantBizNo: string | null;
+            amount: number;
+            vatAmount: number | null;
+            approvalNo: string;
+            installmentMonths: number | null;
+            cancelled: boolean;
+            category: string | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_taxInvoices: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+        sourceId?: string;
+        direction?: 'sales' | 'purchase';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            direction: 'sales' | 'purchase';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            approvalNo: string;
+            issueDate: string;
+            supplierBizNo: string;
+            supplierName: string;
+            buyerBizNo: string;
+            buyerName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            itemSummary: string | null;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_cashReceipts: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+        sourceId?: string;
+        direction?: 'sales' | 'purchase';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            direction: 'sales' | 'purchase';
+            txDate: string;
+            approvalNo: string;
+            bizNo: string | null;
+            name: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            /** @enum {string} */
+            usage: 'income_deduction' | 'expense_proof';
+            cancelled: boolean;
+            /** Format: uuid */
+            partnerId: string | null;
+            partnerName: string | null;
+            source: string;
+            /** @enum {string} */
+            status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_setStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        kind: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          status: 'pending' | 'ignored';
+        };
+      };
+    };
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_runs: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 수집 이력(최근 50건) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            channel: string;
+            provider: string;
+            /** @enum {string} */
+            trigger: 'manual' | 'schedule' | 'file';
+            /** @enum {string} */
+            status: 'running' | 'success' | 'error';
+            fetched: number;
+            inserted: number;
+            duplicates: number;
+            message: string | null;
+            startedAt: string;
+            finishedAt: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
       403: {
         headers: {
           [name: string]: unknown;

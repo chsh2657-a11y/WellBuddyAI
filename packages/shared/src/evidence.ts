@@ -101,3 +101,56 @@ export const CorporateCardUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 export type CorporateCardUpdateInput = z.infer<typeof CorporateCardUpdateSchema>;
+
+export const UPLOAD_KINDS = ['bank', 'card', 'tax_invoice', 'cash_receipt'] as const;
+export type UploadKind = (typeof UPLOAD_KINDS)[number];
+export const UPLOAD_KIND_LABELS: Record<UploadKind, string> = {
+  bank: '통장 거래내역',
+  card: '카드 승인내역',
+  tax_invoice: '세금계산서·계산서',
+  cash_receipt: '현금영수증',
+};
+
+/** 파일 업로드 옵션(multipart 의 options 필드에 JSON 으로 보낸다) */
+export const UploadOptionsSchema = z
+  .object({
+    kind: z.enum(UPLOAD_KINDS),
+    /** 통장은 계좌 ID, 카드는 카드 ID */
+    sourceId: z.uuid().optional(),
+    /** 세금계산서·현금영수증 매출/매입(세금계산서는 비우면 사업자번호로 판단) */
+    direction: z.enum(['sales', 'purchase']).optional(),
+    /** 계산서(면세) 파일 */
+    exempt: z.boolean().optional(),
+    /** 사용자가 지정한 머리글 줄(0부터)과 열 매핑(필드 → 열 번호) */
+    headerRow: z.number().int().min(0).optional(),
+    mapping: z.record(z.string(), z.number().int().min(0)).optional(),
+    /** 이 매핑을 저장해 같은 양식에 다시 쓴다 */
+    saveMapping: z.boolean().optional(),
+    mappingName: z.string().trim().max(50).optional(),
+  })
+  .refine((v) => (v.kind !== 'bank' && v.kind !== 'card') || !!v.sourceId, {
+    error: '계좌 또는 카드를 선택해 주세요.',
+    path: ['sourceId'],
+  })
+  .refine((v) => v.kind !== 'cash_receipt' || !!v.direction, {
+    error: '현금영수증은 매출·매입을 골라 주세요.',
+    path: ['direction'],
+  })
+  .refine((v) => (v.mapping === undefined) === (v.headerRow === undefined), {
+    error: '열을 지정할 때는 머리글 줄도 함께 보냅니다.',
+    path: ['mapping'],
+  });
+export type UploadOptions = z.infer<typeof UploadOptionsSchema>;
+
+export const EvidenceListQuerySchema = z.object({
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+  status: z.enum(EVIDENCE_STATUSES).optional(),
+  /** 통장 계좌·카드·방향(sales/purchase) 필터 */
+  sourceId: z.uuid().optional(),
+  direction: z.enum(['sales', 'purchase']).optional(),
+});
+export type EvidenceListQuery = z.infer<typeof EvidenceListQuerySchema>;
+
+/** 제외 처리(개인 사용분 등) 또는 되살리기 */
+export const EvidenceStatusUpdateSchema = z.object({ status: z.enum(['pending', 'ignored']) });

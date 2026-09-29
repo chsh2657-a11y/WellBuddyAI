@@ -285,3 +285,26 @@ export const collectionRuns = pgTable(
     tenantIsolationPolicy(),
   ],
 );
+
+/**
+ * 파일 업로드 열 매핑 저장(P2-08). 같은 양식(머리글이 같은 파일)을 다시 올리면 저장한 매핑을 쓴다.
+ * signature 는 머리글 줄을 정규화해 이은 값이다.
+ */
+export const importMappings = pgTable(
+  'import_mappings',
+  {
+    id: id(),
+    companyId: companyRef(),
+    kind: text().$type<'bank' | 'card' | 'tax_invoice' | 'cash_receipt'>().notNull(),
+    name: text().notNull(),
+    signature: text().notNull(),
+    headerRow: integer().notNull(),
+    mapping: jsonb().$type<Record<string, number>>().notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex('import_mappings_company_kind_signature_uq').on(t.companyId, t.kind, t.signature),
+    tenantIsolationPolicy(),
+  ],
+);
