@@ -68,6 +68,9 @@ importers:
       '@wellbuddy/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@wellbuddy/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@wellbuddy/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -257,6 +260,16 @@ importers:
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+
+  packages/integrations:
+    dependencies:
+      '@wellbuddy/accounting-core':
+        specifier: workspace:*
+        version: link:../accounting-core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.4
 
   packages/shared:
     dependencies:

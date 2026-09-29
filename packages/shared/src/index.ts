@@ -5,6 +5,7 @@ export * from './biz-reg-no.js';
 export * from './budgets.js';
 export * from './cash.js';
 export * from './company.js';
+export * from './evidence.js';
 export * from './fx.js';
 export * from './integrations.js';
 export * from './journal.js';

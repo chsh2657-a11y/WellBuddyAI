@@ -1508,6 +1508,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/bank-accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SourcesController_listBankAccounts'];
+    put?: never;
+    post: operations['SourcesController_createBankAccount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bank-accounts/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['SourcesController_removeBankAccount'];
+    options?: never;
+    head?: never;
+    patch: operations['SourcesController_updateBankAccount'];
+    trace?: never;
+  };
+  '/api/corporate-cards': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SourcesController_listCards'];
+    put?: never;
+    post: operations['SourcesController_createCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/corporate-cards/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['SourcesController_removeCard'];
+    options?: never;
+    head?: never;
+    patch: operations['SourcesController_updateCard'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8260,6 +8324,344 @@ export interface operations {
         };
       };
       /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_listBankAccounts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            bankCode: string;
+            bankName: string;
+            alias: string;
+            accountNoMasked: string;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_createBankAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          bankCode:
+            | '0004'
+            | '0088'
+            | '0020'
+            | '0081'
+            | '0003'
+            | '0011'
+            | '0023'
+            | '0027'
+            | '0031'
+            | '0032'
+            | '0034'
+            | '0035'
+            | '0037'
+            | '0039'
+            | '0045'
+            | '0048'
+            | '0071'
+            | '0089'
+            | '0090'
+            | '0092';
+          alias: string;
+          accountNo: string;
+          /** Format: uuid */
+          ledgerAccountId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            bankCode: string;
+            bankName: string;
+            alias: string;
+            accountNoMasked: string;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_removeBankAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_updateBankAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          alias?: string;
+          /** Format: uuid */
+          ledgerAccountId?: string;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            bankCode: string;
+            bankName: string;
+            alias: string;
+            accountNoMasked: string;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_listCards: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cardCompany: string;
+            cardCompanyName: string;
+            alias: string;
+            cardNoMasked: string;
+            holderName: string | null;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_createCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          cardCompany:
+            '0301' | '0302' | '0303' | '0304' | '0305' | '0306' | '0307' | '0309' | '0311' | '0313';
+          alias: string;
+          cardNo: string;
+          holderName?: string | null;
+          /** Format: uuid */
+          ledgerAccountId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cardCompany: string;
+            cardCompanyName: string;
+            alias: string;
+            cardNoMasked: string;
+            holderName: string | null;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_removeCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SourcesController_updateCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          alias?: string;
+          holderName?: string | null;
+          /** Format: uuid */
+          ledgerAccountId?: string;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cardCompany: string;
+            cardCompanyName: string;
+            alias: string;
+            cardNoMasked: string;
+            holderName: string | null;
+            /** Format: uuid */
+            ledgerAccountId: string;
+            ledgerAccount: string;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
       403: {
         headers: {
           [name: string]: unknown;

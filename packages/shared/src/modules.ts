@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const MODULES = [
   { key: 'dashboard', label: '대시보드', phase: 'P0', available: true, required: true },
   { key: 'accounting', label: '회계', phase: 'P1', available: true, required: false },
-  { key: 'evidence', label: '증빙·자동분개', phase: 'P2', available: false, required: false },
+  { key: 'evidence', label: '증빙·자동분개', phase: 'P2', available: true, required: false },
   { key: 'sales', label: '영업·구매·재고', phase: 'P3', available: false, required: false },
   { key: 'production', label: '생산', phase: 'P4', available: false, required: false },
   { key: 'approval', label: '전자결재', phase: 'P5', available: false, required: false },

@@ -20,6 +20,7 @@ import { ZodSerializerInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
 import { APP_CONFIG, type AppConfig } from './config/env.js';
 import { DbModule } from './db/db.module.js';
+import { EvidenceModule } from './evidence/evidence.module.js';
 import { FilesModule } from './files/files.module.js';
 import { HealthController } from './health/health.controller.js';
 import { ImportsModule } from './imports/imports.module.js';
@@ -60,6 +61,7 @@ export class AppModule implements NestModule {
         IntegrationsModule,
         FilesModule,
         AccountingModule,
+        EvidenceModule,
       ],
       controllers: [HealthController],
       providers: [

@@ -4,6 +4,7 @@ export * from './auth.js';
 export * from './budgets.js';
 export * from './cash.js';
 export * from './companies.js';
+export * from './evidence.js';
 export * from './fx.js';
 export * from './journal.js';
 export * from './notes.js';

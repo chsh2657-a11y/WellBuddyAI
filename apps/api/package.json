@@ -24,6 +24,7 @@
     "@nestjs/throttler": "^6.7.1",
     "@wellbuddy/accounting-core": "workspace:*",
     "@wellbuddy/db": "workspace:*",
+    "@wellbuddy/integrations": "workspace:*",
     "@wellbuddy/shared": "workspace:*",
     "argon2": "^0.45.1",
     "bullmq": "^6.3.9",
