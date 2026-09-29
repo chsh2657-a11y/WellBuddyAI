@@ -10,7 +10,7 @@ import type { TemplateLine } from './templates.js';
 
 export const BASE_CURRENCY = 'KRW';
 
-/** 자주 쓰는 통화(환율 고시 단위: 엔화는 100엔당 원) */
+/** 거래 통화(환율 고시 단위: 엔화·동·루피아는 100 단위당 원) */
 export const CURRENCIES = [
   { code: 'USD', name: '미국 달러', unit: 1 },
   { code: 'EUR', name: '유로', unit: 1 },
@@ -18,8 +18,33 @@ export const CURRENCIES = [
   { code: 'CNY', name: '중국 위안', unit: 1 },
   { code: 'GBP', name: '영국 파운드', unit: 1 },
   { code: 'HKD', name: '홍콩 달러', unit: 1 },
+  { code: 'TWD', name: '대만 달러', unit: 1 },
+  { code: 'SGD', name: '싱가포르 달러', unit: 1 },
+  { code: 'AUD', name: '호주 달러', unit: 1 },
+  { code: 'CAD', name: '캐나다 달러', unit: 1 },
+  { code: 'CHF', name: '스위스 프랑', unit: 1 },
+  { code: 'NZD', name: '뉴질랜드 달러', unit: 1 },
+  { code: 'THB', name: '태국 바트', unit: 1 },
+  { code: 'MYR', name: '말레이시아 링깃', unit: 1 },
+  { code: 'PHP', name: '필리핀 페소', unit: 1 },
   { code: 'VND', name: '베트남 동', unit: 100 },
+  { code: 'IDR', name: '인도네시아 루피아', unit: 100 },
 ] as const;
+
+export type CurrencyCode = (typeof CURRENCIES)[number]['code'];
+export const CURRENCY_CODES = CURRENCIES.map((c) => c.code) as [CurrencyCode, ...CurrencyCode[]];
+const CURRENCY_BY_CODE = new Map<string, (typeof CURRENCIES)[number]>(
+  CURRENCIES.map((c) => [c.code, c]),
+);
+
+/** 환율 고시 단위(엔화 100 등). 모르는 통화는 1 */
+export function currencyUnit(code: string): number {
+  return CURRENCY_BY_CODE.get(code)?.unit ?? 1;
+}
+
+export function currencyName(code: string): string {
+  return CURRENCY_BY_CODE.get(code)?.name ?? code;
+}
 
 export const FX_ACCOUNTS = {
   /** 외화환산이익·손실(기말 평가) */
@@ -31,12 +56,38 @@ export const FX_ACCOUNTS = {
 } as const;
 
 const FOREIGN = /^-?\d+(\.\d{1,2})?$/;
+const RATE = /^\d+(\.\d{1,4})?$/;
 
 /** "1,234.5" → "1234.50" (소수 둘째 자리까지). 형식이 틀리면 null */
 export function parseForeign(input: string): string | null {
   const s = input.replace(/[,\s]/g, '');
   if (!FOREIGN.test(s)) return null;
   return new Decimal(s).toFixed(2);
+}
+
+/** 환율 "1,385.2" → "1385.2000" (소수 넷째 자리까지, 0보다 커야 함). 틀리면 null */
+export function parseRate(input: string | number): string | null {
+  const s = String(input).replace(/[,\s]/g, '');
+  if (!RATE.test(s)) return null;
+  const d = new Decimal(s);
+  return d.isZero() ? null : d.toFixed(4);
+}
+
+/** 외화 금액 표시: 1,234.50 */
+export function formatForeign(amount: string | number): string {
+  const d = new Decimal(amount);
+  const [int, frac] = d.abs().toFixed(2).split('.');
+  return `${d.isNegative() ? '-' : ''}${int!.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${frac}`;
+}
+
+/** 외화 부호 뒤집기(차변 기준 순액을 대변 기준으로 등) */
+export function negateForeign(amount: string | number): string {
+  return new Decimal(amount).negated().toFixed(2);
+}
+
+/** 외화 금액이 0 인지 */
+export function isZeroForeign(amount: string | number): boolean {
+  return new Decimal(amount).isZero();
 }
 
 function decimal(value: string | number, label: string): Decimal {

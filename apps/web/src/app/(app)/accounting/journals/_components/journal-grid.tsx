@@ -1,19 +1,33 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { CURRENCIES } from '@wellbuddy/accounting-core';
 import { Plus, Trash2 } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useRef } from 'react';
 import { Combobox } from '@/components/combobox';
 import { WonInput } from '@/components/won-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { apiFetch } from '@/lib/api';
 import { formatWon } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { applyForeign, trimRate } from './foreign-calc';
 import { type GridLine, newGridLine } from './types';
 import type { MasterData } from './use-master-data';
 
-type Col = 'account' | 'partner' | 'department' | 'project' | 'debit' | 'credit' | 'memo';
+type Col =
+  | 'account'
+  | 'partner'
+  | 'department'
+  | 'project'
+  | 'foreign'
+  | 'rate'
+  | 'debit'
+  | 'credit'
+  | 'memo';
+
+type LinesUpdate = GridLine[] | ((prev: GridLine[]) => GridLine[]);
 
 interface Focusable {
   focus: () => void;
@@ -21,9 +35,13 @@ interface Focusable {
 
 interface Props {
   lines: GridLine[];
-  onChange: (lines: GridLine[]) => void;
+  onChange: (lines: LinesUpdate) => void;
   data: MasterData;
   disabled?: boolean;
+  /** 외화 열(통화·외화금액·환율)을 보여 준다 */
+  foreign?: boolean;
+  /** 통화를 고르면 이 날짜의 환율을 불러온다 */
+  entryDate?: string;
   /** Ctrl+Enter */
   onSubmit?: () => void;
 }
@@ -40,7 +58,15 @@ export function gridTotals(lines: readonly GridLine[]) {
  * - 새 줄(또는 비어 있는 다음 줄)은 차액을 반대편 금액에 미리 채우고, 앞 줄의 적요를 이어받는다
  * - Ctrl+Enter: 저장
  */
-export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props) {
+export function JournalGrid({
+  lines,
+  onChange,
+  data,
+  disabled,
+  foreign = false,
+  entryDate,
+  onSubmit,
+}: Props) {
   const showDimensions = data.departmentItems.length > 0 || data.projectItems.length > 0;
   const cells = useRef(new Map<string, Focusable>());
   const pendingFocus = useRef<string | null>(null);
@@ -67,6 +93,25 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
   const update = (current: GridLine) => onChange(replace(current));
 
   const amountCol = (l: GridLine): Col => (l.credit > 0 ? 'credit' : 'debit');
+  /** 관리항목 다음 칸: 외화 줄이면 외화금액, 아니면 금액 */
+  const afterDims = (l: GridLine): Col => (foreign && l.currency ? 'foreign' : amountCol(l));
+
+  /** 통화를 고르면 전표 일자(없으면 이전 가장 가까운 날)의 환율을 채운다 */
+  const lookupRate = async (key: number, currency: string) => {
+    if (!entryDate) return;
+    const found = await apiFetch<{ exchangeRate: { rate: string } | null }>(
+      `/exchange-rates/lookup?currency=${currency}&date=${entryDate}`,
+    ).catch(() => null);
+    const rate = found?.exchangeRate?.rate;
+    if (!rate) return;
+    onChange((prev) =>
+      prev.map((l) =>
+        l.key === key && l.currency === currency && !l.exchangeRate
+          ? applyForeign({ ...l, exchangeRate: trimRate(rate) })
+          : l,
+      ),
+    );
+  };
 
   const advance = (index: number, from: Col, current: GridLine) => {
     const account = current.accountId ? data.accountById.get(current.accountId) : undefined;
@@ -78,10 +123,12 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
           ? 'partner'
           : needsDept
             ? 'department'
-            : amountCol(current);
-    } else if (from === 'partner') target = needsDept ? 'department' : amountCol(current);
+            : afterDims(current);
+    } else if (from === 'partner') target = needsDept ? 'department' : afterDims(current);
     else if (from === 'department') target = 'project';
-    else if (from === 'project') target = amountCol(current);
+    else if (from === 'project') target = afterDims(current);
+    else if (from === 'foreign') target = 'rate';
+    else if (from === 'rate') target = amountCol(current);
     else if (from === 'debit') target = current.debit > 0 ? 'memo' : 'credit';
     else if (from === 'credit') target = 'memo';
     if (target) return focus(current.key, target);
@@ -124,7 +171,7 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
       }}
     >
       <div className="w-full overflow-x-auto rounded-md border">
-        <table className="w-full min-w-[56rem] text-sm">
+        <table className={cn('w-full text-sm', foreign ? 'min-w-[80rem]' : 'min-w-[56rem]')}>
           <thead className="bg-surface-muted text-xs text-muted-foreground">
             <tr className="border-b">
               <th className="w-10 px-2 py-2 text-center font-medium">#</th>
@@ -134,6 +181,13 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
                 <>
                   <th className="w-36 px-1 py-2 text-left font-medium">부서</th>
                   <th className="w-36 px-1 py-2 text-left font-medium">프로젝트</th>
+                </>
+              ) : null}
+              {foreign ? (
+                <>
+                  <th className="w-24 px-1 py-2 text-left font-medium">통화</th>
+                  <th className="w-32 px-1 py-2 text-right font-medium">외화금액</th>
+                  <th className="w-28 px-1 py-2 text-right font-medium">환율</th>
                 </>
               ) : null}
               <th className="w-36 px-3 py-2 text-right font-medium">차변</th>
@@ -220,6 +274,62 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
                       </td>
                     </>
                   ) : null}
+                  {foreign ? (
+                    <>
+                      <td className="px-1 py-1">
+                        <Select
+                          aria-label={`${i + 1}행 통화`}
+                          className="h-9 px-2"
+                          value={line.currency ?? ''}
+                          disabled={disabled}
+                          onChange={(e) => {
+                            const currency = e.target.value || null;
+                            update(
+                              currency
+                                ? applyForeign({ ...line, currency })
+                                : { ...line, currency, foreignAmount: '', exchangeRate: '' },
+                            );
+                            if (currency && !line.exchangeRate) void lookupRate(line.key, currency);
+                          }}
+                        >
+                          <option value="">원화</option>
+                          {CURRENCIES.map((c) => (
+                            <option key={c.code} value={c.code}>
+                              {c.code}
+                            </option>
+                          ))}
+                        </Select>
+                      </td>
+                      <td className="px-1 py-1">
+                        <Input
+                          ref={register(line.key, 'foreign')}
+                          aria-label={`${i + 1}행 외화금액`}
+                          className="h-9 text-right tabular-nums"
+                          inputMode="decimal"
+                          value={line.foreignAmount}
+                          disabled={disabled || !line.currency}
+                          onChange={(e) =>
+                            update(applyForeign({ ...line, foreignAmount: e.target.value }))
+                          }
+                          onKeyDown={onEnter(i, 'foreign')}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <Input
+                          ref={register(line.key, 'rate')}
+                          aria-label={`${i + 1}행 환율`}
+                          className="h-9 text-right tabular-nums"
+                          inputMode="decimal"
+                          value={line.exchangeRate}
+                          disabled={disabled || !line.currency}
+                          onChange={(e) =>
+                            update(applyForeign({ ...line, exchangeRate: e.target.value }))
+                          }
+                          onKeyDown={onEnter(i, 'rate')}
+                        />
+                      </td>
+                    </>
+                  ) : null}
                   <td className="px-1 py-1">
                     <WonInput
                       ref={register(line.key, 'debit')}
@@ -280,7 +390,10 @@ export function JournalGrid({ lines, onChange, data, disabled, onSubmit }: Props
           <tfoot className="border-t bg-surface-muted">
             <tr>
               <td />
-              <td className="px-2 py-2 font-medium" colSpan={showDimensions ? 4 : 2}>
+              <td
+                className="px-2 py-2 font-medium"
+                colSpan={(showDimensions ? 4 : 2) + (foreign ? 3 : 0)}
+              >
                 합계
                 {totals.difference !== 0 ? (
                   <span className="ml-3 text-danger">

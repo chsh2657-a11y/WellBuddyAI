@@ -1,6 +1,6 @@
 'use client';
 
-import { EVIDENCE_TYPE_LABELS, VAT_TYPE_LABELS } from '@wellbuddy/accounting-core';
+import { EVIDENCE_TYPE_LABELS, formatForeign, VAT_TYPE_LABELS } from '@wellbuddy/accounting-core';
 import { JOURNAL_TYPE_LABELS } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Check, Trash2, Undo2, X } from 'lucide-react';
@@ -32,6 +32,7 @@ import { ApiError, apiFetch } from '@/lib/api';
 import { formatWon, todayIso, wonOrBlank } from '@/lib/format';
 import { can, useSession } from '@/lib/session';
 import { AttachmentsField } from '../_components/attachments-field';
+import { trimRate } from '../_components/foreign-calc';
 import { JOURNALS_KEY, JournalEditor } from '../_components/journal-editor';
 import { JournalStatusBadge } from '../_components/status-badge';
 import type { JournalEntry } from '../_components/types';
@@ -307,7 +308,15 @@ function ReadOnlyEntry({
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{wonOrBlank(l.debit)}</TableCell>
                 <TableCell className="text-right tabular-nums">{wonOrBlank(l.credit)}</TableCell>
-                <TableCell className="pr-5">{l.memo ?? ''}</TableCell>
+                <TableCell className="pr-5">
+                  {l.memo ?? ''}
+                  {l.currency ? (
+                    <span className="block text-xs text-muted-foreground tabular-nums">
+                      {l.currency} {formatForeign(l.foreignAmount ?? '0')}
+                      {l.exchangeRate ? ` @ ${trimRate(l.exchangeRate)}` : ''}
+                    </span>
+                  ) : null}
+                </TableCell>
               </TableRow>
             ))}
             <TableRow className="bg-surface-muted font-semibold">

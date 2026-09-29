@@ -48,6 +48,9 @@ export interface JournalEntry {
     projectId: string | null;
     projectName: string | null;
     memo: string | null;
+    currency: string | null;
+    foreignAmount: string | null;
+    exchangeRate: string | null;
   }[];
   attachments: AttachedFile[];
 }
@@ -69,6 +72,10 @@ export interface GridLine {
   debit: number;
   credit: number;
   memo: string;
+  /** 외화 줄: 통화·외화 금액·환율(입력 그대로의 문자열) */
+  currency: string | null;
+  foreignAmount: string;
+  exchangeRate: string;
 }
 
 let nextKey = 1;
@@ -83,6 +90,9 @@ export function newGridLine(patch: Partial<Omit<GridLine, 'key'>> = {}): GridLin
     debit: 0,
     credit: 0,
     memo: '',
+    currency: null,
+    foreignAmount: '',
+    exchangeRate: '',
     ...patch,
   };
 }
@@ -101,5 +111,8 @@ export function toLineInput(l: GridLine) {
     departmentId: l.departmentId,
     projectId: l.projectId,
     memo: l.memo || null,
+    ...(l.currency
+      ? { currency: l.currency, foreignAmount: l.foreignAmount, exchangeRate: l.exchangeRate }
+      : {}),
   };
 }

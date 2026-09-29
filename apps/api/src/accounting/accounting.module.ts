@@ -5,6 +5,9 @@ import { FiscalYearsController } from './fiscal-years.controller.js';
 import { FiscalYearsService } from './fiscal-years.service.js';
 import { FixedAssetsController } from './fixed-assets.controller.js';
 import { FixedAssetsService } from './fixed-assets.service.js';
+import { FxController } from './fx.controller.js';
+import { ExchangeRatesImport } from './fx.import.js';
+import { FxService } from './fx.service.js';
 import { JournalsController } from './journals.controller.js';
 import { JournalsService } from './journals.service.js';
 import { MasterController } from './master.controller.js';
@@ -20,6 +23,7 @@ import { ReportsService } from './reports.service.js';
     JournalsController,
     ReportsController,
     FixedAssetsController,
+    FxController,
   ],
   providers: [
     AccountsService,
@@ -30,6 +34,8 @@ import { ReportsService } from './reports.service.js';
     JournalsService,
     ReportsService,
     FixedAssetsService,
+    FxService,
+    ExchangeRatesImport,
   ],
   exports: [
     AccountsService,

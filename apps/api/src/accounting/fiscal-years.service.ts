@@ -35,6 +35,8 @@ interface OpeningLine {
   partnerId: string | null;
   debit: number;
   credit: number;
+  currency?: string | null;
+  foreignAmount?: string | null;
 }
 
 /** 회계연도·월별 기간·마감, 기초잔액과 전기이월 */
@@ -349,6 +351,8 @@ export class FiscalYearsService {
               partnerName: partners.name,
               debit: journalLines.debit,
               credit: journalLines.credit,
+              currency: journalLines.currency,
+              foreignAmount: journalLines.foreignAmount,
             })
             .from(journalLines)
             .innerJoin(accounts, eq(accounts.id, journalLines.accountId))
@@ -374,7 +378,12 @@ export class FiscalYearsService {
   async setOpening(fiscalYearId: string, input: OpeningBalancesInput) {
     await this.db.tenant(async (tx) => {
       const year = await this.getYear(tx, fiscalYearId);
-      const lines = input.lines.map((l) => ({ ...l, partnerId: l.partnerId ?? null }));
+      const lines = input.lines.map((l) => ({
+        ...l,
+        partnerId: l.partnerId ?? null,
+        currency: l.currency ?? null,
+        foreignAmount: l.foreignAmount ?? null,
+      }));
       if (lines.length > 0) {
         const issues = validateJournal(lines);
         if (issues.length > 0) {
@@ -482,6 +491,8 @@ export class FiscalYearsService {
         partnerId: l.partnerId,
         debit: l.debit,
         credit: l.credit,
+        currency: l.currency ?? null,
+        foreignAmount: l.foreignAmount ?? null,
       })),
     );
   }
@@ -503,6 +514,11 @@ export class FiscalYearsService {
           group: accounts.group,
           debit: sum(journalLines.debit).mapWith(Number),
           credit: sum(journalLines.credit).mapWith(Number),
+          currency: journalLines.currency,
+          // 외화 순액(차변 +, 대변 −)
+          foreignNet: sql<
+            string | null
+          >`sum(case when ${journalLines.debit} > 0 then ${journalLines.foreignAmount} else -${journalLines.foreignAmount} end)::text`,
         })
         .from(journalLines)
         .innerJoin(journalEntries, eq(journalEntries.id, journalLines.entryId))
@@ -513,7 +529,12 @@ export class FiscalYearsService {
             inArray(journalEntries.status, [...LEDGER_STATUSES]),
           ),
         )
-        .groupBy(journalLines.accountId, journalLines.partnerId, accounts.group);
+        .groupBy(
+          journalLines.accountId,
+          journalLines.partnerId,
+          journalLines.currency,
+          accounts.group,
+        );
 
       let [retained] = await tx
         .select({ id: accounts.id })

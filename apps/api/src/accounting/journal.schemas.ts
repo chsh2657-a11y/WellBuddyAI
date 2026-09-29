@@ -19,6 +19,10 @@ export const JournalLineSchema = z.object({
   projectId: z.uuid().nullable(),
   projectName: nullableString,
   memo: nullableString,
+  /** 외화 줄이면 통화·외화 금액(원화와 같은 쪽 기준)·환율 */
+  currency: nullableString,
+  foreignAmount: nullableString,
+  exchangeRate: nullableString,
 });
 
 export const JournalAttachmentSchema = z.object({
@@ -130,6 +134,8 @@ export const OpeningBalancesSchema = z.object({
       partnerName: nullableString,
       debit: z.number().int(),
       credit: z.number().int(),
+      currency: nullableString,
+      foreignAmount: nullableString,
     }),
   ),
 });

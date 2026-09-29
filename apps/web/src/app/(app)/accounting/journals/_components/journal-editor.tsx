@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ApiError, apiFetch } from '@/lib/api';
 import { todayIso } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { cn } from '@/lib/utils';
 import { AttachmentsField } from './attachments-field';
+import { trimRate } from './foreign-calc';
 import { gridTotals, JournalGrid } from './journal-grid';
 import {
   type AttachedFile,
@@ -60,6 +62,9 @@ function linesFromEntry(entry: JournalEntry): GridLine[] {
       debit: l.debit,
       credit: l.credit,
       memo: l.memo ?? '',
+      currency: l.currency,
+      foreignAmount: l.foreignAmount ?? '',
+      exchangeRate: l.exchangeRate ? trimRate(l.exchangeRate) : '',
     }),
   );
 }
@@ -120,9 +125,20 @@ function EditorForm({
     entry ? linesFromEntry(entry) : [newGridLine(), newGridLine()],
   );
   const [attachments, setAttachments] = useState<AttachedFile[]>(entry?.attachments ?? []);
+  const [foreign, setForeign] = useState(() => !!entry?.lines.some((l) => l.currency));
+  const toggleForeign = (on: boolean) => {
+    setForeign(on);
+    // 외화 열을 끄면 줄의 외화 정보도 지운다(원화 금액은 그대로)
+    if (!on) {
+      setLines((prev) =>
+        prev.map((l) => ({ ...l, currency: null, foreignAmount: '', exchangeRate: '' })),
+      );
+    }
+  };
 
   const switchMode = (next: Mode) => {
     setMode(next);
+    if (next === 'vat') setForeign(false);
     setLines(next === 'vat' ? vatLines(vat, data) : [newGridLine(), newGridLine()]);
   };
   const changeVat = (next: VatState) => {
@@ -262,7 +278,21 @@ function EditorForm({
 
       {mode === 'vat' ? <VatPanel state={vat} onChange={changeVat} data={data} /> : null}
 
-      <JournalGrid lines={lines} onChange={setLines} data={data} onSubmit={() => submit(primary)} />
+      {mode === 'general' ? (
+        <label className="-mb-2 flex w-fit items-center gap-2 text-sm">
+          <Switch aria-label="외화 입력" checked={foreign} onCheckedChange={toggleForeign} />
+          외화 입력(통화·외화금액·환율)
+        </label>
+      ) : null}
+
+      <JournalGrid
+        lines={lines}
+        onChange={setLines}
+        data={data}
+        foreign={foreign}
+        entryDate={entryDate}
+        onSubmit={() => submit(primary)}
+      />
 
       <AttachmentsField
         files={attachments}

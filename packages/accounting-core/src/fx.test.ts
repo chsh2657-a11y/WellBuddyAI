@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  currencyUnit,
+  formatForeign,
+  negateForeign,
   parseForeign,
+  parseRate,
   revaluation,
   revaluationLines,
   settlementLines,
@@ -17,6 +21,18 @@ describe('외화 금액', () => {
     expect(parseForeign('1.234')).toBeNull();
     expect(parseForeign('abc')).toBeNull();
     expect(sumForeign(['1.10', '2.20', '-0.30'])).toBe('3.00');
+  });
+
+  it('환율은 소수 넷째 자리까지, 표시는 천 단위 쉼표', () => {
+    expect(parseRate('1,385.2')).toBe('1385.2000');
+    expect(parseRate(912.3456)).toBe('912.3456');
+    expect(parseRate('0')).toBeNull();
+    expect(parseRate('-1')).toBeNull();
+    expect(parseRate('1.23456')).toBeNull();
+    expect(formatForeign('1234567.5')).toBe('1,234,567.50');
+    expect(formatForeign('-0.3')).toBe('-0.30');
+    expect(negateForeign('12.30')).toBe('-12.30');
+    expect([currencyUnit('JPY'), currencyUnit('USD'), currencyUnit('XXX')]).toEqual([100, 1, 1]);
   });
 
   it('원화 환산은 원 미만 반올림, 엔화는 100엔 단위 환율', () => {

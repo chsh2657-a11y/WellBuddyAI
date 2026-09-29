@@ -1,5 +1,12 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { reverseLines, SYSTEM_ACCOUNTS, validateJournal } from '@wellbuddy/accounting-core';
+import {
+  currencyUnit,
+  formatForeign,
+  reverseLines,
+  SYSTEM_ACCOUNTS,
+  toKrw,
+  validateJournal,
+} from '@wellbuddy/accounting-core';
 import {
   accounts,
   companies,
@@ -176,6 +183,9 @@ export class JournalsService {
         projectId: journalLines.projectId,
         projectName: projects.name,
         memo: journalLines.memo,
+        currency: journalLines.currency,
+        foreignAmount: journalLines.foreignAmount,
+        exchangeRate: journalLines.exchangeRate,
       })
       .from(journalLines)
       .innerJoin(accounts, eq(accounts.id, journalLines.accountId))
@@ -264,7 +274,9 @@ export class JournalsService {
     const { entry, status } = input;
     const year = await this.fiscal.ensureFor(tx, entry.entryDate);
     await this.fiscal.assertOpen(tx, entry.entryDate);
-    const lines = await this.validate(tx, entry);
+    const lines = await this.validate(tx, entry, {
+      system: SYSTEM_SOURCES.has(origin.source ?? ''),
+    });
     const [row] = await tx
       .insert(journalEntries)
       .values({
@@ -751,6 +763,9 @@ export class JournalsService {
       departmentId?: string | null;
       projectId?: string | null;
       memo?: string | null;
+      currency?: string | null;
+      foreignAmount?: string | null;
+      exchangeRate?: string | null;
     }[],
   ) {
     const { companyId } = requireCompanyContext();
@@ -766,20 +781,41 @@ export class JournalsService {
         departmentId: l.departmentId ?? null,
         projectId: l.projectId ?? null,
         memo: l.memo ?? null,
+        currency: l.currency ?? null,
+        foreignAmount: l.currency ? (l.foreignAmount ?? null) : null,
+        exchangeRate: l.currency ? (l.exchangeRate ?? null) : null,
       })),
     );
   }
 
   /**
    * 업무 규칙 검사: 차대 균형, 사용 중인 계정, 계정별 필수 관리항목(거래처·부서),
-   * 거래처·부서·프로젝트 존재, 매입매출전표의 부가세 금액과 부가세 계정 분개 일치.
+   * 거래처·부서·프로젝트 존재, 매입매출전표의 부가세 금액과 부가세 계정 분개 일치,
+   * 외화 줄의 원화 금액 = 외화 × 환율(자동 전표인 외화평가 줄은 외화 0 으로 원화만 조정하므로 뺀다).
    */
-  private async validate(tx: Transaction, entry: JournalEntryInput) {
+  private async validate(
+    tx: Transaction,
+    entry: JournalEntryInput,
+    opts: { system?: boolean } = {},
+  ) {
     const lines = entry.lines;
     const issues = validateJournal(lines);
     if (issues.length > 0) {
       throw new AppException('JOURNAL_INVALID', issues[0]!.message, HttpStatus.BAD_REQUEST, {
         issues,
+      });
+    }
+    if (!opts.system) {
+      lines.forEach((l, i) => {
+        if (!l.currency || !l.foreignAmount || !l.exchangeRate) return;
+        const krw = toKrw(l.foreignAmount, l.exchangeRate, currencyUnit(l.currency));
+        const booked = l.debit || l.credit;
+        if (krw !== booked) {
+          throw new AppException(
+            'FX_AMOUNT_MISMATCH',
+            `${i + 1}행: ${l.currency} ${formatForeign(l.foreignAmount)} × ${l.exchangeRate} = ${krw.toLocaleString('ko-KR')}원인데 금액이 ${booked.toLocaleString('ko-KR')}원입니다.`,
+          );
+        }
       });
     }
 

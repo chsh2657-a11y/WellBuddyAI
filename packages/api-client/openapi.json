@@ -5843,6 +5843,14 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -5852,7 +5860,9 @@
                           "partnerId",
                           "partnerName",
                           "debit",
-                          "credit"
+                          "credit",
+                          "currency",
+                          "foreignAmount"
                         ],
                         "additionalProperties": false
                       }
@@ -5933,6 +5943,40 @@
                           "type": "integer",
                           "minimum": 0,
                           "maximum": 9007199254740991
+                        },
+                        "currency": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "EUR",
+                            "JPY",
+                            "CNY",
+                            "GBP",
+                            "HKD",
+                            "TWD",
+                            "SGD",
+                            "AUD",
+                            "CAD",
+                            "CHF",
+                            "NZD",
+                            "THB",
+                            "MYR",
+                            "PHP",
+                            "VND",
+                            "IDR"
+                          ]
+                        },
+                        "foreignAmount": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -6009,6 +6053,14 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -6018,7 +6070,9 @@
                           "partnerId",
                           "partnerName",
                           "debit",
-                          "credit"
+                          "credit",
+                          "currency",
+                          "foreignAmount"
                         ],
                         "additionalProperties": false
                       }
@@ -6581,6 +6635,18 @@
                                 "memo": {
                                   "nullable": true,
                                   "type": "string"
+                                },
+                                "currency": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "foreignAmount": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "exchangeRate": {
+                                  "nullable": true,
+                                  "type": "string"
                                 }
                               },
                               "required": [
@@ -6597,7 +6663,10 @@
                                 "departmentName",
                                 "projectId",
                                 "projectName",
-                                "memo"
+                                "memo",
+                                "currency",
+                                "foreignAmount",
+                                "exchangeRate"
                               ],
                               "additionalProperties": false
                             }
@@ -6774,6 +6843,51 @@
                               "nullable": true,
                               "type": "string",
                               "maxLength": 200
+                            },
+                            "currency": {
+                              "nullable": true,
+                              "type": "string",
+                              "enum": [
+                                "USD",
+                                "EUR",
+                                "JPY",
+                                "CNY",
+                                "GBP",
+                                "HKD",
+                                "TWD",
+                                "SGD",
+                                "AUD",
+                                "CAD",
+                                "CHF",
+                                "NZD",
+                                "THB",
+                                "MYR",
+                                "PHP",
+                                "VND",
+                                "IDR"
+                              ]
+                            },
+                            "foreignAmount": {
+                              "nullable": true,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ]
+                            },
+                            "exchangeRate": {
+                              "nullable": true,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -7099,6 +7213,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -7115,7 +7241,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -7448,6 +7577,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -7464,7 +7605,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -7634,6 +7778,51 @@
                           "nullable": true,
                           "type": "string",
                           "maxLength": 200
+                        },
+                        "currency": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "EUR",
+                            "JPY",
+                            "CNY",
+                            "GBP",
+                            "HKD",
+                            "TWD",
+                            "SGD",
+                            "AUD",
+                            "CAD",
+                            "CHF",
+                            "NZD",
+                            "THB",
+                            "MYR",
+                            "PHP",
+                            "VND",
+                            "IDR"
+                          ]
+                        },
+                        "foreignAmount": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
+                        },
+                        "exchangeRate": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -7945,6 +8134,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -7961,7 +8162,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -8323,6 +8527,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -8339,7 +8555,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -8672,6 +8891,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -8688,7 +8919,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -9021,6 +9255,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -9037,7 +9283,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -9390,6 +9639,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -9406,7 +9667,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -9739,6 +10003,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -9755,7 +10031,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -10110,6 +10389,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -10126,7 +10417,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -10484,6 +10778,18 @@
                           "memo": {
                             "nullable": true,
                             "type": "string"
+                          },
+                          "currency": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "foreignAmount": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "exchangeRate": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -10500,7 +10806,10 @@
                           "departmentName",
                           "projectId",
                           "projectName",
-                          "memo"
+                          "memo",
+                          "currency",
+                          "foreignAmount",
+                          "exchangeRate"
                         ],
                         "additionalProperties": false
                       }
@@ -13795,6 +14104,736 @@
         ],
         "tags": [
           "fixed-assets"
+        ]
+      }
+    },
+    "/api/exchange-rates": {
+      "get": {
+        "operationId": "FxController_listRates",
+        "parameters": [
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "CNY",
+                "GBP",
+                "HKD",
+                "TWD",
+                "SGD",
+                "AUD",
+                "CAD",
+                "CHF",
+                "NZD",
+                "THB",
+                "MYR",
+                "PHP",
+                "VND",
+                "IDR"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "환율(최근 날짜부터, 최대 1,000건)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "rateDate": {
+                        "type": "string"
+                      },
+                      "rate": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "currency",
+                      "rateDate",
+                      "rate",
+                      "unit"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      },
+      "put": {
+        "operationId": "FxController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "JPY",
+                      "CNY",
+                      "GBP",
+                      "HKD",
+                      "TWD",
+                      "SGD",
+                      "AUD",
+                      "CAD",
+                      "CHF",
+                      "NZD",
+                      "THB",
+                      "MYR",
+                      "PHP",
+                      "VND",
+                      "IDR"
+                    ]
+                  },
+                  "rateDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "rate": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "rateDate",
+                  "rate"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "환율 등록(같은 통화·날짜면 덮어쓴다)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "rateDate": {
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "currency",
+                    "rateDate",
+                    "rate",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/api/exchange-rates/lookup": {
+      "get": {
+        "operationId": "FxController_lookup",
+        "parameters": [
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "EUR",
+                "JPY",
+                "CNY",
+                "GBP",
+                "HKD",
+                "TWD",
+                "SGD",
+                "AUD",
+                "CAD",
+                "CHF",
+                "NZD",
+                "THB",
+                "MYR",
+                "PHP",
+                "VND",
+                "IDR"
+              ]
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "그 날짜(없으면 이전 가장 가까운 날)의 환율. 없으면 null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exchangeRate": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "currency": {
+                          "type": "string"
+                        },
+                        "rateDate": {
+                          "type": "string"
+                        },
+                        "rate": {
+                          "type": "string"
+                        },
+                        "unit": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "currency",
+                        "rateDate",
+                        "rate",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "exchangeRate"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/api/exchange-rates/{id}": {
+      "delete": {
+        "operationId": "FxController_removeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/api/fx-revaluations/preview": {
+      "get": {
+        "operationId": "FxController_preview",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "평가일 현재 외화 자산·부채 잔액과 평가손익 미리보기(전표는 만들지 않음)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "fiscalYear": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "accountCode": {
+                            "type": "string"
+                          },
+                          "accountName": {
+                            "type": "string"
+                          },
+                          "partnerId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "partnerName": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "side": {
+                            "type": "string",
+                            "enum": [
+                              "asset",
+                              "liability"
+                            ]
+                          },
+                          "foreignBalance": {
+                            "type": "string"
+                          },
+                          "bookKrw": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "rate": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "rateDate": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "targetKrw": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "adjustment": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "profit": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "accountCode",
+                          "accountName",
+                          "partnerId",
+                          "partnerName",
+                          "currency",
+                          "side",
+                          "foreignBalance",
+                          "bookKrw",
+                          "rate",
+                          "rateDate",
+                          "targetKrw",
+                          "adjustment",
+                          "profit"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "gain": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "loss": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "missingCurrencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "fiscalYear",
+                    "rows",
+                    "gain",
+                    "loss",
+                    "missingCurrencies"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/api/fx-revaluations": {
+      "get": {
+        "operationId": "FxController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "외화평가 실행 이력(최근부터)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "date": {
+                        "type": "string"
+                      },
+                      "gain": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "loss": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "entryId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "entryNumber": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "rows": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "date",
+                      "gain",
+                      "loss",
+                      "entryId",
+                      "entryNumber",
+                      "rows",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      },
+      "post": {
+        "operationId": "FxController_revalue",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "외화평가 전표 전기(평가일마다 한 번, 날짜 순서대로)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "gain": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "loss": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "rows": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "entryId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "gain",
+                    "loss",
+                    "rows",
+                    "entryId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/api/fx-revaluations/{date}": {
+      "delete": {
+        "operationId": "FxController_cancel",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: accounting (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fx"
         ]
       }
     }

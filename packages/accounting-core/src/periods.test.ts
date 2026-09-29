@@ -89,6 +89,66 @@ describe('전기이월', () => {
     expect(journalTotals(lines).difference).toBe(0);
   });
 
+  it('외화 잔액은 (계정, 거래처, 통화)별로 원화와 함께 이월한다', () => {
+    const { lines } = carryForwardLines(
+      [
+        // 외화예금: 원화 줄과 USD 줄은 따로 이월
+        { accountId: 'bank', partnerId: null, group: 'quick_assets', debit: 500_000, credit: 0 },
+        {
+          accountId: 'bank',
+          partnerId: null,
+          group: 'quick_assets',
+          debit: 2_800_000,
+          credit: 1_385_000,
+          currency: 'USD',
+          foreignNet: '1000.00',
+        },
+        // 외화 외상매입금(대변 잔액): 외화 순액은 차변 기준 − 이므로 대변 줄에는 + 로
+        {
+          accountId: 'ap',
+          partnerId: 'V',
+          group: 'current_liabilities',
+          debit: 0,
+          credit: 700_500,
+          currency: 'USD',
+          foreignNet: '-500.25',
+        },
+        // 외화 매출은 손익이라 통화 없이 당기순이익으로
+        {
+          accountId: 'sales',
+          partnerId: null,
+          group: 'revenue',
+          debit: 0,
+          credit: 1_214_500,
+          currency: 'USD',
+          foreignNet: '-900.00',
+        },
+      ],
+      'retained',
+    );
+    expect(lines).toEqual([
+      { accountId: 'bank', partnerId: null, debit: 500_000, credit: 0 },
+      {
+        accountId: 'bank',
+        partnerId: null,
+        debit: 1_415_000,
+        credit: 0,
+        currency: 'USD',
+        foreignAmount: '1000.00',
+      },
+      {
+        accountId: 'ap',
+        partnerId: 'V',
+        debit: 0,
+        credit: 700_500,
+        currency: 'USD',
+        foreignAmount: '500.25',
+      },
+      { accountId: 'retained', partnerId: null, debit: 0, credit: 1_214_500 },
+    ]);
+    expect(journalTotals(lines).difference).toBe(0);
+  });
+
   it('잔액이 0 인 계정은 빼고, 순손실은 이익잉여금 차변으로 간다', () => {
     const { lines, netIncome } = carryForwardLines(
       [

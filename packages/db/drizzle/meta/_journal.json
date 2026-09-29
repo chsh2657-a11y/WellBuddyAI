@@ -64,6 +64,13 @@
       "when": 1790665917805,
       "tag": "0008_fixed_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790666833766,
+      "tag": "0009_fx",
+      "breakpoints": true
     }
   ]
 }

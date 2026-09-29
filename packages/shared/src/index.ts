@@ -3,6 +3,7 @@ export * from './assets.js';
 export * from './auth.js';
 export * from './biz-reg-no.js';
 export * from './company.js';
+export * from './fx.js';
 export * from './integrations.js';
 export * from './journal.js';
 export * from './modules.js';

@@ -1172,6 +1172,102 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/exchange-rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FxController_listRates'];
+    put: operations['FxController_upsert'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/exchange-rates/lookup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FxController_lookup'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/exchange-rates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['FxController_removeRate'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fx-revaluations/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FxController_preview'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fx-revaluations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['FxController_list'];
+    put?: never;
+    post: operations['FxController_revalue'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/fx-revaluations/{date}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['FxController_cancel'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3734,6 +3830,8 @@ export interface operations {
               partnerName: string | null;
               debit: number;
               credit: number;
+              currency: string | null;
+              foreignAmount: string | null;
             }[];
           };
         };
@@ -3768,6 +3866,27 @@ export interface operations {
             debit?: number;
             /** @default 0 */
             credit?: number;
+            /** @enum {string|null} */
+            currency?:
+              | 'USD'
+              | 'EUR'
+              | 'JPY'
+              | 'CNY'
+              | 'GBP'
+              | 'HKD'
+              | 'TWD'
+              | 'SGD'
+              | 'AUD'
+              | 'CAD'
+              | 'CHF'
+              | 'NZD'
+              | 'THB'
+              | 'MYR'
+              | 'PHP'
+              | 'VND'
+              | 'IDR'
+              | null;
+            foreignAmount?: (string | number) | null;
           }[];
         };
       };
@@ -3796,6 +3915,8 @@ export interface operations {
               partnerName: string | null;
               debit: number;
               credit: number;
+              currency: string | null;
+              foreignAmount: string | null;
             }[];
           };
         };
@@ -3994,6 +4115,9 @@ export interface operations {
                 projectId: string | null;
                 projectName: string | null;
                 memo: string | null;
+                currency: string | null;
+                foreignAmount: string | null;
+                exchangeRate: string | null;
               }[];
               attachments: {
                 /** Format: uuid */
@@ -4049,6 +4173,28 @@ export interface operations {
               /** Format: uuid */
               projectId?: string | null;
               memo?: string | null;
+              /** @enum {string|null} */
+              currency?:
+                | 'USD'
+                | 'EUR'
+                | 'JPY'
+                | 'CNY'
+                | 'GBP'
+                | 'HKD'
+                | 'TWD'
+                | 'SGD'
+                | 'AUD'
+                | 'CAD'
+                | 'CHF'
+                | 'NZD'
+                | 'THB'
+                | 'MYR'
+                | 'PHP'
+                | 'VND'
+                | 'IDR'
+                | null;
+              foreignAmount?: (string | number) | null;
+              exchangeRate?: (string | number) | null;
             }[];
             vat?: {
               /** @enum {string} */
@@ -4141,6 +4287,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4239,6 +4388,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4293,6 +4445,28 @@ export interface operations {
             /** Format: uuid */
             projectId?: string | null;
             memo?: string | null;
+            /** @enum {string|null} */
+            currency?:
+              | 'USD'
+              | 'EUR'
+              | 'JPY'
+              | 'CNY'
+              | 'GBP'
+              | 'HKD'
+              | 'TWD'
+              | 'SGD'
+              | 'AUD'
+              | 'CAD'
+              | 'CHF'
+              | 'NZD'
+              | 'THB'
+              | 'MYR'
+              | 'PHP'
+              | 'VND'
+              | 'IDR'
+              | null;
+            foreignAmount?: (string | number) | null;
+            exchangeRate?: (string | number) | null;
           }[];
           vat?: {
             /** @enum {string} */
@@ -4379,6 +4553,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4497,6 +4674,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4595,6 +4775,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4693,6 +4876,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4797,6 +4983,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -4895,6 +5084,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -5001,6 +5193,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -5105,6 +5300,9 @@ export interface operations {
               projectId: string | null;
               projectName: string | null;
               memo: string | null;
+              currency: string | null;
+              foreignAmount: string | null;
+              exchangeRate: string | null;
             }[];
             attachments: {
               /** Format: uuid */
@@ -6265,6 +6463,351 @@ export interface operations {
       header?: never;
       path: {
         month: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_listRates: {
+    parameters: {
+      query?: {
+        currency?:
+          | 'USD'
+          | 'EUR'
+          | 'JPY'
+          | 'CNY'
+          | 'GBP'
+          | 'HKD'
+          | 'TWD'
+          | 'SGD'
+          | 'AUD'
+          | 'CAD'
+          | 'CHF'
+          | 'NZD'
+          | 'THB'
+          | 'MYR'
+          | 'PHP'
+          | 'VND'
+          | 'IDR';
+        from?: string;
+        to?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 환율(최근 날짜부터, 최대 1,000건) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            currency: string;
+            rateDate: string;
+            rate: string;
+            unit: number;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_upsert: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          currency:
+            | 'USD'
+            | 'EUR'
+            | 'JPY'
+            | 'CNY'
+            | 'GBP'
+            | 'HKD'
+            | 'TWD'
+            | 'SGD'
+            | 'AUD'
+            | 'CAD'
+            | 'CHF'
+            | 'NZD'
+            | 'THB'
+            | 'MYR'
+            | 'PHP'
+            | 'VND'
+            | 'IDR';
+          /** Format: date */
+          rateDate: string;
+          rate: string | number;
+        };
+      };
+    };
+    responses: {
+      /** @description 환율 등록(같은 통화·날짜면 덮어쓴다) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            currency: string;
+            rateDate: string;
+            rate: string;
+            unit: number;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_lookup: {
+    parameters: {
+      query: {
+        currency:
+          | 'USD'
+          | 'EUR'
+          | 'JPY'
+          | 'CNY'
+          | 'GBP'
+          | 'HKD'
+          | 'TWD'
+          | 'SGD'
+          | 'AUD'
+          | 'CAD'
+          | 'CHF'
+          | 'NZD'
+          | 'THB'
+          | 'MYR'
+          | 'PHP'
+          | 'VND'
+          | 'IDR';
+        date: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 그 날짜(없으면 이전 가장 가까운 날)의 환율. 없으면 null */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            exchangeRate: {
+              /** Format: uuid */
+              id: string;
+              currency: string;
+              rateDate: string;
+              rate: string;
+              unit: number;
+            } | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_removeRate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_preview: {
+    parameters: {
+      query: {
+        date: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 평가일 현재 외화 자산·부채 잔액과 평가손익 미리보기(전표는 만들지 않음) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            fiscalYear: string;
+            rows: {
+              /** Format: uuid */
+              accountId: string;
+              accountCode: string;
+              accountName: string;
+              /** Format: uuid */
+              partnerId: string | null;
+              partnerName: string | null;
+              currency: string;
+              /** @enum {string} */
+              side: 'asset' | 'liability';
+              foreignBalance: string;
+              bookKrw: number;
+              rate: string | null;
+              rateDate: string | null;
+              targetKrw: number | null;
+              adjustment: number | null;
+              profit: number | null;
+            }[];
+            gain: number;
+            loss: number;
+            missingCurrencies: string[];
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 외화평가 실행 이력(최근부터) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            date: string;
+            gain: number;
+            loss: number;
+            /** Format: uuid */
+            entryId: string | null;
+            entryNumber: string | null;
+            rows: number;
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: accounting (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_revalue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          date: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 외화평가 전표 전기(평가일마다 한 번, 날짜 순서대로) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            gain: number;
+            loss: number;
+            rows: number;
+            /** Format: uuid */
+            entryId: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: accounting (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FxController_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        date: string;
       };
       cookie?: never;
     };

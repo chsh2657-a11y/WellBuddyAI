@@ -8,6 +8,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -152,6 +153,13 @@ export const journalLines = pgTable(
     departmentId: uuid().references(() => departments.id, { onDelete: 'restrict' }),
     projectId: uuid().references(() => projects.id, { onDelete: 'restrict' }),
     memo: text(),
+    /**
+     * 외화 줄: 통화, 외화 금액(원화 금액과 같은 쪽 기준, 소수 둘째 자리), 적용 환율(고시 단위 기준).
+     * 원화 금액(debit/credit)이 장부 금액이고, 외화는 외화 잔액·기말 평가에 쓴다.
+     */
+    currency: text(),
+    foreignAmount: numeric({ precision: 18, scale: 2 }),
+    exchangeRate: numeric({ precision: 18, scale: 4 }),
   },
   (t) => [
     index('journal_lines_entry_idx').on(t.entryId),
@@ -160,6 +168,10 @@ export const journalLines = pgTable(
     check(
       'journal_lines_amount_ck',
       sql`debit >= 0 and credit >= 0 and ((debit > 0) <> (credit > 0))`,
+    ),
+    check(
+      'journal_lines_foreign_ck',
+      sql`(currency is null) = (foreign_amount is null) and (exchange_rate is null or currency is not null) and (currency is null or currency ~ '^[A-Z]{3}$') and (exchange_rate is null or exchange_rate > 0)`,
     ),
     tenantIsolationPolicy(),
   ],

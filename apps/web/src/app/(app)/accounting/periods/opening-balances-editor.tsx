@@ -1,6 +1,6 @@
 'use client';
 
-import { STATEMENT_GROUPS } from '@wellbuddy/accounting-core';
+import { CURRENCIES, STATEMENT_GROUPS } from '@wellbuddy/accounting-core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import {
   Table,
@@ -42,6 +43,8 @@ interface OpeningBalances {
     partnerId: string | null;
     debit: number;
     credit: number;
+    currency: string | null;
+    foreignAmount: string | null;
   }[];
 }
 
@@ -51,10 +54,21 @@ interface Row {
   partnerId: string;
   debit: number;
   credit: number;
+  /** 외화 잔액(외화예금·외화채권·채무): 통화와 외화 금액, 원화는 장부 금액 */
+  currency: string;
+  foreignAmount: string;
 }
 
 let nextKey = 1;
-const emptyRow = (): Row => ({ key: nextKey++, accountId: '', partnerId: '', debit: 0, credit: 0 });
+const emptyRow = (): Row => ({
+  key: nextKey++,
+  accountId: '',
+  partnerId: '',
+  debit: 0,
+  credit: 0,
+  currency: '',
+  foreignAmount: '',
+});
 
 /** 회계연도 첫날의 재무상태표 계정 잔액(기초잔액). 차변 합계와 대변 합계가 같아야 저장된다. */
 export function OpeningBalancesEditor({
@@ -126,6 +140,8 @@ function OpeningForm({
           partnerId: l.partnerId ?? '',
           debit: l.debit,
           credit: l.credit,
+          currency: l.currency ?? '',
+          foreignAmount: l.foreignAmount ?? '',
         }))
       : [emptyRow(), emptyRow()],
   );
@@ -145,6 +161,7 @@ function OpeningForm({
             partnerId: r.partnerId || null,
             debit: r.debit,
             credit: r.credit,
+            ...(r.currency ? { currency: r.currency, foreignAmount: r.foreignAmount } : {}),
           })),
         },
       }),
@@ -181,6 +198,7 @@ function OpeningForm({
             <TableRow>
               <TableHead className="pl-5">계정과목</TableHead>
               <TableHead className="w-56">거래처</TableHead>
+              <TableHead className="w-60">외화 잔액(선택)</TableHead>
               <TableHead className="w-40 text-right">차변</TableHead>
               <TableHead className="w-40 text-right">대변</TableHead>
               {editable ? <TableHead className="w-12 pr-5" /> : null}
@@ -220,6 +238,37 @@ function OpeningForm({
                   </Select>
                 </TableCell>
                 <TableCell>
+                  <div className="flex gap-1">
+                    <Select
+                      aria-label={`${i + 1}행 통화`}
+                      className="w-24 px-2"
+                      value={r.currency}
+                      disabled={!editable}
+                      onChange={(e) =>
+                        update(r.key, {
+                          currency: e.target.value,
+                          ...(e.target.value ? {} : { foreignAmount: '' }),
+                        })
+                      }
+                    >
+                      <option value="">원화</option>
+                      {CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code}
+                        </option>
+                      ))}
+                    </Select>
+                    <Input
+                      aria-label={`${i + 1}행 외화금액`}
+                      className="text-right tabular-nums"
+                      inputMode="decimal"
+                      value={r.foreignAmount}
+                      disabled={!editable || !r.currency}
+                      onChange={(e) => update(r.key, { foreignAmount: e.target.value })}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell>
                   <WonInput
                     aria-label={`${i + 1}행 차변`}
                     value={r.debit}
@@ -256,7 +305,7 @@ function OpeningForm({
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell className="pl-5 font-medium" colSpan={2}>
+              <TableCell className="pl-5 font-medium" colSpan={3}>
                 합계
                 {debit !== credit ? (
                   <span className="ml-3 text-danger" role="status">

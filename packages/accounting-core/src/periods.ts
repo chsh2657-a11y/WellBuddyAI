@@ -1,3 +1,4 @@
+import { Decimal } from 'decimal.js';
 import { STATEMENT_GROUPS, type StatementGroup } from './chart-of-accounts.js';
 
 /** YYYY-MM-DD 문자열로 날짜를 다룬다(시간대 영향 없음). */
@@ -74,6 +75,9 @@ export interface BalanceRow {
   group: StatementGroup;
   debit: number;
   credit: number;
+  /** 외화 전표 줄이면 통화와 외화 순액(차변 +, 대변 −, 소수 둘째 자리 문자열) */
+  currency?: string | null;
+  foreignNet?: string | null;
 }
 
 export interface CarryForwardLine {
@@ -81,6 +85,9 @@ export interface CarryForwardLine {
   partnerId: string | null;
   debit: number;
   credit: number;
+  /** 외화 잔액도 함께 이월한다(외화 금액은 원화 금액과 같은 쪽 기준) */
+  currency?: string | null;
+  foreignAmount?: string | null;
 }
 
 /**
@@ -93,29 +100,55 @@ export function carryForwardLines(
   rows: readonly BalanceRow[],
   retainedEarningsAccountId: string,
 ): { lines: CarryForwardLine[]; netIncome: number } {
-  const balances = new Map<string, CarryForwardLine & { net: number }>();
+  interface Balance {
+    accountId: string;
+    partnerId: string | null;
+    currency: string | null;
+    net: number;
+    foreignNet: Decimal;
+  }
+  const balances = new Map<string, Balance>();
   let netIncome = 0;
-  const add = (accountId: string, partnerId: string | null, net: number) => {
-    const key = `${accountId}:${partnerId ?? ''}`;
-    const b = balances.get(key) ?? { accountId, partnerId, debit: 0, credit: 0, net: 0 };
+  const add = (
+    accountId: string,
+    partnerId: string | null,
+    net: number,
+    currency: string | null = null,
+    foreignNet: string | null = null,
+  ) => {
+    const key = `${accountId}:${partnerId ?? ''}:${currency ?? ''}`;
+    const b = balances.get(key) ?? {
+      accountId,
+      partnerId,
+      currency,
+      net: 0,
+      foreignNet: new Decimal(0),
+    };
     b.net += net;
+    if (foreignNet) b.foreignNet = b.foreignNet.plus(foreignNet);
     balances.set(key, b);
   };
   for (const r of rows) {
     if (STATEMENT_GROUPS[r.group].statement === 'IS') {
       netIncome += r.credit - r.debit;
     } else {
-      add(r.accountId, r.partnerId, r.debit - r.credit);
+      add(r.accountId, r.partnerId, r.debit - r.credit, r.currency ?? null, r.foreignNet ?? null);
     }
   }
   if (netIncome !== 0) add(retainedEarningsAccountId, null, -netIncome);
   const lines = [...balances.values()]
     .filter((b) => b.net !== 0)
-    .map(({ accountId, partnerId, net }) => ({
+    .map(({ accountId, partnerId, net, currency, foreignNet }) => ({
       accountId,
       partnerId,
       debit: Math.max(net, 0),
       credit: Math.max(-net, 0),
+      ...(currency
+        ? {
+            currency,
+            foreignAmount: (net > 0 ? foreignNet : foreignNet.negated()).toFixed(2),
+          }
+        : {}),
     }));
   return { lines, netIncome };
 }
