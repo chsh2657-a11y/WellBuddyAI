@@ -16,13 +16,17 @@ import {
   type CollectChannel,
   type CollectRequest,
   CollectRequestSchema,
+  type EvidenceCenterQuery,
+  EvidenceCenterQuerySchema,
   type EvidenceListQuery,
   EvidenceListQuerySchema,
   EvidenceStatusUpdateSchema,
+  ReconcileQuerySchema,
   UPLOAD_KINDS,
   type UploadKind,
   UploadOptionsSchema,
 } from '@wellbuddy/shared';
+import { todayInKorea } from '@wellbuddy/accounting-core';
 import { z } from 'zod';
 import { RequirePermission } from '../auth/decorators.js';
 import { AppException } from '../common/errors.js';
@@ -34,13 +38,17 @@ import {
   CollectionRunSchema,
   CollectResultSchema,
   CollectStatusSchema,
+  EvidenceCenterSchema,
   ImportMappingSchema,
+  ReconciliationSchema,
   TaxInvoiceSchema,
   UploadCommitSchema,
   UploadPreviewSchema,
 } from './evidence.schemas.js';
+import { CenterService } from './center.service.js';
 import { CollectionService } from './collection.service.js';
 import { EvidenceService } from './evidence.service.js';
+import { ReconcileService } from './reconcile.service.js';
 import { UploadService } from './upload.service.js';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -93,6 +101,8 @@ export class EvidenceController {
     private readonly evidence: EvidenceService,
     private readonly uploads: UploadService,
     private readonly collection: CollectionService,
+    private readonly center: CenterService,
+    private readonly reconcile: ReconcileService,
   ) {}
 
   @RequirePermission('evidence', 'write')
@@ -192,6 +202,24 @@ export class EvidenceController {
     @ZodBody(CollectRequestSchema) body: CollectRequest,
   ) {
     return this.collection.collect(channel, body);
+  }
+
+  @RequirePermission('evidence', 'read')
+  @Get('center')
+  @ZodResponse(EvidenceCenterSchema, {
+    description: '증빙센터: 통장·카드·세금계산서·현금영수증 통합 조회와 상태별 건수',
+  })
+  evidenceCenter(@ZodQuery(EvidenceCenterQuerySchema) q: EvidenceCenterQuery) {
+    return this.center.list(q);
+  }
+
+  @RequirePermission('evidence', 'read')
+  @Get('reconciliation')
+  @ZodResponse(ReconciliationSchema, {
+    description: '통장 잔액 ↔ 장부 잔액 대사(기준일을 비우면 오늘)',
+  })
+  reconciliation(@ZodQuery(ReconcileQuerySchema) q: { date?: string }) {
+    return this.reconcile.reconciliation(q.date ?? todayInKorea());
   }
 
   @RequirePermission('evidence', 'read')

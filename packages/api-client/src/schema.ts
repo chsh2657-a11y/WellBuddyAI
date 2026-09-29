@@ -1748,6 +1748,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/evidence/center': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_evidenceCenter'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/evidence/reconciliation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['EvidenceController_reconciliation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/evidence/runs': {
     parameters: {
       query?: never;
@@ -9520,6 +9552,124 @@ export interface operations {
         };
       };
       /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_evidenceCenter: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        kind?: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+        status?: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 증빙센터: 통장·카드·세금계산서·현금영수증 통합 조회와 상태별 건수 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            total: number;
+            counts: {
+              pending: number;
+              review: number;
+              posted: number;
+              ignored: number;
+              matched: number;
+            };
+            items: {
+              /** @enum {string} */
+              evidenceKind: 'bank' | 'card' | 'tax_invoice' | 'cash_receipt';
+              /** Format: uuid */
+              id: string;
+              date: string;
+              kindLabel: string;
+              description: string;
+              counterparty: string | null;
+              sourceLabel: string | null;
+              /** @enum {string} */
+              flow: 'in' | 'out';
+              amount: number;
+              /** @enum {string} */
+              status: 'pending' | 'review' | 'posted' | 'ignored' | 'matched';
+              account: string | null;
+              /** Format: uuid */
+              entryId: string | null;
+              entryNumber: string | null;
+            }[];
+            truncated: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  EvidenceController_reconciliation: {
+    parameters: {
+      query?: {
+        date?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 통장 잔액 ↔ 장부 잔액 대사(기준일을 비우면 오늘) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            groups: {
+              /** Format: uuid */
+              ledgerAccountId: string;
+              ledgerAccount: string;
+              bankBalance: number | null;
+              ledgerBalance: number;
+              unreflected: number;
+              unreflectedCount: number;
+              difference: number | null;
+              /** @enum {string} */
+              status: 'matched' | 'mismatch' | 'unknown';
+              accounts: {
+                /** Format: uuid */
+                id: string;
+                alias: string;
+                bankName: string;
+                accountNoMasked: string;
+                isActive: boolean;
+                balance: number | null;
+                balanceDate: string | null;
+                unreflected: number;
+                unreflectedCount: number;
+              }[];
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
       403: {
         headers: {
           [name: string]: unknown;

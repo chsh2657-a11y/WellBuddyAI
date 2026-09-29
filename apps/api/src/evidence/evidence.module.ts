@@ -1,18 +1,29 @@
 import { Module } from '@nestjs/common';
+import { AccountingModule } from '../accounting/accounting.module.js';
 import { IntegrationsModule } from '../integrations/integrations.module.js';
+import { CenterService } from './center.service.js';
 import { CollectionService } from './collection.service.js';
 import { EvidenceStore } from './evidence-store.service.js';
 import { EvidenceController } from './evidence.controller.js';
 import { EvidenceService } from './evidence.service.js';
+import { ReconcileService } from './reconcile.service.js';
 import { SourcesController } from './sources.controller.js';
 import { SourcesService } from './sources.service.js';
 import { UploadService } from './upload.service.js';
 
 /** 증빙 자동수집·자동분개 */
 @Module({
-  imports: [IntegrationsModule],
+  imports: [IntegrationsModule, AccountingModule],
   controllers: [SourcesController, EvidenceController],
-  providers: [SourcesService, EvidenceStore, EvidenceService, UploadService, CollectionService],
+  providers: [
+    SourcesService,
+    EvidenceStore,
+    EvidenceService,
+    UploadService,
+    CollectionService,
+    CenterService,
+    ReconcileService,
+  ],
   exports: [SourcesService, EvidenceStore, EvidenceService],
 })
 export class EvidenceModule {}

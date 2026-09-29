@@ -158,3 +158,65 @@ export const CollectResultSchema = z.object({
   duplicates: int,
   message: z.string(),
 });
+
+export const EvidenceCenterSchema = z.object({
+  total: int,
+  /** 상태별 건수(상태 조건만 빼고 같은 조건) */
+  counts: z.object(
+    Object.fromEntries(EVIDENCE_STATUSES.map((s) => [s, int])) as Record<
+      (typeof EVIDENCE_STATUSES)[number],
+      typeof int
+    >,
+  ),
+  items: z.array(
+    z.object({
+      evidenceKind: z.enum(UPLOAD_KINDS),
+      id: z.uuid(),
+      date: z.string(),
+      kindLabel: z.string(),
+      description: z.string(),
+      counterparty: nullableString,
+      sourceLabel: nullableString,
+      flow: z.enum(['in', 'out']),
+      amount: int,
+      status: z.enum(EVIDENCE_STATUSES),
+      account: nullableString,
+      entryId: z.uuid().nullable(),
+      entryNumber: nullableString,
+    }),
+  ),
+  /** 1,000건을 넘어 잘랐는지 */
+  truncated: z.boolean(),
+});
+
+export const ReconciliationSchema = z.object({
+  date: z.string(),
+  groups: z.array(
+    z.object({
+      ledgerAccountId: z.uuid(),
+      ledgerAccount: z.string(),
+      /** 연결된 계좌들의 기준일 통장 잔액 합계(잔액을 모르는 계좌가 있으면 null) */
+      bankBalance: int.nullable(),
+      ledgerBalance: int,
+      /** 장부에 아직 반영되지 않은 통장 거래의 순액(입금 +, 출금 −) */
+      unreflected: int,
+      unreflectedCount: int,
+      /** 통장 − 장부 − 미반영 */
+      difference: int.nullable(),
+      status: z.enum(['matched', 'mismatch', 'unknown']),
+      accounts: z.array(
+        z.object({
+          id: z.uuid(),
+          alias: z.string(),
+          bankName: z.string(),
+          accountNoMasked: z.string(),
+          isActive: z.boolean(),
+          balance: int.nullable(),
+          balanceDate: nullableString,
+          unreflected: int,
+          unreflectedCount: int,
+        }),
+      ),
+    }),
+  ),
+});

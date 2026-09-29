@@ -175,3 +175,16 @@ export const CollectRequestSchema = z
     path: ['from'],
   });
 export type CollectRequest = z.infer<typeof CollectRequestSchema>;
+
+/** 증빙센터 조회(P2-28): 기간·종류·상태·검색어 */
+export const EvidenceCenterQuerySchema = z.object({
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+  kind: z.enum(UPLOAD_KINDS).optional(),
+  status: z.enum(EVIDENCE_STATUSES).optional(),
+  q: z.string().trim().min(1).max(50).optional(),
+});
+export type EvidenceCenterQuery = z.infer<typeof EvidenceCenterQuerySchema>;
+
+/** 통장 잔액 대사 기준일(비우면 오늘) */
+export const ReconcileQuerySchema = z.object({ date: z.iso.date().optional() });
