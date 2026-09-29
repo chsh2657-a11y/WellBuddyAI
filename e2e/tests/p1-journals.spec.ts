@@ -102,4 +102,19 @@ test('전표: 키보드로 일반전표 입력, 매입매출전표, 입금 간�
   await expect(page.getByText('다른 전표를 취소한 역분개 전표입니다.')).toBeVisible();
   await expect(page.getByRole('cell', { name: '외상매출금' })).toBeVisible();
   await snap(page, 'p1-08-journal-reversal');
+
+  // ── P1-23: 화면에서 입력·전기한 전표가 장부까지 맞는지 ──
+  // 복리후생비 5만(현금), 매출 110만(역분개로 취소), 외상대금 회수 110만
+  await page.getByRole('link', { name: '장부·보고서' }).click();
+  await page.getByRole('link', { name: '합계잔액시산표' }).click();
+  await expect(page.getByText('대차 일치')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '811 복리후생비' })).toBeVisible();
+
+  await page.getByRole('link', { name: '재무제표' }).click();
+  await expect(page.getByText('자산 = 부채 + 자본')).toBeVisible();
+  await page.getByRole('tab', { name: '손익계산서' }).click();
+  // 역분개한 매출은 빠지고 복리후생비만 남는다
+  await expect(page.getByRole('row', { name: /Ⅰ\. 매출액/ })).toContainText('0');
+  await expect(page.getByRole('row', { name: /Ⅹ\. 당기순이익/ })).toContainText('-50,000');
+  await snap(page, 'p1-13-journal-to-statements');
 });

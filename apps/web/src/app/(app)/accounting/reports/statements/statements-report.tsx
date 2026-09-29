@@ -54,12 +54,12 @@ function incomeStatementRows(d: IncomeStatement): ReportRow[] {
   return [
     ...block('Ⅰ. 매출액', d.revenue, 'revenue'),
     ...block('Ⅱ. 매출원가', d.costOfSales, 'cost_of_sales', 'manufacturing_cost'),
-    { kind: 'section', cells: ['Ⅲ. 매출총이익', null, d.grossProfit] },
+    { kind: 'total', cells: ['Ⅲ. 매출총이익', null, d.grossProfit] },
     ...block('Ⅳ. 판매비와관리비', d.sga, 'sga'),
-    { kind: 'section', cells: ['Ⅴ. 영업이익', null, d.operatingIncome] },
+    { kind: 'total', cells: ['Ⅴ. 영업이익', null, d.operatingIncome] },
     ...block('Ⅵ. 영업외수익', d.nonOperatingIncome, 'non_operating_income'),
     ...block('Ⅶ. 영업외비용', d.nonOperatingExpense, 'non_operating_expense'),
-    { kind: 'section', cells: ['Ⅷ. 법인세비용차감전순이익', null, d.incomeBeforeTax] },
+    { kind: 'total', cells: ['Ⅷ. 법인세비용차감전순이익', null, d.incomeBeforeTax] },
     ...block('Ⅸ. 법인세비용', d.incomeTax, 'income_tax'),
     { kind: 'total', cells: ['Ⅹ. 당기순이익', null, d.netIncome] },
   ];
