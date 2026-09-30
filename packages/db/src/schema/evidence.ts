@@ -311,3 +311,44 @@ export const importMappings = pgTable(
     tenantIsolationPolicy(),
   ],
 );
+
+/**
+ * 전자세금계산서 발행 기록(P2-14). 팝빌(또는 모의)로 발행하고, 발행되면 매출 세금계산서(tax_invoices)로도
+ * 등록해 자동분개로 이어지게 한다. mgt_key 는 공급자에 보내는 우리 쪽 관리번호다.
+ */
+export const taxInvoiceIssues = pgTable(
+  'tax_invoice_issues',
+  {
+    id: id(),
+    companyId: companyRef(),
+    mgtKey: text().notNull(),
+    provider: text().notNull(),
+    status: text().$type<'issued' | 'sent' | 'cancelled' | 'failed'>().notNull(),
+    kind: text().$type<'tax' | 'zero' | 'exempt'>().notNull(),
+    issueDate: date().notNull(),
+    buyerBizNo: text().notNull(),
+    buyerName: text().notNull(),
+    buyerCeoName: text(),
+    buyerEmail: text(),
+    itemName: text().notNull(),
+    supplyAmount: won().notNull(),
+    vatAmount: won().notNull(),
+    totalAmount: won().notNull(),
+    /** 국세청 승인번호 */
+    approvalNo: text(),
+    /** 공급자가 돌려준 마지막 안내(전송 실패 사유 등) */
+    message: text(),
+    taxInvoiceId: uuid().references(() => taxInvoices.id, { onDelete: 'set null' }),
+    createdBy: uuid().references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex('tax_invoice_issues_company_mgt_key_uq').on(t.companyId, t.mgtKey),
+    index('tax_invoice_issues_company_date_idx').on(t.companyId, t.issueDate),
+    check('tax_invoice_issues_status_ck', sql`status in ('issued', 'sent', 'cancelled', 'failed')`),
+    check('tax_invoice_issues_kind_ck', sql`kind in ('tax', 'zero', 'exempt')`),
+    check('tax_invoice_issues_amount_ck', sql`total_amount = supply_amount + vat_amount`),
+    tenantIsolationPolicy(),
+  ],
+);

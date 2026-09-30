@@ -2,6 +2,8 @@ import {
   BIZ_NO_STATUSES,
   COLLECT_CHANNELS,
   EVIDENCE_STATUSES,
+  ISSUE_STATUSES,
+  TAX_INVOICE_KINDS,
   UPLOAD_KINDS,
 } from '@wellbuddy/shared';
 import { z } from 'zod';
@@ -263,4 +265,34 @@ export const ReconciliationSchema = z.object({
       ),
     }),
   ),
+});
+
+/** 전자세금계산서 발행 기록(P2-14) */
+export const TaxInvoiceIssueSchema = z.object({
+  id: z.uuid(),
+  mgtKey: z.string(),
+  provider: z.string(),
+  status: z.enum(ISSUE_STATUSES),
+  kind: z.enum(TAX_INVOICE_KINDS),
+  issueDate: z.string(),
+  buyerBizNo: z.string(),
+  buyerName: z.string(),
+  buyerCeoName: nullableString,
+  buyerEmail: nullableString,
+  itemName: z.string(),
+  supplyAmount: int,
+  vatAmount: int,
+  totalAmount: int,
+  /** 국세청 승인번호 */
+  approvalNo: nullableString,
+  message: nullableString,
+  /** 등록한 매출 세금계산서(증빙)와 그 처리 상태 */
+  taxInvoiceId: z.uuid().nullable(),
+  evidenceStatus: status.nullable(),
+  createdAt: z.string(),
+});
+
+export const TaxInvoiceCancelResultSchema = TaxInvoiceIssueSchema.extend({
+  /** 이미 전표가 있으면 역분개 안내 */
+  notice: nullableString,
 });

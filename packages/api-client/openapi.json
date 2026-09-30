@@ -20074,6 +20074,713 @@
         ]
       }
     },
+    "/api/tax-invoice-issues": {
+      "get": {
+        "operationId": "TaxInvoiceIssuesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "발행한 전자세금계산서(최근 500건)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "mgtKey": {
+                        "type": "string"
+                      },
+                      "provider": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "issued",
+                          "sent",
+                          "cancelled",
+                          "failed"
+                        ]
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "tax",
+                          "zero",
+                          "exempt"
+                        ]
+                      },
+                      "issueDate": {
+                        "type": "string"
+                      },
+                      "buyerBizNo": {
+                        "type": "string"
+                      },
+                      "buyerName": {
+                        "type": "string"
+                      },
+                      "buyerCeoName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "buyerEmail": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "itemName": {
+                        "type": "string"
+                      },
+                      "supplyAmount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "vatAmount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "totalAmount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "approvalNo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "message": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "taxInvoiceId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "evidenceStatus": {
+                        "nullable": true,
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "review",
+                          "posted",
+                          "ignored",
+                          "matched"
+                        ]
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "mgtKey",
+                      "provider",
+                      "status",
+                      "kind",
+                      "issueDate",
+                      "buyerBizNo",
+                      "buyerName",
+                      "buyerCeoName",
+                      "buyerEmail",
+                      "itemName",
+                      "supplyAmount",
+                      "vatAmount",
+                      "totalAmount",
+                      "approvalNo",
+                      "message",
+                      "taxInvoiceId",
+                      "evidenceStatus",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      },
+      "post": {
+        "operationId": "TaxInvoiceIssuesController_issue",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "issueDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "kind": {
+                    "default": "tax",
+                    "type": "string",
+                    "enum": [
+                      "tax",
+                      "zero",
+                      "exempt"
+                    ]
+                  },
+                  "buyerBizNo": {
+                    "type": "string"
+                  },
+                  "buyerName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "buyerCeoName": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "buyerEmail": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "email",
+                        "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          ""
+                        ]
+                      }
+                    ]
+                  },
+                  "itemName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "supplyAmount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000000
+                  },
+                  "vatAmount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000000000000
+                  }
+                },
+                "required": [
+                  "issueDate",
+                  "buyerBizNo",
+                  "buyerName",
+                  "itemName",
+                  "supplyAmount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "연동관리에서 고른 공급자(모의·팝빌)로 발행하고 매출 세금계산서로 등록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "mgtKey": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "issued",
+                        "sent",
+                        "cancelled",
+                        "failed"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "tax",
+                        "zero",
+                        "exempt"
+                      ]
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "buyerBizNo": {
+                      "type": "string"
+                    },
+                    "buyerName": {
+                      "type": "string"
+                    },
+                    "buyerCeoName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "buyerEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "itemName": {
+                      "type": "string"
+                    },
+                    "supplyAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "totalAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "approvalNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "taxInvoiceId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "evidenceStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "mgtKey",
+                    "provider",
+                    "status",
+                    "kind",
+                    "issueDate",
+                    "buyerBizNo",
+                    "buyerName",
+                    "buyerCeoName",
+                    "buyerEmail",
+                    "itemName",
+                    "supplyAmount",
+                    "vatAmount",
+                    "totalAmount",
+                    "approvalNo",
+                    "message",
+                    "taxInvoiceId",
+                    "evidenceStatus",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
+    "/api/tax-invoice-issues/{id}/cancel": {
+      "post": {
+        "operationId": "TaxInvoiceIssuesController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "발행 취소",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "mgtKey": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "issued",
+                        "sent",
+                        "cancelled",
+                        "failed"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "tax",
+                        "zero",
+                        "exempt"
+                      ]
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "buyerBizNo": {
+                      "type": "string"
+                    },
+                    "buyerName": {
+                      "type": "string"
+                    },
+                    "buyerCeoName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "buyerEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "itemName": {
+                      "type": "string"
+                    },
+                    "supplyAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "totalAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "approvalNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "taxInvoiceId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "evidenceStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "notice": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "mgtKey",
+                    "provider",
+                    "status",
+                    "kind",
+                    "issueDate",
+                    "buyerBizNo",
+                    "buyerName",
+                    "buyerCeoName",
+                    "buyerEmail",
+                    "itemName",
+                    "supplyAmount",
+                    "vatAmount",
+                    "totalAmount",
+                    "approvalNo",
+                    "message",
+                    "taxInvoiceId",
+                    "evidenceStatus",
+                    "createdAt",
+                    "notice"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
+    "/api/tax-invoice-issues/{id}/refresh": {
+      "post": {
+        "operationId": "TaxInvoiceIssuesController_refresh",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "국세청 전송 상태 다시 조회",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "mgtKey": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "issued",
+                        "sent",
+                        "cancelled",
+                        "failed"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "tax",
+                        "zero",
+                        "exempt"
+                      ]
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "buyerBizNo": {
+                      "type": "string"
+                    },
+                    "buyerName": {
+                      "type": "string"
+                    },
+                    "buyerCeoName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "buyerEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "itemName": {
+                      "type": "string"
+                    },
+                    "supplyAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "totalAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "approvalNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "taxInvoiceId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "evidenceStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "mgtKey",
+                    "provider",
+                    "status",
+                    "kind",
+                    "issueDate",
+                    "buyerBizNo",
+                    "buyerName",
+                    "buyerCeoName",
+                    "buyerEmail",
+                    "itemName",
+                    "supplyAmount",
+                    "vatAmount",
+                    "totalAmount",
+                    "approvalNo",
+                    "message",
+                    "taxInvoiceId",
+                    "evidenceStatus",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: evidence (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "evidence"
+        ]
+      }
+    },
     "/api/evidence/uploads/preview": {
       "post": {
         "operationId": "EvidenceController_preview",

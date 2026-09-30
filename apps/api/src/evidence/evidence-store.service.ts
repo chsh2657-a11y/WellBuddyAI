@@ -229,11 +229,12 @@ export class EvidenceStore {
     return new Map(rows.map((r) => [r.bizRegNo!, r.id]));
   }
 
+  /** runId 는 수집 실행 기록(전자세금계산서 발행으로 만든 매출 세금계산서는 null) */
   async insertTaxInvoices(
     tx: Transaction,
     records: TaxInvoiceRecord[],
     source: EvidenceSource,
-    runId: string,
+    runId: string | null,
   ): Promise<InsertResult> {
     const { companyId } = requireCompanyContext();
     const counterpart = (r: TaxInvoiceRecord) =>

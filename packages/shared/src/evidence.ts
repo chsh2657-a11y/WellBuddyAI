@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidBizRegNo, normalizeBizRegNo } from './biz-reg-no.js';
 
 const emptyToNull = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v);
 
@@ -240,3 +241,52 @@ export const ReceiptListQuerySchema = z.object({
   status: z.enum(EVIDENCE_STATUSES).optional(),
 });
 export type ReceiptListQuery = z.infer<typeof ReceiptListQuerySchema>;
+
+/** 전자세금계산서 발행(P2-14) */
+export const TAX_INVOICE_KINDS = ['tax', 'zero', 'exempt'] as const;
+export type TaxInvoiceKind = (typeof TAX_INVOICE_KINDS)[number];
+export const TAX_INVOICE_KIND_LABELS: Record<TaxInvoiceKind, string> = {
+  tax: '세금계산서(과세)',
+  zero: '세금계산서(영세율)',
+  exempt: '계산서(면세)',
+};
+export const ISSUE_STATUSES = ['issued', 'sent', 'cancelled', 'failed'] as const;
+export type IssueStatus = (typeof ISSUE_STATUSES)[number];
+export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
+  issued: '발행 완료',
+  sent: '국세청 전송 완료',
+  cancelled: '발행 취소',
+  failed: '전송 실패',
+};
+
+export const TaxInvoiceIssueInputSchema = z
+  .object({
+    issueDate: z.iso.date(),
+    kind: z.enum(TAX_INVOICE_KINDS).default('tax'),
+    buyerBizNo: z
+      .string()
+      .trim()
+      .refine(isValidBizRegNo, { error: '공급받는자 사업자번호가 올바르지 않습니다.' })
+      .transform(normalizeBizRegNo),
+    buyerName: z.string().trim().min(1, { error: '상호를 입력해 주세요.' }).max(100),
+    buyerCeoName: z.string().trim().max(50).optional(),
+    buyerEmail: z.email({ error: '이메일 형식이 올바르지 않습니다.' }).optional().or(z.literal('')),
+    itemName: z.string().trim().min(1, { error: '품목을 입력해 주세요.' }).max(100),
+    supplyAmount: z
+      .number()
+      .int()
+      .min(1, { error: '공급가액을 입력해 주세요.' })
+      .max(1_000_000_000_000),
+    /** 비우면 과세는 공급가액의 10%(원 미만 절사), 영세·면세는 0 */
+    vatAmount: z.number().int().min(0).max(1_000_000_000_000).optional(),
+  })
+  .refine((v) => v.kind === 'tax' || !v.vatAmount, {
+    error: '영세율·면세는 세액이 0원입니다.',
+    path: ['vatAmount'],
+  });
+export type TaxInvoiceIssueInput = z.infer<typeof TaxInvoiceIssueInputSchema>;
+
+export const TaxInvoiceCancelSchema = z.object({
+  reason: z.string().trim().min(1, { error: '취소 사유를 입력해 주세요.' }).max(200),
+});
+export type TaxInvoiceCancelInput = z.infer<typeof TaxInvoiceCancelSchema>;

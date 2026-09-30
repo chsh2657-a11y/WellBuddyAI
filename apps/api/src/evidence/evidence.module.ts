@@ -12,12 +12,19 @@ import { ReceiptsService } from './receipts.service.js';
 import { ReconcileService } from './reconcile.service.js';
 import { SourcesController } from './sources.controller.js';
 import { SourcesService } from './sources.service.js';
+import { TaxInvoiceIssuesController } from './tax-invoice-issues.controller.js';
+import { TaxInvoiceIssuesService } from './tax-invoice-issues.service.js';
 import { UploadService } from './upload.service.js';
 
 /** 증빙 자동수집·자동분개 */
 @Module({
   imports: [IntegrationsModule, AccountingModule, FilesModule],
-  controllers: [SourcesController, ReceiptsController, EvidenceController],
+  controllers: [
+    SourcesController,
+    ReceiptsController,
+    TaxInvoiceIssuesController,
+    EvidenceController,
+  ],
   providers: [
     SourcesService,
     EvidenceStore,
@@ -27,6 +34,7 @@ import { UploadService } from './upload.service.js';
     CenterService,
     ReconcileService,
     ReceiptsService,
+    TaxInvoiceIssuesService,
   ],
   exports: [SourcesService, EvidenceStore, EvidenceService],
 })

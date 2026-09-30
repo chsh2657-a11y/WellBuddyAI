@@ -123,6 +123,16 @@ const POPBILL: ProviderDefinition = {
       required: true,
       placeholder: '1234567890',
     },
+    {
+      key: 'environment',
+      label: '서버',
+      secret: false,
+      required: false,
+      choices: [
+        { value: 'test', label: '테스트(국세청 전송 없음)' },
+        { value: 'production', label: '운영' },
+      ],
+    },
   ],
   schedulable: true,
 };

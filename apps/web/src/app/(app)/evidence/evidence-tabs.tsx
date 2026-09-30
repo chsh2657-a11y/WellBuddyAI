@@ -8,6 +8,7 @@ export const EVIDENCE_TABS = [
   { href: '/evidence/review', label: '자동분개 검토함' },
   { href: '/evidence/center', label: '증빙센터' },
   { href: '/evidence/receipts', label: '영수증' },
+  { href: '/evidence/issue', label: '세금계산서 발행' },
   { href: '/evidence/records', label: '수집 내역' },
   { href: '/evidence/upload', label: '파일 올리기' },
   { href: '/evidence/collect', label: '자동 수집' },

@@ -5,9 +5,8 @@ import { requireCompanyContext } from '../common/request-context.js';
 
 /**
  * 공급자별 연결 테스트.
- * 파일 업로드·모의 데이터·내장 규칙은 바로 준비되고, 외부 API 는 구현체가 있으면(Claude AI 분류,
- * 영수증 OCR, 국세청 사업자 상태조회 등) 실제로 호출해 본다. 아직 구현체가 없는 외부 API(CODEF·팝빌)는
- * P2-10~16 에서 더한다.
+ * 파일 업로드·모의 데이터·내장 규칙은 바로 준비되고, 외부 API(CODEF·팝빌·Claude·OCR·국세청 상태조회)는
+ * 저장한 자격증명으로 구현체를 만들어 실제로 호출해 본다(P2-15). 구현체가 없는 공급자는 안내만 한다.
  */
 @Injectable()
 export class ConnectionTester {

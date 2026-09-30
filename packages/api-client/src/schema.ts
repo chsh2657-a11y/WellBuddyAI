@@ -1636,6 +1636,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/tax-invoice-issues': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TaxInvoiceIssuesController_list'];
+    put?: never;
+    post: operations['TaxInvoiceIssuesController_issue'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/tax-invoice-issues/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TaxInvoiceIssuesController_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/tax-invoice-issues/{id}/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TaxInvoiceIssuesController_refresh'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/evidence/uploads/preview': {
     parameters: {
       query?: never;
@@ -9532,6 +9580,244 @@ export interface operations {
             entryNumber: string | null;
             createdAt: string;
             message: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TaxInvoiceIssuesController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 발행한 전자세금계산서(최근 500건) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            mgtKey: string;
+            provider: string;
+            /** @enum {string} */
+            status: 'issued' | 'sent' | 'cancelled' | 'failed';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            issueDate: string;
+            buyerBizNo: string;
+            buyerName: string;
+            buyerCeoName: string | null;
+            buyerEmail: string | null;
+            itemName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            approvalNo: string | null;
+            message: string | null;
+            /** Format: uuid */
+            taxInvoiceId: string | null;
+            /** @enum {string|null} */
+            evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description 권한 필요: evidence (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TaxInvoiceIssuesController_issue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          issueDate: string;
+          /**
+           * @default tax
+           * @enum {string}
+           */
+          kind?: 'tax' | 'zero' | 'exempt';
+          buyerBizNo: string;
+          buyerName: string;
+          buyerCeoName?: string;
+          buyerEmail?: string | '';
+          itemName: string;
+          supplyAmount: number;
+          vatAmount?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description 연동관리에서 고른 공급자(모의·팝빌)로 발행하고 매출 세금계산서로 등록 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            mgtKey: string;
+            provider: string;
+            /** @enum {string} */
+            status: 'issued' | 'sent' | 'cancelled' | 'failed';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            issueDate: string;
+            buyerBizNo: string;
+            buyerName: string;
+            buyerCeoName: string | null;
+            buyerEmail: string | null;
+            itemName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            approvalNo: string | null;
+            message: string | null;
+            /** Format: uuid */
+            taxInvoiceId: string | null;
+            /** @enum {string|null} */
+            evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            createdAt: string;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TaxInvoiceIssuesController_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 발행 취소 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            mgtKey: string;
+            provider: string;
+            /** @enum {string} */
+            status: 'issued' | 'sent' | 'cancelled' | 'failed';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            issueDate: string;
+            buyerBizNo: string;
+            buyerName: string;
+            buyerCeoName: string | null;
+            buyerEmail: string | null;
+            itemName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            approvalNo: string | null;
+            message: string | null;
+            /** Format: uuid */
+            taxInvoiceId: string | null;
+            /** @enum {string|null} */
+            evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            createdAt: string;
+            notice: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TaxInvoiceIssuesController_refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 국세청 전송 상태 다시 조회 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            mgtKey: string;
+            provider: string;
+            /** @enum {string} */
+            status: 'issued' | 'sent' | 'cancelled' | 'failed';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            issueDate: string;
+            buyerBizNo: string;
+            buyerName: string;
+            buyerCeoName: string | null;
+            buyerEmail: string | null;
+            itemName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            approvalNo: string | null;
+            message: string | null;
+            /** Format: uuid */
+            taxInvoiceId: string | null;
+            /** @enum {string|null} */
+            evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            createdAt: string;
           };
         };
       };

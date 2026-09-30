@@ -71,13 +71,18 @@ export interface HometaxProvider extends Connectable {
 
 export interface TaxInvoiceDraft {
   issueDate: string;
+  /** tax: 세금계산서(과세), zero: 영세율, exempt: 계산서(면세) */
+  kind?: 'tax' | 'zero' | 'exempt';
+  /** 공급자(우리 회사) 대표자 */
+  supplierCeoName?: string | null;
   buyerBizNo: string;
   buyerName: string;
+  buyerCeoName?: string | null;
   buyerEmail?: string | null;
   supplyAmount: number;
   vatAmount: number;
   itemName: string;
-  /** 우리 쪽 관리번호(중복 발행 방지) */
+  /** 우리 쪽 관리번호(중복 발행 방지, 영문·숫자·-·_ 24자 이내) */
   mgtKey: string;
 }
 

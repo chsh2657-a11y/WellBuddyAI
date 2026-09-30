@@ -7,6 +7,7 @@ export * from './mock/index.js';
 export * from './ai/claude.js';
 export * from './bizcheck/index.js';
 export * from './codef/index.js';
+export * from './popbill/index.js';
 export * from './ocr/claude.js';
 export * from './ocr/clova.js';
 export * from './ocr/mock.js';
