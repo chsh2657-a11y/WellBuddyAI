@@ -22072,6 +22072,10 @@
                       "lastRunAt": {
                         "nullable": true,
                         "type": "string"
+                      },
+                      "nextRunAt": {
+                        "nullable": true,
+                        "type": "string"
                       }
                     },
                     "required": [
@@ -22084,7 +22088,8 @@
                       "schedule",
                       "lastStatus",
                       "lastMessage",
-                      "lastRunAt"
+                      "lastRunAt",
+                      "nextRunAt"
                     ],
                     "additionalProperties": false
                   }

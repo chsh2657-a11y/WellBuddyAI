@@ -3,6 +3,7 @@ import { AccountingModule } from '../accounting/accounting.module.js';
 import { FilesModule } from '../files/files.module.js';
 import { IntegrationsModule } from '../integrations/integrations.module.js';
 import { CenterService } from './center.service.js';
+import { CollectionScheduler } from './collection.scheduler.js';
 import { CollectionService } from './collection.service.js';
 import { EvidenceStore } from './evidence-store.service.js';
 import { EvidenceController } from './evidence.controller.js';
@@ -31,11 +32,12 @@ import { UploadService } from './upload.service.js';
     EvidenceService,
     UploadService,
     CollectionService,
+    CollectionScheduler,
     CenterService,
     ReconcileService,
     ReceiptsService,
     TaxInvoiceIssuesService,
   ],
-  exports: [SourcesService, EvidenceStore, EvidenceService],
+  exports: [SourcesService, EvidenceStore, EvidenceService, CollectionScheduler],
 })
 export class EvidenceModule {}

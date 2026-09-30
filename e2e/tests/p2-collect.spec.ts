@@ -60,6 +60,19 @@ test('증빙: 모의 데이터로 통장·카드·홈택스를 수집하고, 다
   await expect(page.getByText(/^홈택스: 새로 [1-9]\d*건, 중복 0건$/)).toBeVisible();
   await expect(page.getByTestId('collect-hometax')).toContainText('세금계산서');
 
+  // 자동 수집 주기(P2-16): 수동이면 예정 없음, 매시간으로 바꾸면 다음 예정 시각
+  await expect(page.getByTestId('collect-bank-schedule')).toHaveText(/^자동 수집: 수동/);
+  await page.goto('/settings/integrations');
+  const bankSetting = page.getByTestId('integration-bank');
+  await bankSetting.getByLabel('자동 수집 주기').selectOption('hourly');
+  await bankSetting.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByText('은행 입출금 연동 설정을 저장했습니다.')).toBeVisible();
+  await page.goto('/evidence/collect');
+  await expect(page.getByTestId('collect-bank-schedule')).toHaveText(
+    /^자동 수집: 매시간 · 다음 .+ 무렵$/,
+  );
+  await expect(page.getByTestId('collect-card-schedule')).toHaveText(/^자동 수집: 수동/);
+
   const runs = page.getByRole('table', { name: '수집 이력' });
   await expect(runs.locator('tbody tr')).toHaveCount(4);
   await expect(runs.locator('tbody tr').first()).toContainText('모의 · 수동');

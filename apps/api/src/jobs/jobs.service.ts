@@ -4,8 +4,8 @@ import { Redis } from 'ioredis';
 import { currentContext, runWithContext } from '../common/request-context.js';
 import { APP_CONFIG, type AppConfig } from '../config/env.js';
 
-/** 큐 이름. P2 에서 수집(collect)·분류(classify) 큐가 추가된다. */
-export const QUEUES = ['mail', 'system'] as const;
+/** 큐 이름: 메일, 시스템, 예약 수집(P2-16) */
+export const QUEUES = ['mail', 'system', 'collect'] as const;
 export type QueueName = (typeof QUEUES)[number];
 
 type Handler = (data: unknown) => Promise<unknown>;
@@ -53,6 +53,20 @@ export class JobsService implements OnModuleDestroy {
       return;
     }
     await this.queue(queue).add(name, envelope, { ...DEFAULT_JOB_OPTIONS, ...options });
+  }
+
+  /**
+   * 반복 작업을 등록한다(같은 이름이면 주기만 바꾼다). 워커 프로세스가 시작할 때 부른다.
+   * 반복 작업은 회사·사용자 컨텍스트 없이 실행된다. 인라인 모드(테스트)에서는 등록하지 않는다.
+   */
+  async repeat(queue: QueueName, name: string, data: unknown, everyMs: number) {
+    if (this.config.queue.inline) return;
+    const envelope: JobEnvelope = { ctx: { userId: null, companyId: null }, data };
+    await this.queue(queue).upsertJobScheduler(
+      `${queue}-${name}`,
+      { every: everyMs },
+      { name, data: envelope, opts: { removeOnComplete: 100, removeOnFail: 500 } },
+    );
   }
 
   /** 워커 프로세스에서 호출: 지정한 큐의 작업을 처리한다. */

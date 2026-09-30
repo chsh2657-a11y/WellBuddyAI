@@ -19,11 +19,12 @@ import {
   DEFAULT_COLLECT_DAYS,
   getProvider,
   MAX_COLLECT_DAYS,
+  nextScheduledRun,
 } from '@wellbuddy/shared';
 import { eq } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
 import { AppException } from '../common/errors.js';
-import { requireCompanyContext } from '../common/request-context.js';
+import { requireCompanyId } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
 import { IntegrationsService } from '../integrations/integrations.service.js';
 import { EvidenceStore, type InsertResult } from './evidence-store.service.js';
@@ -69,10 +70,15 @@ export class CollectionService {
 
   /** 증빙 화면에서 보는 채널별 수집 설정과 마지막 결과 */
   async status() {
+    const now = new Date();
     return Promise.all(
       COLLECT_CHANNELS.map(async (channel) => {
         const s = await this.integrations.get(channel);
         const def = getProvider(channel, s.provider);
+        const collectable = s.enabled && this.registry.has(channel, s.provider);
+        const next = collectable
+          ? nextScheduledRun(s.schedule, s.lastRunAt ? new Date(s.lastRunAt) : null, now)
+          : null;
         return {
           channel,
           label: COLLECT_CHANNEL_LABELS[channel],
@@ -80,11 +86,13 @@ export class CollectionService {
           providerLabel: def?.label ?? s.provider,
           enabled: s.enabled,
           /** 켜져 있고 자동 수집 공급자(파일 업로드가 아님)인지 */
-          collectable: s.enabled && this.registry.has(channel, s.provider),
+          collectable,
           schedule: s.schedule,
           lastStatus: s.lastStatus,
           lastMessage: s.lastMessage,
           lastRunAt: s.lastRunAt,
+          // 이미 지난 예정 시각은 다음 예약 확인(최대 5분 뒤)에 돈다
+          nextRunAt: next ? new Date(Math.max(next.getTime(), now.getTime())).toISOString() : null,
         };
       }),
     );
@@ -119,8 +127,13 @@ export class CollectionService {
     }
   }
 
-  async collect(channel: CollectChannel, req: CollectRequest): Promise<CollectResult> {
-    const { companyId } = requireCompanyContext();
+  /** trigger: manual(지금 수집 버튼) · schedule(예약 수집, 사용자 없이 워커가 실행) */
+  async collect(
+    channel: CollectChannel,
+    req: CollectRequest,
+    trigger: 'manual' | 'schedule' = 'manual',
+  ): Promise<CollectResult> {
+    const { companyId } = requireCompanyId();
     const range = this.range(req);
     const setting = await this.integrations.providerSetting(channel);
     const { company, banks, cards } = await this.db.tenant(async (tx) => {
@@ -151,7 +164,7 @@ export class CollectionService {
     }
 
     const runId = await this.db.tenant((tx) =>
-      this.store.startRun(tx, channel, setting.provider, 'manual'),
+      this.store.startRun(tx, channel, setting.provider, trigger),
     );
     try {
       let save: Save;
@@ -216,7 +229,7 @@ export class CollectionService {
             action: 'evidence.collect',
             entity: 'collection_run',
             entityId: runId,
-            after: { channel, provider: setting.provider, ...range, ...result },
+            after: { channel, provider: setting.provider, trigger, ...range, ...result },
           },
           tx,
         );

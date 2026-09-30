@@ -23,7 +23,7 @@ import {
 } from '@wellbuddy/integrations';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { matchCardPurchases } from '../auto-journal/engine/matching.js';
-import { requireCompanyContext } from '../common/request-context.js';
+import { requireCompanyId } from '../common/request-context.js';
 
 export interface InsertResult {
   fetched: number;
@@ -45,7 +45,7 @@ export class EvidenceStore {
     provider: string,
     trigger: 'manual' | 'schedule' | 'file',
   ) {
-    const { companyId, userId } = requireCompanyContext();
+    const { companyId, userId } = requireCompanyId();
     const [run] = await tx
       .insert(collectionRuns)
       .values({ companyId, channel, provider, trigger, status: 'running', createdBy: userId })
@@ -122,7 +122,7 @@ export class EvidenceStore {
     source: EvidenceSource,
     runId: string,
   ): Promise<InsertResult> {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const hashes = this.bankHashes(bankAccountId, records);
     const rows = records.map((r, i) => ({
       companyId,
@@ -155,7 +155,7 @@ export class EvidenceStore {
     source: EvidenceSource,
     runId: string,
   ): Promise<InsertResult> {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const rows = records.map((r) => ({
       companyId,
       cardId,
@@ -236,7 +236,7 @@ export class EvidenceStore {
     source: EvidenceSource,
     runId: string | null,
   ): Promise<InsertResult> {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const counterpart = (r: TaxInvoiceRecord) =>
       r.direction === 'sales' ? r.buyerBizNo : r.supplierBizNo;
     const byBizNo = await this.partnersByBizNo(tx, records.map(counterpart));
@@ -274,7 +274,7 @@ export class EvidenceStore {
     source: EvidenceSource,
     runId: string,
   ): Promise<InsertResult> {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const byBizNo = await this.partnersByBizNo(
       tx,
       records.map((r) => r.bizNo),

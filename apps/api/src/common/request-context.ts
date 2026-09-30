@@ -39,6 +39,16 @@ export function requireCompanyContext(): RequestContext & {
   return ctx as ReturnType<typeof requireCompanyContext>;
 }
 
+/**
+ * 회사만 정해진 컨텍스트(예약 수집처럼 사용자 없이 워커가 실행하는 작업 포함).
+ * 권한 검사는 하지 않으므로 요청 처리에서는 requireCompanyContext 를 쓴다.
+ */
+export function requireCompanyId(): { companyId: string; userId: string | null } {
+  const ctx = storage.getStore();
+  if (!ctx?.companyId) throw new Error('회사 컨텍스트가 없습니다');
+  return { companyId: ctx.companyId, userId: ctx.userId };
+}
+
 /** 요청 밖(워커, 스크립트, 테스트)에서 컨텍스트를 지정해 실행한다. */
 export function runWithContext<T>(ctx: Partial<RequestContext>, fn: () => T): T {
   return storage.run(

@@ -21,7 +21,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { FieldCrypto } from '../common/crypto/field-crypto.js';
 import { isUniqueViolation } from '../common/db-errors.js';
 import { AppException } from '../common/errors.js';
-import { requireCompanyContext } from '../common/request-context.js';
+import { requireCompanyContext, requireCompanyId } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
 
 const last4 = (no: string) => `****${no.slice(-4)}`;
@@ -175,7 +175,7 @@ export class SourcesService {
 
   /** 수집 대상: 사용 중인 계좌(계좌번호 복호화) */
   async activeBankRefs(tx: Transaction) {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const rows = await tx
       .select()
       .from(bankAccounts)
@@ -295,7 +295,7 @@ export class SourcesService {
 
   /** 수집 대상: 사용 중인 카드(카드번호 복호화) */
   async activeCardRefs(tx: Transaction) {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const rows = await tx
       .select()
       .from(corporateCards)

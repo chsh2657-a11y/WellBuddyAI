@@ -134,6 +134,13 @@
       "when": 1790723774124,
       "tag": "0018_tax_invoice_issues",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790738092182,
+      "tag": "0019_scheduled_collections",
+      "breakpoints": true
     }
   ]
 }

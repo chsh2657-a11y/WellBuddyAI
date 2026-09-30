@@ -9,25 +9,18 @@ import {
   type IntegrationStatus,
   INTEGRATIONS,
   SCHEDULE_PRESETS,
-  type SchedulePreset,
+  schedulePresetOf,
   type UpdateIntegrationInput,
 } from '@wellbuddy/shared';
 import { eq } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
 import { FieldCrypto, maskSecret } from '../common/crypto/field-crypto.js';
 import { AppException } from '../common/errors.js';
-import { requireCompanyContext } from '../common/request-context.js';
+import { requireCompanyContext, requireCompanyId } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
 import { ConnectionTester } from './connection-tester.js';
 
 type Row = typeof integrationSettings.$inferSelect;
-
-function scheduleOf(cron: string | null): SchedulePreset {
-  const found = (
-    Object.entries(SCHEDULE_PRESETS) as [SchedulePreset, { cron: string | null }][]
-  ).find(([, v]) => v.cron === cron);
-  return found?.[0] ?? 'manual';
-}
 
 @Injectable()
 export class IntegrationsService {
@@ -146,13 +139,23 @@ export class IntegrationsService {
 
   /** 수집 공급자를 만들 설정(자격증명 복호화). 저장한 적이 없으면 기본 공급자·꺼짐 */
   async providerSetting(channel: IntegrationChannel) {
-    const { companyId } = requireCompanyContext();
+    const { companyId } = requireCompanyId();
     const row = await this.findRow(channel);
     return {
       provider: row?.provider ?? getChannel(channel)!.defaultProvider,
       enabled: row?.enabled ?? false,
       credentials: row?.credentialsEnc ? this.decrypt(companyId, channel, row.credentialsEnc) : {},
     };
+  }
+
+  /** 예약 수집이 설정 문제로 시작하지 못했을 때 마지막 상태로 남긴다(다음 주기까지 기다리게) */
+  async recordStatus(channel: IntegrationChannel, status: 'success' | 'error', message: string) {
+    await this.db.tenant((tx) =>
+      tx
+        .update(integrationSettings)
+        .set({ lastStatus: status, lastMessage: message, lastRunAt: new Date() })
+        .where(eq(integrationSettings.channel, channel)),
+    );
   }
 
   /** 저장된 설정으로 연결을 시험하고 결과를 마지막 상태로 기록한다. */
@@ -295,7 +298,7 @@ export class IntegrationsService {
       enabled: row.enabled,
       provider: row.provider,
       credentials,
-      schedule: scheduleOf(row.scheduleCron),
+      schedule: schedulePresetOf(row.scheduleCron),
       lastStatus: row.lastStatus,
       lastMessage: row.lastMessage,
       lastRunAt: row.lastRunAt?.toISOString() ?? null,

@@ -287,6 +287,53 @@ export const SCHEDULE_PRESETS = {
 } as const;
 export type SchedulePreset = keyof typeof SCHEDULE_PRESETS;
 
+/** 저장된 크론 → 프리셋(모르는 값은 수동) */
+export function schedulePresetOf(cron: string | null | undefined): SchedulePreset {
+  const found = (Object.keys(SCHEDULE_PRESETS) as SchedulePreset[]).find(
+    (k) => SCHEDULE_PRESETS[k].cron === (cron ?? null),
+  );
+  return found ?? 'manual';
+}
+
+const HOUR = 3_600_000;
+/** 매시간 수집은 마지막 실행 뒤 55분이 지나면 돈다(예약 확인 주기 5분의 여유) */
+const HOURLY_GAP = 55 * 60_000;
+
+/** 한국 시간 기준 그 날 오전 6시(UTC 시각) */
+function koreaSixAm(now: Date, addDays = 0): Date {
+  const kst = new Date(now.getTime() + 9 * HOUR);
+  return new Date(
+    Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() + addDays, 6 - 9),
+  );
+}
+
+/**
+ * 다음 예약 수집 시각(P2-16). 수동이면 null.
+ * 매시간: 마지막 실행 + 55분(한 번도 안 돌았으면 지금). 매일: 한국 시간 오전 6시(오늘 이미 돌았거나
+ * 6시 전이면 그 다음 6시).
+ */
+export function nextScheduledRun(
+  preset: SchedulePreset,
+  lastRunAt: Date | null,
+  now: Date,
+): Date | null {
+  if (preset === 'hourly') {
+    return lastRunAt ? new Date(lastRunAt.getTime() + HOURLY_GAP) : now;
+  }
+  if (preset === 'daily') {
+    const today = koreaSixAm(now);
+    if (now < today) return today;
+    return lastRunAt && lastRunAt >= today ? koreaSixAm(now, 1) : today;
+  }
+  return null;
+}
+
+/** 지금 예약 수집을 돌릴 때인지 */
+export function isScheduleDue(preset: SchedulePreset, lastRunAt: Date | null, now: Date): boolean {
+  const next = nextScheduledRun(preset, lastRunAt, now);
+  return next !== null && next <= now;
+}
+
 export const UpdateIntegrationSchema = z.object({
   enabled: z.boolean(),
   provider: z.string().min(1),

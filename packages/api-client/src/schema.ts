@@ -10275,6 +10275,7 @@ export interface operations {
             lastStatus: 'success' | 'error' | null;
             lastMessage: string | null;
             lastRunAt: string | null;
+            nextRunAt: string | null;
           }[];
         };
       };

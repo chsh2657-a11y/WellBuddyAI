@@ -193,6 +193,8 @@ export const CollectStatusSchema = z.object({
   lastStatus: z.enum(['success', 'error']).nullable(),
   lastMessage: nullableString,
   lastRunAt: nullableString,
+  /** 다음 예약 수집 시각(수동이거나 수집할 수 없으면 null, P2-16) */
+  nextRunAt: nullableString,
 });
 export const CollectResultSchema = z.object({
   runId: z.uuid(),

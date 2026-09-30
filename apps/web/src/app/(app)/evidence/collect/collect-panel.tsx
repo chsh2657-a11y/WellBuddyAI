@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CollectChannel } from '@wellbuddy/shared';
+import { type CollectChannel, SCHEDULE_PRESETS, type SchedulePreset } from '@wellbuddy/shared';
 import { Download } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -21,9 +21,11 @@ interface ChannelStatus {
   providerLabel: string;
   enabled: boolean;
   collectable: boolean;
+  schedule: SchedulePreset;
   lastStatus: 'success' | 'error' | null;
   lastMessage: string | null;
   lastRunAt: string | null;
+  nextRunAt: string | null;
 }
 
 interface CollectResult {
@@ -107,6 +109,25 @@ export function CollectPanel() {
               ) : (
                 <p className="text-muted-foreground">아직 수집한 적이 없습니다.</p>
               )}
+              {s.collectable ? (
+                <p
+                  className="text-xs text-muted-foreground"
+                  data-testid={`collect-${s.channel}-schedule`}
+                >
+                  자동 수집: {SCHEDULE_PRESETS[s.schedule].label}
+                  {s.nextRunAt ? ` · 다음 ${formatDateTime(s.nextRunAt)} 무렵` : ''}
+                  {s.schedule === 'manual' && canConfigure ? (
+                    <>
+                      {' '}
+                      (
+                      <Link href="/settings/integrations" className="underline">
+                        주기 설정
+                      </Link>
+                      )
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
               {s.collectable ? (
                 <Button
                   size="sm"
