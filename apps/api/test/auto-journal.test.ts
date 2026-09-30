@@ -638,4 +638,51 @@ describe('자동분개: 매칭·분류·검토함·승인·학습·규칙·자�
         .expect(200);
     }
   });
+
+  it('카드대금 출금은 상대 카드사를 미지급금 거래처로 찾거나 등록해 전기한다', async () => {
+    await upload(
+      'bank',
+      csv([
+        BANK_HEADER,
+        [
+          `${d(1)} 16:00:00`,
+          '카드대금',
+          '롯데카드 결제',
+          '',
+          '"350,000"',
+          '0',
+          '"6,142,000"',
+          '강남',
+        ],
+      ]),
+      'bank4.csv',
+      { sourceId: bankId },
+    );
+    await owner.post('/api/auto-journal/run').expect(200);
+    const item = find(await review(), '롯데카드 결제 카드대금');
+    expect(item).toMatchObject({ accountCode: '253', partnerId: null });
+    const result = (
+      await owner
+        .post('/api/auto-journal/approve')
+        .send({ items: [ref(item)] })
+        .expect(200)
+    ).body as { posted: { entryId: string }[]; failed: unknown[] };
+    expect(result.failed).toEqual([]);
+
+    const partners = (await owner.get('/api/partners').expect(200)).body as {
+      id: string;
+      name: string;
+      kind: string;
+    }[];
+    const lotte = partners.filter((p) => p.name === '롯데카드');
+    expect(lotte).toHaveLength(1);
+    expect(lotte[0]!.kind).toBe('other');
+    const entry = await journal(result.posted[0]!.entryId);
+    expect(entry.lines.find((l: { accountCode: string }) => l.accountCode === '253')).toMatchObject(
+      {
+        debit: 350_000,
+        partnerId: lotte[0]!.id,
+      },
+    );
+  });
 });

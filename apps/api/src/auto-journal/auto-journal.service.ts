@@ -21,6 +21,7 @@ import {
   AUTO_JOURNAL_KIND_LABELS,
   type AutoJournalKind,
   type AutoJournalSettings,
+  CARD_COMPANIES,
   type EvidenceRef,
   type SuggestionMethod,
   type SuggestionUpdateInput,
@@ -528,6 +529,18 @@ export class AutoJournalService {
       if (item.evidenceKind === 'tax_invoice') {
         await tx.update(taxInvoices).set({ partnerId }).where(eq(taxInvoices.id, item.evidenceId));
       }
+    }
+    // 카드대금 출금(미지급금 상환)의 상대가 카드사면, 카드 승인 전표와 같은 카드사 거래처로 찾거나 등록한다.
+    // 카드 승인보다 카드대금을 먼저 전기해도 거래처가 없어 실패하지 않게 한다.
+    const cardCompany =
+      item.evidenceKind === 'bank' && item.counterparty
+        ? CARD_COMPANIES.find((c) => item.counterparty!.replace(/\s/g, '').includes(c.name))
+        : undefined;
+    if (needsPartner('counterparty') && !partnerId && cardCompany) {
+      partnerId = await this.partnersService.ensureIn(tx, {
+        name: cardCompany.name,
+        kind: 'other',
+      });
     }
     if (needsPartner('counterparty') && !partnerId) {
       throw new AppException(

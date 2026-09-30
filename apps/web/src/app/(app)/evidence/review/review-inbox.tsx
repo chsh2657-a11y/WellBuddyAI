@@ -163,7 +163,9 @@ export function ReviewInbox() {
 
   const items = list.data ?? [];
   const chosen = items.filter((i) => selected.has(keyOf(i)));
-  const allChosen = items.length > 0 && chosen.length === items.length;
+  // 계정이 정해진 거래만 승인할 수 있으므로 '모두 선택'도 그것만 고른다
+  const approvable = items.filter((i) => i.accountId);
+  const allChosen = approvable.length > 0 && chosen.length === approvable.length;
 
   return (
     <div className="grid gap-4">
@@ -241,9 +243,9 @@ export function ReviewInbox() {
                   type="checkbox"
                   aria-label="모두 선택"
                   checked={allChosen}
-                  disabled={!writable || items.length === 0}
+                  disabled={!writable || approvable.length === 0}
                   onChange={(e) =>
-                    setSelected(e.target.checked ? new Set(items.map(keyOf)) : new Set())
+                    setSelected(e.target.checked ? new Set(approvable.map(keyOf)) : new Set())
                   }
                 />
               </TableHead>
