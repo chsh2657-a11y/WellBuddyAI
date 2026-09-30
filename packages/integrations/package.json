@@ -1,0 +1,31 @@
+{
+  "name": "@wellbuddy/integrations",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "외부 연동 공급자(은행·카드·홈택스·세금계산서 발행·OCR·AI) 인터페이스, 레지스트리, 파일 파서·모의·실연동 구현체",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@wellbuddy/accounting-core": "workspace:*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0"
+  }
+}
