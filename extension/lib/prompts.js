@@ -169,7 +169,7 @@ function headingList(headings) {
   return headings.map((h) => `- ${h}`).join('\n');
 }
 
-export function infographicPlanMessage({ markdown, headings, count, today }) {
+export function infographicPlanMessage({ markdown, headings, count, today, avoid = [] }) {
   return `[작업: 3단계 — 설명형 인포그래픽 ${count}장 설계]
 오늘 날짜: ${today}
 
@@ -188,6 +188,24 @@ export function infographicPlanMessage({ markdown, headings, count, today }) {
 - basis_date: 변동 가능한 정보가 있으면 "${today} 확인 기준" 같은 확인 기준일, 없으면 빈 문자열
 - source_note: 공식 자료를 바탕으로 했다면 "내용 근거: 기관명·자료명", 없으면 빈 문자열
 - alt: 이미지 내용을 설명하는 짧은 대체텍스트 (키워드 반복 금지)
+${avoid.length ? `- 다음 소제목에는 이미 실사진이 배치되어 있으니 가능하면 다른 소제목을 고릅니다: ${avoid.join(' / ')}\n` : ''}
+[H2 목록]
+${headingList(headings)}
+
+[완성 포스팅]
+${markdown}`;
+}
+
+export function infographicFixMessage({ plan, issues, markdown, headings }) {
+  const list = issues.map((x) => `- ${x.i + 1}번째 「${x.title}」: ${x.missing.join(', ')}`).join('\n');
+  return `[작업: 3단계 — 인포그래픽 검수·수정]
+아래 [설계]를 본문과 대조했더니, 본문에서 확인되지 않는 숫자가 있었습니다.
+${list}
+
+본문 표기와 일치하도록 고치거나, 본문에 근거가 없는 숫자는 빼 주세요. 문제가 없는 항목은 그대로 둡니다. 같은 형식으로 설계 전체를 다시 출력해 주세요. heading은 [H2 목록]의 문구를 글자 그대로 씁니다.
+
+[설계]
+${JSON.stringify(plan)}
 
 [H2 목록]
 ${headingList(headings)}

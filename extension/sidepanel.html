@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>보가드 SEO 블로그 비서</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img src="icons/icon48.png" alt="" width="28" height="28">
+      <div class="brand-text">
+        <strong>보가드 SEO 블로그 비서</strong>
+        <span>문제 해결형 검색 블로그</span>
+      </div>
+    </div>
+    <nav class="header-actions">
+      <button type="button" class="ghost" id="btn-open-tab" title="새 탭의 넓은 화면에서 열기">넓게 보기</button>
+      <button type="button" class="ghost" id="btn-new" title="지금 작업을 지우고 새로 시작">새 작업</button>
+      <button type="button" class="ghost" id="btn-settings" aria-pressed="false">설정</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <!-- Settings -->
+    <section id="view-settings" class="card" hidden>
+      <h2>설정</h2>
+      <form id="settings-form" autocomplete="off">
+        <fieldset>
+          <legend>Claude 연결</legend>
+          <label class="field">
+            <span>Anthropic API 키 <em>필수</em></span>
+            <input type="password" name="anthropicKey" placeholder="sk-ant-..." spellcheck="false">
+            <small>키는 이 브라우저에만 저장되며 Anthropic API 요청에만 사용됩니다. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">키 발급 페이지</a></small>
+          </label>
+          <label class="field">
+            <span>모델</span>
+            <select name="model"></select>
+          </label>
+          <label class="field">
+            <span>작업 깊이</span>
+            <select name="effort">
+              <option value="medium">보통 (빠름)</option>
+              <option value="high">깊게 (권장)</option>
+              <option value="xhigh">아주 깊게</option>
+              <option value="max">최대 (느림·비용 높음)</option>
+            </select>
+            <small>깊을수록 자료 확인과 글 완성도가 높아지지만 시간이 더 걸립니다.</small>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>글 작성</legend>
+          <label class="field">
+            <span>검색 플랫폼</span>
+            <select name="platform">
+              <option value="google">구글</option>
+              <option value="naver">네이버</option>
+              <option value="both">구글 + 네이버</option>
+            </select>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>해시태그 개수</span>
+              <input type="number" name="hashtagCount" min="0" max="30" step="1">
+            </label>
+            <label class="field">
+              <span>분량</span>
+              <input type="text" name="length">
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>이미지</legend>
+          <label class="check">
+            <input type="checkbox" name="thumbnail">
+            <span>AI 썸네일 1장 만들기</span>
+          </label>
+          <label class="field">
+            <span>썸네일 그림 생성</span>
+            <select name="imageProvider">
+              <option value="claude-svg">Claude 일러스트 (추가 키 불필요)</option>
+              <option value="openai">OpenAI 이미지 모델</option>
+              <option value="gemini">Google Gemini 이미지 모델</option>
+            </select>
+            <small>그림은 AI가 만들고, 한글 문구는 확장 프로그램이 정확한 글꼴로 얹습니다.</small>
+          </label>
+          <div class="provider provider-openai">
+            <label class="field">
+              <span>OpenAI API 키</span>
+              <input type="password" name="openaiKey" placeholder="sk-..." spellcheck="false">
+            </label>
+            <label class="field">
+              <span>OpenAI 이미지 모델</span>
+              <input type="text" name="openaiModel" spellcheck="false">
+            </label>
+          </div>
+          <div class="provider provider-gemini">
+            <label class="field">
+              <span>Gemini API 키</span>
+              <input type="password" name="geminiKey" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>Gemini 이미지 모델</span>
+              <input type="text" name="geminiModel" spellcheck="false">
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>본문 이미지</span>
+              <select name="imagePreset">
+                <option value="ask">글 완성 후 물어보기</option>
+                <option value="infographic">설명형 인포그래픽 자동</option>
+                <option value="photo">관련 실사진 자동</option>
+                <option value="mixed">인포그래픽 + 실사진 자동</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>본문 이미지 개수</span>
+              <input type="number" name="bodyImageCount" min="1" max="8" step="1">
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="primary">저장</button>
+          <button type="button" id="btn-settings-close">닫기</button>
+        </div>
+        <p class="hint" id="settings-saved" hidden>저장했습니다.</p>
+      </form>
+    </section>
+
+    <!-- Main flow -->
+    <section id="view-main">
+      <ol class="stepper" id="stepper">
+        <li data-step="1"><b>1</b> 제목 추천</li>
+        <li data-step="2"><b>2</b> 포스팅 완성</li>
+        <li data-step="3"><b>3</b> 본문 이미지</li>
+      </ol>
+
+      <div id="setup-banner" class="notice notice--warn" hidden>
+        Anthropic API 키를 먼저 설정해 주세요. <button type="button" class="link" id="btn-setup">설정 열기</button>
+      </div>
+
+      <section class="card" id="card-input">
+        <h2>기사·자료 입력</h2>
+        <label class="sr-only" for="input-material">기사 내용, 링크 또는 이슈</label>
+        <textarea id="input-material" rows="7" placeholder="기사 내용, 기사·영상 링크 또는 이슈를 붙여 넣어 주세요."></textarea>
+        <div class="row">
+          <button type="button" id="btn-grab">현재 탭 기사 가져오기</button>
+          <span class="hint" id="grab-info"></span>
+        </div>
+        <div id="grab-permission" class="notice" hidden>
+          이 페이지를 읽으려면 권한이 필요합니다.
+          <button type="button" class="link" id="btn-grant">페이지 읽기 허용</button>
+        </div>
+        <details class="direct-title">
+          <summary>제목을 이미 정하셨나요?</summary>
+          <div class="row">
+            <input type="text" id="input-title" placeholder="원하는 제목을 입력하면 바로 글을 작성합니다">
+            <button type="button" id="btn-write-direct">이 제목으로 작성</button>
+          </div>
+        </details>
+        <div class="actions">
+          <button type="button" class="primary" id="btn-titles">검색형 제목 5개 추천받기</button>
+          <button type="button" id="btn-auto" title="제목 추천 후 가장 추천하는 제목으로 바로 작성">알아서 골라서 작성</button>
+        </div>
+      </section>
+
+      <div id="assistant-message" class="bubble" hidden></div>
+
+      <section class="card" id="card-progress" hidden aria-live="polite">
+        <div class="progress-head">
+          <span class="spinner" aria-hidden="true"></span>
+          <strong id="progress-title">작업 중</strong>
+          <button type="button" class="ghost" id="btn-stop">중지</button>
+        </div>
+        <ol id="progress-log" class="progress-log"></ol>
+        <article id="stream-preview" class="post stream-preview" hidden></article>
+      </section>
+
+      <div id="alerts"></div>
+
+      <section class="card" id="card-titles" hidden></section>
+      <section class="card" id="card-post" hidden></section>
+    </section>
+  </main>
+
+  <template id="tpl-alert">
+    <div class="notice" role="status"><div class="notice-body"></div><div class="notice-actions"></div></div>
+  </template>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
