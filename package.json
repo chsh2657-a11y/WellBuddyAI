@@ -1,26 +1,19 @@
 {
-  "name": "wellbuddyai",
+  "name": "bogard-seo-blog-assistant",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "보가드팩토리 문제 해결형 SEO 검색 블로그 비서 — Chrome extension",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:vendor": "node scripts/build-vendor.mjs",
+    "test": "node --test tests/unit.test.mjs",
+    "test:e2e": "node tests/e2e.cjs"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/chsh2657-a11y/WellBuddyAI.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/chsh2657-a11y/WellBuddyAI/issues"
-  },
-  "homepage": "https://github.com/chsh2657-a11y/WellBuddyAI#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
-  }
+  },
+  "license": "UNLICENSED"
 }

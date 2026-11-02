@@ -11,8 +11,10 @@ export function bodyHeadings(markdown) {
 
 /**
  * Maps each image to the index (among H2 headings) it should sit under.
- * Exact (normalized) matches win, then substring matches, then the first
- * free body heading, so an image is never dropped or stacked at the end.
+ * Relevance wins: an image whose heading matches (exactly, then by substring)
+ * goes under that H2 even if another image is already there. Only images whose
+ * heading matches nothing go to the first free body heading, so none is
+ * dropped or piled up at the end of the post.
  */
 export function placeImages(markdown, images) {
   const all = extractHeadings(markdown, 2);
@@ -27,8 +29,8 @@ export function placeImages(markdown, images) {
   const pending = [];
   for (const img of images) {
     const target = normalizeHeading(img.heading || '');
-    let idx = norm.findIndex((h, i) => h === target && !used.has(i));
-    if (idx === -1 && target) idx = norm.findIndex((h, i) => !used.has(i) && (h.includes(target) || target.includes(h)) && h.length > 1);
+    let idx = target ? norm.findIndex((h) => h === target) : -1;
+    if (idx === -1 && target) idx = norm.findIndex((h) => h.length > 1 && (h.includes(target) || target.includes(h)));
     if (idx === -1) pending.push(img);
     else put(idx, img);
   }

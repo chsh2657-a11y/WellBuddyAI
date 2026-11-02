@@ -18,10 +18,21 @@ export const MODELS = [
 const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-opus-5', 'claude-fable-5-1']);
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 
-export const WEB_TOOLS = [
-  { type: 'web_search_20260209', name: 'web_search', max_uses: 8 },
-  { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 8 },
-];
+// Dynamic-filtering web tools (_20260209) run on Opus 4.6+/Sonnet 4.6+;
+// other models (e.g. Haiku) use the basic variants.
+const DYNAMIC_WEB_TOOL_MODELS = /^claude-(opus-(5|4-[678])|sonnet-(5|4-6))/;
+
+/** Server-side web search + web fetch tools for the given model. */
+export function webTools(model) {
+  const dynamic = DYNAMIC_WEB_TOOL_MODELS.test(model);
+  return [
+    { type: dynamic ? 'web_search_20260209' : 'web_search_20250305', name: 'web_search', max_uses: 8 },
+    { type: dynamic ? 'web_fetch_20260209' : 'web_fetch_20250910', name: 'web_fetch', max_uses: 8 },
+  ];
+}
+
+// Set once the API rejects the fallback opt-in, so later calls skip it.
+let fallbackRejected = false;
 
 export class RefusalError extends Error {
   constructor(details) {
@@ -110,7 +121,7 @@ export async function runTurn({
   const assistantMessages = [];
   let text = '';
   let working = [...messages];
-  let useFallback = FALLBACK_MODELS.has(model);
+  let useFallback = FALLBACK_MODELS.has(model) && !fallbackRejected;
   let lastUsage = null;
 
   for (let round = 0; round < 8; round++) {
@@ -142,6 +153,7 @@ export async function runTurn({
       // does not accept it), retry once without it before surfacing the error.
       if (useFallback && err instanceof Anthropic.BadRequestError && round === 0 && !text) {
         useFallback = false;
+        fallbackRejected = true;
         round -= 1;
         continue;
       }

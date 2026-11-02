@@ -116,7 +116,7 @@ function postFormatBlock(settings) {
     : '썸네일 문구는 핵심 키워드와 정보 범위를 담은 짧은 한글 1~2줄입니다. 긴 제목 전체를 넣지 않고, 글에 없는 금액·혜택·기한은 넣지 않습니다.';
   return `옵션:
 - 해시태그: ${settings.hashtagCount}개${Number(settings.hashtagCount) === 0 ? ' (생략)' : ''}
-- 분량: ${settings.length || '공백 포함 약 1,800~3,000자'}
+- 분량: ${settings.postLength || '공백 포함 약 1,800~3,000자'}
 - ${thumb}
 
 출력은 아래 태그 순서와 형식만 사용합니다.

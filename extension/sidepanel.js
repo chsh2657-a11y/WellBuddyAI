@@ -3,7 +3,7 @@
 // Step 2: chosen title → research + full post (SEO, FAQ, hashtags, sources) → AI thumbnail
 // Step 3: user-chosen direction → body images placed under their H2s
 
-import { createClient, runTurn, runJson, describeError, WEB_TOOLS, MODELS } from './lib/claude.js';
+import { createClient, runTurn, runJson, describeError, webTools, MODELS } from './lib/claude.js';
 import * as P from './lib/prompts.js';
 import { parseSourceCheck, parseTitles, parsePost, extractTag } from './lib/parse.js';
 import { collectAutocomplete, countSuggestions } from './lib/keywords.js';
@@ -259,7 +259,7 @@ async function startTitles({ auto = false } = {}) {
     log(useTools ? '자료를 확인합니다 (링크·짧은 이슈는 원문과 검색으로 확인)' : '붙여 넣은 기사 내용을 확인합니다');
     const r0 = await runTurn({
       client, model: settings.model, effort: 'low', system, messages: [m0],
-      tools: useTools ? WEB_TOOLS : undefined, onStatus: log, signal,
+      tools: useTools ? webTools(settings.model) : undefined, onStatus: log, signal,
     });
     const sc = parseSourceCheck(r0.text);
     if (!sc) throw new Error('자료 확인 결과를 읽지 못했습니다. 다시 시도해 주세요.');
@@ -288,7 +288,7 @@ async function startTitles({ auto = false } = {}) {
     const m1 = { role: 'user', content: P.titlesMessage({ autocomplete: ac, settings, today }) };
     const r1 = await runTurn({
       client, model: settings.model, effort: 'medium', system,
-      messages: [...session.messages, m1], tools: WEB_TOOLS, onStatus: log, signal,
+      messages: [...session.messages, m1], tools: webTools(settings.model), onStatus: log, signal,
     });
     const titles = parseTitles(r1.text);
     if (!titles) throw new Error('제목 추천 결과를 읽지 못했습니다. 다시 시도해 주세요.');
@@ -340,7 +340,7 @@ async function startPost({ title, how }) {
     const preview = makeStreamPreview();
     const r = await runTurn({
       client, model: settings.model, effort: settings.effort, system,
-      messages: [...session.messages, m], tools: WEB_TOOLS,
+      messages: [...session.messages, m], tools: webTools(settings.model),
       onText: (_, full) => preview(full), onStatus: log, signal,
     });
     const post = parsePost(r.text);
@@ -400,7 +400,7 @@ async function revisePost(request) {
     const preview = makeStreamPreview();
     const r = await runTurn({
       client, model: settings.model, effort: settings.effort, system,
-      messages: [...session.messages, m], tools: WEB_TOOLS,
+      messages: [...session.messages, m], tools: webTools(settings.model),
       onText: (_, full) => preview(full), onStatus: log, signal,
     });
     const post = parsePost(r.text);
@@ -786,7 +786,7 @@ function fillSettingsForm() {
   modelSel.replaceChildren(...MODELS.map((m) => new Option(m.label, m.id)));
   if (!MODELS.some((m) => m.id === settings.model)) modelSel.append(new Option(settings.model, settings.model));
   for (const [k, v] of Object.entries(settings)) {
-    const el = form.elements[k];
+    const el = form.elements.namedItem(k);
     if (!el) continue;
     if (el.type === 'checkbox') el.checked = Boolean(v);
     else el.value = v;
@@ -811,7 +811,7 @@ async function onSettingsSubmit(e) {
   const form = e.currentTarget;
   const next = { ...settings };
   for (const k of Object.keys(DEFAULT_SETTINGS)) {
-    const el = form.elements[k];
+    const el = form.elements.namedItem(k);
     if (!el) continue;
     if (el.type === 'checkbox') next[k] = el.checked;
     else if (el.type === 'number') next[k] = Number(el.value);
@@ -938,7 +938,10 @@ function bindEvents() {
 /* ---------------- Init ---------------- */
 
 async function init() {
-  if (VIEW === 'tab' || VIEW === 'settings') document.body.classList.add('wide');
+  if (VIEW === 'tab' || VIEW === 'settings') {
+    document.body.classList.add('wide');
+    $('#btn-open-tab').hidden = true;
+  }
   settings = await loadSettings();
   const saved = await loadSession();
   if (saved) session = { ...newSession(), ...saved };

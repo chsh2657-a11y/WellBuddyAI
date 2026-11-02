@@ -7,7 +7,7 @@ export const DEFAULT_SETTINGS = {
   effort: 'high',
   platform: 'google', // google | naver | both
   hashtagCount: 15,
-  length: '공백 포함 약 1,800~3,000자',
+  postLength: '공백 포함 약 1,800~3,000자',
   thumbnail: true,
   imageProvider: 'claude-svg', // claude-svg | openai | gemini
   openaiKey: '',
