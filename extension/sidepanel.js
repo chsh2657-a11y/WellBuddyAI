@@ -3,7 +3,7 @@
 // Step 2: chosen title → research + full post (SEO, FAQ, hashtags, sources) → AI thumbnail
 // Step 3: user-chosen direction → body images placed under their H2s
 
-import { createClient, runTurn, runJson, describeError, webTools, MODELS } from './lib/claude.js';
+import { createClient, runTurn, runJson, describeError, errorActions, webTools, MODELS } from './lib/claude.js';
 import * as P from './lib/prompts.js';
 import { parseSourceCheck, parseTitles, parsePost, extractTag } from './lib/parse.js';
 import { collectAutocomplete, countSuggestions } from './lib/keywords.js';
@@ -157,7 +157,10 @@ async function withRun(title, fn) {
   } catch (err) {
     console.error(err);
     if (signal.aborted) addAlert('작업을 중지했습니다.', 'warn');
-    else addAlert(describeError(err), 'error');
+    else {
+      const actions = errorActions(err).map((a) => ({ label: a.label, primary: true, run: () => chrome.tabs.create({ url: a.url }) }));
+      addAlert(describeError(err), 'error', actions);
+    }
   } finally {
     running = null;
     hideProgress();

@@ -198,12 +198,22 @@ function commonsResponse(url) {
   assert.equal(extId, 'kpkbeadlepnhafofikbecejkagmngpon', 'manifest key pins the extension ID');
 
   const calls = [];
+  let creditError = false; // when true, the API answers like an account with no credits
   const photo = fs.readFileSync(path.join(__dirname, 'fixtures/photo.jpg'));
 
   await context.route('https://api.anthropic.com/**', async (route) => {
     const req = route.request();
     const body = req.postDataJSON();
     const kind = classify(body);
+    if (creditError) {
+      calls.push({ kind: 'credit-error', body, headers: req.headers() });
+      await route.fulfill({
+        status: 400,
+        headers: { 'content-type': 'application/json', 'request-id': 'req_test' },
+        body: JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.' } }),
+      });
+      return;
+    }
     calls.push({ kind, body, headers: req.headers() });
     let text;
     if (kind === 'infoPlan' && body.messages[0].content.includes('이미 실사진이 배치되어')) {
@@ -247,6 +257,18 @@ function commonsResponse(url) {
   await page.waitForSelector('#assistant-message:not([hidden])');
   assert.match(await page.textContent('#assistant-message'), /기사 내용이나 링크를 보내주세요/);
   assert.equal(calls.length, 0);
+
+  // No API credits: clear Korean message + billing button, and no wasted retry.
+  await page.fill('#input-material', '정부가 11월 3일부터 테스트 지원금 신청을 받는다. 만 19세 이상 거주자가 대상이며 1인당 300,000원을 지급한다. 신청은 11월 30일까지 정부24에서 할 수 있다.');
+  creditError = true;
+  await page.click('#btn-titles');
+  await page.waitForSelector('#alerts .notice--error');
+  assert.match(await page.textContent('#alerts .notice--error'), /API 크레딧이 부족합니다/);
+  assert.ok(await page.$('#alerts .notice--error button.primary:has-text("크레딧 충전 페이지 열기")'));
+  assert.equal(calls.filter((c) => c.kind === 'credit-error').length, 1, 'credit error is not retried');
+  creditError = false;
+  calls.length = 0;
+  await page.evaluate(() => document.querySelector('#alerts').replaceChildren());
 
   // Step 1
   await page.fill('#input-material', '정부가 11월 3일부터 테스트 지원금 신청을 받는다. 만 19세 이상 거주자가 대상이며 1인당 300,000원을 지급한다. 신청은 11월 30일까지 정부24에서 할 수 있다.');

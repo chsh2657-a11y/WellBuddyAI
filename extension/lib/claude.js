@@ -59,10 +59,30 @@ export function createClient(apiKey) {
   });
 }
 
+const BILLING_URL = 'https://console.anthropic.com/settings/billing';
+const KEYS_URL = 'https://console.anthropic.com/settings/keys';
+
+/** True when the API refused the request because the account has no API credits left. */
+export function isCreditError(err) {
+  if (!(err instanceof Anthropic.APIError)) return false;
+  const msg = String(err.error?.error?.message ?? err.message ?? '');
+  return /credit balance/i.test(msg);
+}
+
+/** Links that help the user fix an error (shown as buttons next to the message). */
+export function errorActions(err) {
+  if (isCreditError(err)) return [{ label: '크레딧 충전 페이지 열기', url: BILLING_URL }];
+  if (err instanceof Anthropic.AuthenticationError) return [{ label: 'API 키 페이지 열기', url: KEYS_URL }];
+  return [];
+}
+
 /** Human-readable Korean message for an error thrown by runTurn. */
 export function describeError(err) {
   if (err instanceof RefusalError || err instanceof TruncatedError) return err.message;
   if (err instanceof Anthropic.APIUserAbortError) return '작업을 중지했습니다.';
+  if (isCreditError(err)) {
+    return 'Anthropic API 크레딧이 부족합니다. API는 Claude 구독(Pro·Max)과 별도로 선불 크레딧으로 결제됩니다. Anthropic 콘솔의 Billing에서 크레딧을 충전한 뒤 다시 시도해 주세요. 충전이 반영되기까지 몇 분 걸릴 수 있습니다.';
+  }
   if (err instanceof Anthropic.AuthenticationError) return 'Anthropic API 키가 올바르지 않습니다. 설정에서 키를 확인해 주세요.';
   if (err instanceof Anthropic.PermissionDeniedError) return '이 API 키로는 해당 모델이나 기능(웹 검색 등)을 사용할 권한이 없습니다. Anthropic 콘솔에서 웹 검색 사용 설정과 권한을 확인해 주세요.';
   if (err instanceof Anthropic.NotFoundError) return '선택한 모델을 찾을 수 없습니다. 설정에서 다른 모델을 선택해 주세요.';
@@ -151,7 +171,7 @@ export async function runTurn({
     } catch (err) {
       // If the fallback opt-in itself is rejected (e.g. the account or model
       // does not accept it), retry once without it before surfacing the error.
-      if (useFallback && err instanceof Anthropic.BadRequestError && round === 0 && !text) {
+      if (useFallback && err instanceof Anthropic.BadRequestError && !isCreditError(err) && round === 0 && !text) {
         useFallback = false;
         fallbackRejected = true;
         round -= 1;

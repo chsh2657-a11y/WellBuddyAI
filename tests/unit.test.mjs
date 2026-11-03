@@ -9,7 +9,7 @@ import { placeImages, buildPostHtml, buildMarkdownExport, bodyHeadings } from '.
 import { findUnsupportedNumbers } from '../extension/lib/infographic.js';
 import { isReusableLicense } from '../extension/lib/photos.js';
 import { formatAutocomplete } from '../extension/lib/prompts.js';
-import { webTools } from '../extension/lib/claude.js';
+import { webTools, describeError, errorActions, isCreditError, Anthropic } from '../extension/lib/claude.js';
 
 const POST = `# 테스트 지원금 신청방법·대상·기간 총정리
 
@@ -194,4 +194,17 @@ test('web tool versions follow the model', () => {
   assert.deepEqual(webTools('claude-opus-5-5').map((t) => t.type), ['web_search_20260209', 'web_fetch_20260209']);
   assert.deepEqual(webTools('claude-sonnet-5-5').map((t) => t.type), ['web_search_20260209', 'web_fetch_20260209']);
   assert.deepEqual(webTools('claude-haiku-5-5').map((t) => t.type), ['web_search_20250305', 'web_fetch_20250910']);
+});
+
+test('credit-balance errors get a clear Korean message and a billing link', () => {
+  const body = { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.' } };
+  const credit = new Anthropic.BadRequestError(400, body, undefined, new Headers());
+  assert.ok(isCreditError(credit));
+  assert.match(describeError(credit), /크레딧이 부족합니다/);
+  assert.deepEqual(errorActions(credit).map((a) => a.url), ['https://console.anthropic.com/settings/billing']);
+
+  const other = new Anthropic.BadRequestError(400, { type: 'error', error: { type: 'invalid_request_error', message: 'max_tokens too large' } }, undefined, new Headers());
+  assert.ok(!isCreditError(other));
+  assert.match(describeError(other), /요청 형식 오류/);
+  assert.deepEqual(errorActions(other), []);
 });
