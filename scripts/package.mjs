@@ -1,5 +1,8 @@
-// Packs extension/ into download/bogard-seo-extension.zip with a single top
-// folder (bogard-seo-extension/) so it can be unzipped and loaded as-is.
+// Packs extension/ into download/bogard-seo-extension.zip with manifest.json
+// at the archive root. Windows "Extract All" (and macOS) unzip it into a
+// folder named after the zip, so that folder is exactly the one to select in
+// chrome://extensions. (A nested top folder made Windows users pick the
+// outer folder and hit "manifest file is missing or unreadable".)
 // Dependency-free: deflate + CRC-32 from node:zlib. Fixed timestamps make the
 // output byte-identical when the sources haven't changed.
 // Run: npm run package
@@ -9,9 +12,8 @@ import { join, relative, sep } from 'node:path';
 import { deflateRawSync, crc32 } from 'node:zlib';
 
 const SRC = 'extension';
-const TOP = 'bogard-seo-extension';
 const OUT_DIR = 'download';
-const OUT = join(OUT_DIR, `${TOP}.zip`);
+const OUT = join(OUT_DIR, 'bogard-seo-extension.zip');
 const SKIP = /(^|\/)(\.DS_Store|Thumbs\.db|\.git.*)$/;
 
 // 2026-11-03 00:00 in MS-DOS date/time format
@@ -27,17 +29,25 @@ function walk(dir) {
 
 const manifest = JSON.parse(readFileSync(join(SRC, 'manifest.json'), 'utf8'));
 const files = walk(SRC)
-  .map((full) => ({ full, name: `${TOP}/${relative(SRC, full).split(sep).join('/')}` }))
+  .map((full) => ({ full, name: relative(SRC, full).split(sep).join('/') }))
   .filter((f) => !SKIP.test(f.name));
+if (!files.some((f) => f.name === 'manifest.json')) throw new Error('manifest.json must be at the zip root');
+
+// Explicit folder entries ("fonts/", "lib/", ...) before the files, as most zip tools write them.
+const dirs = [...new Set(files.flatMap((f) => {
+  const parts = f.name.split('/').slice(0, -1);
+  return parts.map((_, i) => `${parts.slice(0, i + 1).join('/')}/`);
+}))].sort();
+const entries = [...dirs.map((name) => ({ name, dir: true })), ...files];
 
 const locals = [];
 const centrals = [];
 let offset = 0;
-for (const { full, name } of files) {
-  const data = readFileSync(full);
+for (const { full, name, dir } of entries) {
+  const data = dir ? Buffer.alloc(0) : readFileSync(full);
   const nameBuf = Buffer.from(name, 'utf8');
   const deflated = deflateRawSync(data, { level: 9 });
-  const useDeflate = deflated.length < data.length;
+  const useDeflate = !dir && deflated.length < data.length;
   const body = useDeflate ? deflated : data;
   const crc = crc32(data) >>> 0;
   const flags = 0x0800; // UTF-8 names
@@ -72,7 +82,8 @@ for (const { full, name } of files) {
   central.writeUInt16LE(0, 32);
   central.writeUInt16LE(0, 34);
   central.writeUInt16LE(0, 36);
-  central.writeUInt32LE((0o100644 << 16) >>> 0, 38); // -rw-r--r--
+  // Unix mode in the high word; MS-DOS directory bit (0x10) for folders.
+  central.writeUInt32LE(dir ? (((0o40755 << 16) | 0x10) >>> 0) : ((0o100644 << 16) >>> 0), 38);
   central.writeUInt32LE(offset, 42);
   centrals.push(central, nameBuf);
 
@@ -82,8 +93,8 @@ for (const { full, name } of files) {
 const centralBuf = Buffer.concat(centrals);
 const end = Buffer.alloc(22);
 end.writeUInt32LE(0x06054b50, 0);
-end.writeUInt16LE(files.length, 8);
-end.writeUInt16LE(files.length, 10);
+end.writeUInt16LE(entries.length, 8);
+end.writeUInt16LE(entries.length, 10);
 end.writeUInt32LE(centralBuf.length, 12);
 end.writeUInt32LE(offset, 16);
 

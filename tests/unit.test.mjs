@@ -173,6 +173,23 @@ test('only freely reusable licenses are accepted', () => {
   for (const bad of ['CC BY-NC 2.0', 'CC BY-ND 4.0', 'All rights reserved', 'GFDL', '']) assert.ok(!isReusableLicense(bad), bad);
 });
 
+test('download zip has manifest.json at its root (no nested top folder)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const zip = readFileSync(new URL('../download/bogard-seo-extension.zip', import.meta.url));
+  const eocd = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  let p = zip.readUInt32LE(eocd + 16);
+  const names = [];
+  for (let i = 0; i < zip.readUInt16LE(eocd + 10); i++) {
+    const len = zip.readUInt16LE(p + 28);
+    names.push(zip.subarray(p + 46, p + 46 + len).toString('utf8'));
+    p += 46 + len + zip.readUInt16LE(p + 30) + zip.readUInt16LE(p + 32);
+  }
+  for (const f of ['manifest.json', 'sidepanel.html', 'background.js', 'README.txt', 'vendor/anthropic-sdk.mjs']) {
+    assert.ok(names.includes(f), `${f} at zip root`);
+  }
+  assert.ok(!names.some((n) => n.startsWith('bogard-seo-extension/')), 'no extra top-level folder');
+});
+
 test('web tool versions follow the model', () => {
   assert.deepEqual(webTools('claude-opus-5-5').map((t) => t.type), ['web_search_20260209', 'web_fetch_20260209']);
   assert.deepEqual(webTools('claude-sonnet-5-5').map((t) => t.type), ['web_search_20260209', 'web_fetch_20260209']);
