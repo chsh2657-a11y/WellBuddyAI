@@ -18,11 +18,19 @@
 
 ## 설치 방법
 
-1. 이 저장소를 내려받습니다. (GitHub의 **Code → Download ZIP** 후 압축 해제)
-2. 크롬 주소창에 `chrome://extensions` 를 입력합니다.
-3. 오른쪽 위 **개발자 모드**를 켭니다.
-4. **압축해제된 확장 프로그램을 로드합니다**를 누르고 저장소 안의 **`extension` 폴더**를 선택합니다.
-5. 툴바의 퍼즐 아이콘에서 「보가드 SEO 블로그 비서」를 고정하면 편합니다. (단축키 `Alt+Shift+B`)
+설치 파일은 **[download/bogard-seo-extension.zip](download/bogard-seo-extension.zip)** 하나입니다. 압축을 풀면 폴더 하나(`bogard-seo-extension`)가 나오고, 그 폴더를 크롬에 올리면 바로 작동합니다. 따로 빌드하거나 설치할 프로그램은 없습니다.
+
+1. 위 링크에서 압축 파일을 엽니다. 오른쪽 위 **다운로드** 버튼(↓)을 눌러 내려받습니다.
+2. 압축을 풀면 `bogard-seo-extension` 폴더가 나옵니다.
+3. 크롬 주소창에 `chrome://extensions`를 입력합니다.
+4. 오른쪽 위 **개발자 모드**를 켭니다.
+5. **압축해제된 확장 프로그램을 로드합니다**를 누릅니다. 2번의 `bogard-seo-extension` 폴더, 즉 `manifest.json`이 바로 보이는 폴더를 선택합니다.
+6. 툴바의 퍼즐 아이콘에서 「보가드 SEO 블로그 비서」를 고정합니다. (단축키 `Alt+Shift+B`)
+
+- “매니페스트 파일이 없거나 읽을 수 없습니다”가 나오면 한 단계 안쪽 폴더를 선택해 주세요.
+- 설치한 뒤에도 폴더를 지우지 마세요. 크롬이 그 폴더에서 확장 프로그램을 읽습니다.
+- **업데이트**: 새 압축 파일로 폴더를 덮어쓰고 `chrome://extensions`에서 새로고침(↻)을 누릅니다. 확장 프로그램 ID가 고정되어 있어, 다른 위치에 풀어 다시 로드해도 API 키·설정·작업 내용이 유지됩니다.
+- 폴더 안의 `README.txt`에도 같은 설치 안내가 들어 있습니다.
 
 크롬 116 이상이 필요합니다.
 
@@ -73,7 +81,8 @@ API 키는 이 브라우저(`chrome.storage.local`)에만 저장되며, 각 키�
 ## 개발자용
 
 ```
-extension/            크롬에 로드하는 폴더 (빌드 과정 없음)
+download/             설치용 압축 파일 (bogard-seo-extension.zip)
+extension/            크롬에 로드하는 폴더 원본 (빌드 과정 없음)
   manifest.json
   sidepanel.html/.css/.js   화면과 진행 로직
   background.js       사이드패널 열기, 오른쪽 클릭 메뉴
@@ -87,7 +96,9 @@ tests/                단위 테스트, 확장 프로그램 E2E 테스트
 
 - 비서의 말투·규칙을 바꾸려면 `extension/prompts/system-prompt.md`를 고친 뒤 `chrome://extensions`에서 새로고침하면 됩니다.
 - Claude 호출은 공식 `@anthropic-ai/sdk`를 사용합니다. 버전을 올렸다면 `npm install` 후 `npm run build:vendor`로 번들을 다시 만듭니다.
-- 테스트: `npm test`(단위), `npm run test:e2e`(Chromium에 확장 프로그램을 올려 모든 외부 API를 모의 응답으로 바꾼 뒤 3단계 전체를 실행, 화면은 `test-results/`에 저장)
+- 설치 파일 다시 만들기: `npm run package` → `download/bogard-seo-extension.zip` (같은 소스면 매번 같은 파일이 나옵니다)
+- `manifest.json`의 `key`는 압축 해제 설치 시 확장 프로그램 ID를 고정하는 공개키입니다. Chrome 웹 스토어에 올릴 때는 `key` 항목을 빼고, `manifest.json`이 압축 최상위에 오도록 묶어 주세요.
+- 테스트: `npm test`(단위), `npm run test:e2e`(`EXT_DIR=압축을 푼 폴더`를 붙이면 설치 파일로 검증, Chromium에 확장 프로그램을 올려 모든 외부 API를 모의 응답으로 바꾼 뒤 3단계 전체를 실행, 화면은 `test-results/`에 저장)
 - 기술 메모: 모든 요청은 스트리밍, 시스템 프롬프트는 프롬프트 캐싱, 웹 검색·웹 페치 서버 도구(`web_search_20260209`, `web_fetch_20260209`)와 `pause_turn` 이어받기, Opus 5.5·Sonnet 5.5에서는 서버 측 거절 대체 모델(`fallbacks: "default"`)을 사용합니다. 인포그래픽·실사진 계획은 JSON 스키마 구조화 출력으로 받습니다.
 
 글꼴: [Pretendard](https://github.com/orioncactus/pretendard) — SIL Open Font License 1.1 (`extension/fonts/Pretendard-LICENSE.txt`)

@@ -3,6 +3,7 @@
   "name": "보가드 SEO 블로그 비서",
   "short_name": "보가드 SEO 비서",
   "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkivr8CpeZiyMEH1QRVg1uc38iCPhcNWWJOIW+og0f7xu5RVDKgmL/q2i55PBwnrS0jbPKc9Qvv3E5WtLR1BZo9dzeO05rK0upbWS4t9sxBJI3OfUO+zl0Up2963TukKo1p4fvwBCafoLtP4zz0Q9bJWTIY2jeGZFVWen/gGFfVDPThBf1S84Awu/wMf51lXg+78i8AbrEdEU+dTp4NlABAxwMt7pF7XP2AY11ZXftoZ3yU+Oyy/Q8nSDtYCfGfDwjKXH1ZYquBwC3b5JVkQjbsbp/doyah5MIuaF+sS91diZFrlmzTc1EMRnFJrJpXAECJ8vqt18hlde6kybmFWNDQIDAQAB",
   "description": "뉴스·이슈에서 독자가 검색할 질문을 찾아 검색형 제목 5개를 추천하고, AI 썸네일과 FAQ가 포함된 문제 해결형 포스팅을 완성합니다.",
   "minimum_chrome_version": "116",
   "icons": {

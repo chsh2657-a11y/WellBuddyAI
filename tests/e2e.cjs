@@ -8,7 +8,8 @@ const fs = require('fs');
 const assert = require('assert/strict');
 const { chromium } = require('playwright');
 
-const EXT = path.resolve(__dirname, '../extension');
+// EXT_DIR lets the test run against an unzipped download package.
+const EXT = path.resolve(process.env.EXT_DIR || path.join(__dirname, '../extension'));
 const OUT = path.resolve(__dirname, '../test-results');
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -194,6 +195,7 @@ function commonsResponse(url) {
   if (!worker) worker = await context.waitForEvent('serviceworker');
   const extId = new URL(worker.url()).host;
   console.log('extension id', extId);
+  assert.equal(extId, 'kpkbeadlepnhafofikbecejkagmngpon', 'manifest key pins the extension ID');
 
   const calls = [];
   const photo = fs.readFileSync(path.join(__dirname, 'fixtures/photo.jpg'));

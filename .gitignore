@@ -1,5 +1,6 @@
 node_modules/
 dist/
 *.zip
+!download/*.zip
 test-results/
 .DS_Store
