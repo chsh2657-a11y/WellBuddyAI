@@ -73,7 +73,13 @@ const postedByUser = alias(users, 'posted_by_user');
 const vatPartner = alias(partners, 'vat_partner');
 
 /** 다른 모듈이 만든 자동 전표(그 모듈에서만 취소한다) */
-export const SYSTEM_SOURCES = new Set(['depreciation', 'asset_disposal', 'fx_revaluation', 'note']);
+export const SYSTEM_SOURCES = new Set([
+  'depreciation',
+  'asset_disposal',
+  'fx_revaluation',
+  'note',
+  'trade',
+]);
 
 const STATUS_LABEL: Record<JournalStatus, string> = {
   draft: '작성중',
@@ -309,6 +315,7 @@ export class JournalsService {
     const { userId } = requireCompanyContext();
     await this.db.tenant(async (tx) => {
       const before = await this.lockEntry(tx, id);
+      this.assertNotSystem(before, '고칠');
       this.assertStatus(before, ['draft'], '수정');
       await this.fiscal.assertOpen(tx, before.entryDate);
       const dateChanged = entry.entryDate !== before.entryDate;
@@ -354,6 +361,7 @@ export class JournalsService {
   async remove(id: string) {
     await this.db.tenant(async (tx) => {
       const before = await this.lockEntry(tx, id);
+      this.assertNotSystem(before, '지울');
       this.assertStatus(before, ['draft'], '삭제');
       await this.fiscal.assertOpen(tx, before.entryDate);
       await tx.delete(journalEntries).where(eq(journalEntries.id, id));
@@ -493,7 +501,7 @@ export class JournalsService {
       ) {
         throw new AppException(
           'SYSTEM_ENTRY',
-          '자동으로 만든 전표는 만든 메뉴(고정자산·외화평가·어음)에서 취소해 주세요.',
+          '자동으로 만든 전표는 만든 메뉴(고정자산·외화평가·어음·영업·구매·재고)에서 취소해 주세요.',
           HttpStatus.CONFLICT,
         );
       }
@@ -564,6 +572,30 @@ export class JournalsService {
       );
       return reversal!.id;
     }
+  }
+
+  /**
+   * 다른 모듈이 만든 자동 전표 중 아직 전기하지 않은 것(작성중·승인요청)을 지운다.
+   * 거래 문서를 고치거나 취소해 전표가 바뀔 때 쓴다(전기한 전표는 reverseIn 으로 역분개).
+   */
+  async discardIn(tx: Transaction, id: string) {
+    const entry = await this.lockEntry(tx, id);
+    this.assertStatus(entry, ['draft', 'pending'], '삭제');
+    await this.fiscal.assertOpen(tx, entry.entryDate);
+    await tx.delete(journalEntries).where(eq(journalEntries.id, id));
+    await this.audit.record(
+      {
+        action: 'journal.discard',
+        entity: 'journal',
+        entityId: id,
+        before: {
+          number: formatJournalNo(entry.entryDate, entry.entryNo),
+          source: entry.source,
+          sourceRef: entry.sourceRef,
+        },
+      },
+      tx,
+    );
   }
 
   // ── 첨부 ─────────────────────────────────────────────
@@ -642,6 +674,25 @@ export class JournalsService {
         { status: entry.status },
       );
     }
+  }
+
+  /** 자동 전표(상각·외화평가·어음·거래 문서)는 만든 메뉴에서만 고치거나 지운다 */
+  private assertNotSystem(entry: EntryRow, action: string) {
+    if (SYSTEM_SOURCES.has(entry.source)) {
+      throw new AppException(
+        'SYSTEM_ENTRY',
+        `자동으로 만든 전표는 여기서 ${action} 수 없습니다. 만든 메뉴에서 처리해 주세요.`,
+        HttpStatus.CONFLICT,
+      );
+    }
+  }
+
+  /** 지금 사용자가 자동 전표를 바로 전기할 수 있는가(전표 승인을 쓰면 대표·관리자만) */
+  async postStatusIn(tx: Transaction): Promise<'posted' | 'pending'> {
+    const { role } = requireCompanyContext();
+    return (await this.approvalRequired(tx)) && role !== 'owner' && role !== 'admin'
+      ? 'pending'
+      : 'posted';
   }
 
   private async approvalRequired(tx: Transaction): Promise<boolean> {

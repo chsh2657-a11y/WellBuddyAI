@@ -2196,6 +2196,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/trade-docs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_list'];
+    put?: never;
+    post: operations['TradeDocsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/trade-docs/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/trade-docs/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TradeDocsController_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/inventory/stock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_stock'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/inventory/ledger': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_ledger'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -12053,6 +12133,720 @@ export interface operations {
     requestBody?: never;
     responses: {
       /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_list: {
+    parameters: {
+      query?: {
+        kinds?: string;
+        from?: string;
+        to?: string;
+        partnerId?: string;
+        status?: 'open' | 'closed' | 'posted' | 'cancelled';
+        q?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 거래 문서 목록(최근 날짜순) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              kindLabel: string;
+              docNo: string;
+              docDate: string;
+              /** Format: uuid */
+              partnerId: string | null;
+              /** Format: uuid */
+              warehouseId: string | null;
+              /** Format: uuid */
+              toWarehouseId: string | null;
+              /** Format: uuid */
+              sourceDocId: string | null;
+              /** @enum {string} */
+              status: 'open' | 'closed' | 'posted' | 'cancelled';
+              evidenceType: string | null;
+              supplyTotal: number;
+              vatTotal: number;
+              total: number;
+              dueDate: string | null;
+              memo: string | null;
+              createdAt: string;
+              partnerName: string | null;
+              warehouseName: string | null;
+              sourceDocNo: string | null;
+            }[];
+            total: number;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          kind:
+            | 'quote'
+            | 'sales_order'
+            | 'shipment'
+            | 'sale'
+            | 'sales_return'
+            | 'purchase_order'
+            | 'receipt'
+            | 'purchase'
+            | 'purchase_return'
+            | 'transfer'
+            | 'adjustment'
+            | 'opening';
+          /** Format: date */
+          docDate: string;
+          /** Format: uuid */
+          partnerId?: string | null;
+          /** Format: uuid */
+          warehouseId?: string | null;
+          /** Format: uuid */
+          toWarehouseId?: string | null;
+          /** Format: uuid */
+          sourceDocId?: string | null;
+          /** @enum {string|null} */
+          evidenceType?: 'tax_invoice' | 'invoice' | 'card' | 'cash_receipt' | 'none' | null;
+          /** Format: date */
+          dueDate?: string | null;
+          memo?: string | null;
+          lines: {
+            /** Format: uuid */
+            itemId: string;
+            qty: number;
+            unitPrice?: number | null;
+            /** Format: uuid */
+            warehouseId?: string | null;
+            /** Format: uuid */
+            sourceLineId?: string | null;
+            lotNo?: string | null;
+            memo?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description 문서 작성. 확정 문서는 재고 이동과 전표를 만든다(앞 문서에서 전환 가능) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind:
+              | 'quote'
+              | 'sales_order'
+              | 'shipment'
+              | 'sale'
+              | 'sales_return'
+              | 'purchase_order'
+              | 'receipt'
+              | 'purchase'
+              | 'purchase_return'
+              | 'transfer'
+              | 'adjustment'
+              | 'opening';
+            kindLabel: string;
+            docNo: string;
+            docDate: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            /** Format: uuid */
+            warehouseId: string | null;
+            /** Format: uuid */
+            toWarehouseId: string | null;
+            /** Format: uuid */
+            sourceDocId: string | null;
+            /** @enum {string} */
+            status: 'open' | 'closed' | 'posted' | 'cancelled';
+            evidenceType: string | null;
+            supplyTotal: number;
+            vatTotal: number;
+            total: number;
+            dueDate: string | null;
+            memo: string | null;
+            createdAt: string;
+            partnerName: string | null;
+            partnerBizRegNo: string | null;
+            warehouseName: string | null;
+            toWarehouseName: string | null;
+            sourceDoc: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+            } | null;
+            createdByName: string | null;
+            cancelReason: string | null;
+            cancelledAt: string | null;
+            entry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            costEntry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              itemId: string;
+              itemCode: string;
+              itemName: string;
+              spec: string | null;
+              unit: string;
+              qty: number;
+              unitPrice: number;
+              supply: number;
+              vat: number;
+              /** Format: uuid */
+              warehouseId: string | null;
+              warehouseName: string | null;
+              /** Format: uuid */
+              sourceLineId: string | null;
+              lotNo: string | null;
+              memo: string | null;
+              processedQty: number;
+              remainingQty: number;
+            }[];
+            children: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+              docDate: string;
+              /** @enum {string} */
+              status: 'open' | 'closed' | 'posted' | 'cancelled';
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 문서·줄(남은 수량)·다음 단계 문서·전표 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind:
+              | 'quote'
+              | 'sales_order'
+              | 'shipment'
+              | 'sale'
+              | 'sales_return'
+              | 'purchase_order'
+              | 'receipt'
+              | 'purchase'
+              | 'purchase_return'
+              | 'transfer'
+              | 'adjustment'
+              | 'opening';
+            kindLabel: string;
+            docNo: string;
+            docDate: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            /** Format: uuid */
+            warehouseId: string | null;
+            /** Format: uuid */
+            toWarehouseId: string | null;
+            /** Format: uuid */
+            sourceDocId: string | null;
+            /** @enum {string} */
+            status: 'open' | 'closed' | 'posted' | 'cancelled';
+            evidenceType: string | null;
+            supplyTotal: number;
+            vatTotal: number;
+            total: number;
+            dueDate: string | null;
+            memo: string | null;
+            createdAt: string;
+            partnerName: string | null;
+            partnerBizRegNo: string | null;
+            warehouseName: string | null;
+            toWarehouseName: string | null;
+            sourceDoc: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+            } | null;
+            createdByName: string | null;
+            cancelReason: string | null;
+            cancelledAt: string | null;
+            entry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            costEntry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              itemId: string;
+              itemCode: string;
+              itemName: string;
+              spec: string | null;
+              unit: string;
+              qty: number;
+              unitPrice: number;
+              supply: number;
+              vat: number;
+              /** Format: uuid */
+              warehouseId: string | null;
+              warehouseName: string | null;
+              /** Format: uuid */
+              sourceLineId: string | null;
+              lotNo: string | null;
+              memo: string | null;
+              processedQty: number;
+              remainingQty: number;
+            }[];
+            children: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+              docDate: string;
+              /** @enum {string} */
+              status: 'open' | 'closed' | 'posted' | 'cancelled';
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description 취소: 재고 이동을 지우고 전표를 역분개한다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind:
+              | 'quote'
+              | 'sales_order'
+              | 'shipment'
+              | 'sale'
+              | 'sales_return'
+              | 'purchase_order'
+              | 'receipt'
+              | 'purchase'
+              | 'purchase_return'
+              | 'transfer'
+              | 'adjustment'
+              | 'opening';
+            kindLabel: string;
+            docNo: string;
+            docDate: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            /** Format: uuid */
+            warehouseId: string | null;
+            /** Format: uuid */
+            toWarehouseId: string | null;
+            /** Format: uuid */
+            sourceDocId: string | null;
+            /** @enum {string} */
+            status: 'open' | 'closed' | 'posted' | 'cancelled';
+            evidenceType: string | null;
+            supplyTotal: number;
+            vatTotal: number;
+            total: number;
+            dueDate: string | null;
+            memo: string | null;
+            createdAt: string;
+            partnerName: string | null;
+            partnerBizRegNo: string | null;
+            warehouseName: string | null;
+            toWarehouseName: string | null;
+            sourceDoc: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+            } | null;
+            createdByName: string | null;
+            cancelReason: string | null;
+            cancelledAt: string | null;
+            entry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            costEntry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              itemId: string;
+              itemCode: string;
+              itemName: string;
+              spec: string | null;
+              unit: string;
+              qty: number;
+              unitPrice: number;
+              supply: number;
+              vat: number;
+              /** Format: uuid */
+              warehouseId: string | null;
+              warehouseName: string | null;
+              /** Format: uuid */
+              sourceLineId: string | null;
+              lotNo: string | null;
+              memo: string | null;
+              processedQty: number;
+              remainingQty: number;
+            }[];
+            children: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+              docDate: string;
+              /** @enum {string} */
+              status: 'open' | 'closed' | 'posted' | 'cancelled';
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_stock: {
+    parameters: {
+      query?: {
+        date?: string;
+        warehouseId?: string;
+        itemId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 현재고(품목·창고별 수량, 품목별 재고금액) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            itemId: string;
+            code: string;
+            name: string;
+            spec: string | null;
+            unit: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            qty: number;
+            totalQty: number;
+            value: number;
+            unitCost: number | null;
+            safetyStock: number | null;
+            belowSafety: boolean;
+            warehouses: {
+              /** Format: uuid */
+              warehouseId: string;
+              qty: number;
+            }[];
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_ledger: {
+    parameters: {
+      query: {
+        itemId: string;
+        warehouseId?: string;
+        from: string;
+        to: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 재고수불부(기간 입출고와 누계) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            opening: {
+              qty: number;
+              value: number;
+            };
+            closing: {
+              qty: number;
+              value: number;
+            };
+            lines: {
+              /** Format: uuid */
+              id: string;
+              date: string;
+              /** Format: uuid */
+              docId: string;
+              docNo: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              kindLabel: string;
+              partnerName: string | null;
+              /** Format: uuid */
+              warehouseId: string;
+              warehouseName: string;
+              lotNo: string | null;
+              inQty: number;
+              outQty: number;
+              amount: number;
+              balanceQty: number;
+              balanceValue: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
       403: {
         headers: {
           [name: string]: unknown;

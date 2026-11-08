@@ -3,6 +3,7 @@ export * from './biz-no.js';
 export * from './chart-of-accounts.js';
 export * from './depreciation.js';
 export * from './fx.js';
+export * from './inventory.js';
 export * from './journal.js';
 export * from './money.js';
 export * from './notes.js';

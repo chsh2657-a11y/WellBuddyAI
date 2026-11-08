@@ -148,6 +148,13 @@
       "when": 1794126282667,
       "tag": "0020_items_warehouses",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794127365350,
+      "tag": "0021_trade_docs",
+      "breakpoints": true
     }
   ]
 }

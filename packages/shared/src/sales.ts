@@ -160,3 +160,173 @@ export const PartnerPriceInputSchema = z
     path: ['salesPrice'],
   });
 export type PartnerPriceInput = z.infer<typeof PartnerPriceInputSchema>;
+
+// ── 거래 문서 ────────────────────────────────────────────
+
+/**
+ * 거래 문서 종류. 판매: 견적서 → 주문서 → 출고 → 판매(→ 판매반품), 구매: 발주서 → 입고 → 구매(→ 구매반품).
+ * 창고 이동·재고 조정·기초재고는 재고만 움직인다.
+ */
+export const TRADE_DOC_KINDS = [
+  'quote',
+  'sales_order',
+  'shipment',
+  'sale',
+  'sales_return',
+  'purchase_order',
+  'receipt',
+  'purchase',
+  'purchase_return',
+  'transfer',
+  'adjustment',
+  'opening',
+] as const;
+export type TradeDocKind = (typeof TRADE_DOC_KINDS)[number];
+
+export const TRADE_DOC_KIND_LABELS: Record<TradeDocKind, string> = {
+  quote: '견적서',
+  sales_order: '주문서',
+  shipment: '출고',
+  sale: '판매',
+  sales_return: '판매반품',
+  purchase_order: '발주서',
+  receipt: '입고',
+  purchase: '구매',
+  purchase_return: '구매반품',
+  transfer: '창고이동',
+  adjustment: '재고조정',
+  opening: '기초재고',
+};
+
+/** 문서번호 접두어(예: PO-20261108-001) */
+export const TRADE_DOC_PREFIXES: Record<TradeDocKind, string> = {
+  quote: 'QT',
+  sales_order: 'SO',
+  shipment: 'SH',
+  sale: 'SL',
+  sales_return: 'SR',
+  purchase_order: 'PO',
+  receipt: 'RC',
+  purchase: 'PU',
+  purchase_return: 'PR',
+  transfer: 'TR',
+  adjustment: 'AD',
+  opening: 'OB',
+};
+
+export const SALES_DOC_KINDS = [
+  'quote',
+  'sales_order',
+  'shipment',
+  'sale',
+  'sales_return',
+] as const satisfies TradeDocKind[];
+export const PURCHASE_DOC_KINDS = [
+  'purchase_order',
+  'receipt',
+  'purchase',
+  'purchase_return',
+] as const satisfies TradeDocKind[];
+export const STOCK_DOC_KINDS = [
+  'transfer',
+  'adjustment',
+  'opening',
+] as const satisfies TradeDocKind[];
+
+/** 재고·전표에 반영하지 않고 남은 수량만 관리하는 문서(견적·주문·발주) */
+export const ORDER_DOC_KINDS: readonly TradeDocKind[] = ['quote', 'sales_order', 'purchase_order'];
+export const isOrderKind = (kind: TradeDocKind) => ORDER_DOC_KINDS.includes(kind);
+
+/**
+ * 앞 단계로 쓸 수 있는 문서: [만들 문서] → 앞 문서 종류
+ * - 출고 → 판매, 입고 → 구매는 줄 전체를 그대로 옮긴다(수량 고정, 단가만 고칠 수 있음).
+ * - 주문·발주에서는 남은 수량만큼 나눠서 만들 수 있다.
+ */
+export const TRADE_DOC_SOURCES: Partial<Record<TradeDocKind, readonly TradeDocKind[]>> = {
+  sales_order: ['quote'],
+  shipment: ['sales_order'],
+  sale: ['quote', 'sales_order', 'shipment'],
+  sales_return: ['sale'],
+  receipt: ['purchase_order'],
+  purchase: ['purchase_order', 'receipt'],
+  purchase_return: ['purchase'],
+};
+
+/** 지금 입력할 수 있는 문서(판매·재고 쪽은 다음 단계에서 연다) */
+export const ENABLED_TRADE_DOC_KINDS: readonly TradeDocKind[] = [
+  'quote',
+  'sales_order',
+  'purchase_order',
+  'receipt',
+  'purchase',
+  'purchase_return',
+];
+
+/** 앞 문서에서 줄을 그대로 옮기는 전환(수량 고정): 입고 → 구매, 출고 → 판매 */
+export const FULL_CONVERSIONS: Partial<Record<TradeDocKind, TradeDocKind>> = {
+  purchase: 'receipt',
+  sale: 'shipment',
+};
+
+/** 이 문서에서 만들 수 있는 다음 단계 문서 */
+export function nextTradeDocKinds(kind: TradeDocKind): TradeDocKind[] {
+  return TRADE_DOC_KINDS.filter(
+    (k) => ENABLED_TRADE_DOC_KINDS.includes(k) && (TRADE_DOC_SOURCES[k] ?? []).includes(kind),
+  );
+}
+
+export const TRADE_DOC_STATUSES = ['open', 'closed', 'posted', 'cancelled'] as const;
+export type TradeDocStatus = (typeof TRADE_DOC_STATUSES)[number];
+export const TRADE_DOC_STATUS_LABELS: Record<TradeDocStatus, string> = {
+  open: '진행 중',
+  closed: '완료',
+  posted: '확정',
+  cancelled: '취소',
+};
+
+export const TradeDocLineInputSchema = z.object({
+  itemId: z.uuid({ error: '품목을 선택해 주세요.' }),
+  qty: QuantitySchema,
+  /** 비우면 거래처별 단가 → 품목 기본 단가 */
+  unitPrice: optionalWon,
+  /** 비우면 문서의 창고 */
+  warehouseId: optionalUuid,
+  /** 앞 단계 문서의 줄 */
+  sourceLineId: optionalUuid,
+  lotNo: optionalText(50),
+  memo: optionalText(200),
+});
+export type TradeDocLineInput = z.infer<typeof TradeDocLineInputSchema>;
+
+const IsoDate = z.iso
+  .date({ error: '날짜 형식은 YYYY-MM-DD 입니다.' })
+  .refine((d) => d >= '2000-01-01' && d <= '2099-12-31', {
+    error: '2000년~2099년 날짜만 입력할 수 있습니다.',
+  });
+
+export const TradeDocInputSchema = z.object({
+  kind: z.enum(TRADE_DOC_KINDS),
+  docDate: IsoDate,
+  partnerId: optionalUuid,
+  warehouseId: optionalUuid,
+  /** 창고 이동의 받는 창고 */
+  toWarehouseId: optionalUuid,
+  sourceDocId: optionalUuid,
+  /** 비우면 과세는 세금계산서, 면세는 계산서 */
+  evidenceType: z.preprocess(
+    emptyToNull,
+    z.enum(['tax_invoice', 'invoice', 'card', 'cash_receipt', 'none']).nullish(),
+  ),
+  dueDate: z.preprocess(emptyToNull, IsoDate.nullish()),
+  memo: optionalText(500),
+  lines: z
+    .array(TradeDocLineInputSchema)
+    .min(1, { error: '품목을 하나 이상 입력해 주세요.' })
+    .max(200, { error: '한 문서에 200줄까지 입력할 수 있습니다.' }),
+});
+export type TradeDocInput = z.infer<typeof TradeDocInputSchema>;
+
+export const TradeDocCancelSchema = z.object({
+  reason: z.string().trim().min(1, { error: '취소 사유를 입력해 주세요.' }).max(200),
+});
+export type TradeDocCancelInput = z.infer<typeof TradeDocCancelSchema>;
