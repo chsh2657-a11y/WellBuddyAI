@@ -15,8 +15,14 @@
 ## 1. 준비
 
 1. **Docker Desktop**을 설치한다(Windows·Mac 모두 가능): https://www.docker.com/products/docker-desktop/
-   - Docker Desktop 설정 → Resources에서 메모리를 **4GB 이상**으로 둔다. 처음 빌드할 때 메모리를 많이 쓴다.
-   - Windows는 설치할 때 WSL 2를 쓰도록 둔다(기본값).
+   - **Windows**
+     1. 관리자 권한 PowerShell에서 `wsl --install`을 실행하고 PC를 다시 시작한다. 이미 설치되어 있으면 건너뛴다.
+     2. Docker Desktop을 설치한다. "Use WSL 2 instead of Hyper-V"는 체크된 그대로 둔다.
+     3. Docker Desktop을 실행하고 왼쪽 아래에 **Engine running**이 보일 때까지 기다린다. 로그인은 건너뛰어도 된다.
+     4. **새 PowerShell 창**을 열어 `docker --version`이 나오는지 확인한다. 설치 전에 열어 둔 창에서는 `docker`를 찾지 못한다.
+     - "가상화를 켜야 한다"는 메시지가 나오면 BIOS에서 가상화(Intel VT-x 또는 AMD-V)를 켠다.
+     - PC 메모리가 8GB 이상이면 기본 설정으로 충분하다.
+   - **Mac**: Docker Desktop 설정 → Resources에서 메모리를 **4GB 이상**으로 둔다. 처음 빌드할 때 메모리를 많이 쓴다.
 2. **소스를 받는다.** 아래 두 방법 중 하나를 쓴다.
    - Git이 있으면:
      ```bash
@@ -165,6 +171,7 @@ docker compose up -d --build
 
 ## 7. 문제 해결
 
+- **`'docker' 용어가 … 인식되지 않습니다`**(Windows)가 나오면, Docker Desktop이 설치되지 않았거나 설치 전에 연 PowerShell 창을 쓰고 있는 것이다. 위의 "1. 준비"대로 설치하고 새 창에서 다시 실행한다.
 - **포트가 이미 쓰이고 있다**는 오류가 나면, 다른 포트로 띄운다. 예: `WEB_PORT=3100 API_PORT=4100 MAIL_PORT=8125 docker compose up -d`
   - 이때 주소는 http://localhost:3100 이 된다.
   - Windows PowerShell에서는 `$env:WEB_PORT=3100; docker compose up -d`처럼 쓴다.
