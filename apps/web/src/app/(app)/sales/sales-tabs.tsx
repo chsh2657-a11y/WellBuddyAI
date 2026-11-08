@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export const SALES_TABS = [
+  { href: '/sales/sales', label: '판매' },
   { href: '/sales/purchases', label: '구매' },
   { href: '/sales/inventory', label: '재고' },
   { href: '/sales/items', label: '품목' },

@@ -252,10 +252,13 @@ export const TRADE_DOC_SOURCES: Partial<Record<TradeDocKind, readonly TradeDocKi
   purchase_return: ['purchase'],
 };
 
-/** 지금 입력할 수 있는 문서(판매·재고 쪽은 다음 단계에서 연다) */
+/** 지금 입력할 수 있는 문서(창고 이동·재고 조정·기초재고는 다음 단계에서 연다) */
 export const ENABLED_TRADE_DOC_KINDS: readonly TradeDocKind[] = [
   'quote',
   'sales_order',
+  'shipment',
+  'sale',
+  'sales_return',
   'purchase_order',
   'receipt',
   'purchase',

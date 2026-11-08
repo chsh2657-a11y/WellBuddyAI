@@ -611,10 +611,14 @@ export class TradeDocsService {
     source: Doc | null,
   ) {
     const { companyId } = requireCompanyContext();
+    // 금액이 정해진 이동(입고·구매·구매반품)과 이동평균으로 정하는 이동(출고·판매·판매반품)
     const plan: Record<string, { sign: 1 | -1; costing: 'fixed' | 'average' } | null> = {
       receipt: { sign: 1, costing: 'fixed' },
       purchase: source?.kind === 'receipt' ? null : { sign: 1, costing: 'fixed' },
       purchase_return: { sign: -1, costing: 'fixed' },
+      shipment: { sign: -1, costing: 'average' },
+      sale: source?.kind === 'shipment' ? null : { sign: -1, costing: 'average' },
+      sales_return: { sign: 1, costing: 'average' },
     };
     const rule = plan[doc.kind];
     if (!rule) return;

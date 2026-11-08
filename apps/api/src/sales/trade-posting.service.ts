@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SYSTEM_ACCOUNTS, type VatType } from '@wellbuddy/accounting-core';
 import {
   accounts,
+  ensureStandardAccounts,
   items,
   journalEntries,
   journalLines,
@@ -20,6 +21,7 @@ import {
 import { and, eq, inArray, ne } from 'drizzle-orm';
 import { JournalsService } from '../accounting/journals.service.js';
 import { AppException } from '../common/errors.js';
+import { requireCompanyContext } from '../common/request-context.js';
 
 type Doc = typeof tradeDocs.$inferSelect;
 type Item = typeof items.$inferSelect;
@@ -35,6 +37,20 @@ interface EntryLine {
 
 /** 문서 금액·재고 이동으로 정한 "있어야 할" 전표 */
 type DesiredEntry = Omit<JournalEntryInput, 'lines'> & { lines: EntryLine[] };
+
+/** 거래 전표가 쓰는 표준 계정 */
+const NEEDED_CODES = [
+  SYSTEM_ACCOUNTS.accountsReceivable,
+  SYSTEM_ACCOUNTS.accountsPayable,
+  SYSTEM_ACCOUNTS.vatPaid,
+  SYSTEM_ACCOUNTS.vatReceived,
+  '402',
+  ...new Set(
+    Object.values(ITEM_KIND_ACCOUNTS).flatMap((a) =>
+      [a.inventory, a.revenue, a.cogs, a.purchase].filter((c): c is string => !!c),
+    ),
+  ),
+];
 
 const lineKey = (l: EntryLine) => `${l.accountId}|${l.debit}|${l.credit}|${l.partnerId ?? ''}`;
 
@@ -76,7 +92,12 @@ export class TradePostingService {
       .where(eq(tradeDocLines.docId, doc.id))
       .orderBy(tradeDocLines.lineNo);
     const lines: Line[] = lineRows.map((r) => ({ ...r.line, item: r.item }));
-    const accountRows = await tx.select({ id: accounts.id, code: accounts.code }).from(accounts);
+    let accountRows = await tx.select({ id: accounts.id, code: accounts.code }).from(accounts);
+    if (!NEEDED_CODES.every((code) => accountRows.some((a) => a.code === code))) {
+      // 표준 계정이 빠진 예전 회사: 보충한 뒤 다시 읽는다
+      await ensureStandardAccounts(tx, requireCompanyContext().companyId);
+      accountRows = await tx.select({ id: accounts.id, code: accounts.code }).from(accounts);
+    }
     const byCode = new Map(accountRows.map((a) => [a.code, a.id]));
     const account = (code: string) => {
       const id = byCode.get(code);
@@ -196,18 +217,107 @@ export class TradePostingService {
           lines: sign > 0 ? [...debitSide, creditSide] : [flip(creditSide), ...debitSide.map(flip)],
         };
       }
+      case 'sale':
+      case 'sales_return': {
+        const sign = doc.kind === 'sale' ? 1 : -1;
+        const supply = sum((l) => l.supply);
+        const vat = sum((l) => l.vat);
+        if (supply + vat === 0) return null;
+        const receivable: EntryLine = {
+          accountId: account(SYSTEM_ACCOUNTS.accountsReceivable),
+          debit: supply + vat,
+          credit: 0,
+          partnerId: doc.partnerId,
+        };
+        const vatLine: EntryLine[] =
+          vat > 0
+            ? [
+                {
+                  accountId: account(SYSTEM_ACCOUNTS.vatReceived),
+                  debit: 0,
+                  credit: vat,
+                  partnerId: null,
+                },
+              ]
+            : [];
+        // 판매: 품목별 매출 계정 / 반품: 매출환입및에누리
+        const revenue: EntryLine[] =
+          sign > 0
+            ? byAccount((l) => [this.revenueAccount(l.item, account), l.supply]).map(
+                ([accountId, amount]) => ({ accountId, debit: 0, credit: amount, partnerId: null }),
+              )
+            : [{ accountId: account('402'), debit: 0, credit: supply, partnerId: null }];
+        const flip = (l: EntryLine): EntryLine => ({ ...l, debit: l.credit, credit: l.debit });
+        return {
+          ...base,
+          type: 'sales',
+          vat: {
+            vatType: this.vatType(lines),
+            evidenceType: this.evidence(doc, lines),
+            supplyAmount: sign * supply,
+            vatAmount: sign * vat,
+            deductible: true,
+            partnerId: doc.partnerId,
+          },
+          lines:
+            sign > 0
+              ? [receivable, ...revenue, ...vatLine]
+              : [flip(receivable), ...revenue.map(flip), ...vatLine.map(flip)],
+        };
+      }
       default:
         return null;
     }
   }
 
-  /** 매출원가·재고조정 전표(판매 쪽은 다음 단계에서 채운다) */
+  /** 품목의 매출 계정(지정이 없으면 구분별 기본: 상품매출·제품매출·용역매출) */
+  private revenueAccount(item: Item, account: (code: string) => string) {
+    return item.salesAccountId ?? account(ITEM_KIND_ACCOUNTS[item.kind].revenue);
+  }
+
+  /**
+   * 매출원가 전표: 재고 이동 금액(이동평균)으로 만든다.
+   * - 출고·판매(직접): (차) 매출원가 / (대) 재고자산
+   * - 판매반품: (차) 재고자산 / (대) 매출원가
+   */
   private async costEntry(
-    _tx: Transaction,
-    _doc: Doc,
-    _ctx: NonNullable<Awaited<ReturnType<TradePostingService['context']>>>,
+    tx: Transaction,
+    doc: Doc,
+    ctx: NonNullable<Awaited<ReturnType<TradePostingService['context']>>>,
   ): Promise<DesiredEntry | null> {
-    return null;
+    if (!['shipment', 'sale', 'sales_return'].includes(doc.kind)) return null;
+    const amounts = await this.moveAmountsIn(tx, doc.id);
+    const debit = new Map<string, number>();
+    const credit = new Map<string, number>();
+    const add = (map: Map<string, number>, id: string, v: number) =>
+      map.set(id, (map.get(id) ?? 0) + v);
+    for (const l of ctx.lines) {
+      const amount = amounts.get(l.id);
+      if (!amount) continue;
+      const kinds = ITEM_KIND_ACCOUNTS[l.item.kind];
+      if (!kinds.cogs) continue;
+      const inventory = this.purchaseAccount(l.item, ctx.account);
+      const cogs = ctx.account(kinds.cogs);
+      if (amount < 0) {
+        add(debit, cogs, -amount);
+        add(credit, inventory, -amount);
+      } else {
+        add(debit, inventory, amount);
+        add(credit, cogs, amount);
+      }
+    }
+    const lines: EntryLine[] = [
+      ...[...debit].map(([accountId, v]) => ({ accountId, debit: v, credit: 0, partnerId: null })),
+      ...[...credit].map(([accountId, v]) => ({ accountId, debit: 0, credit: v, partnerId: null })),
+    ];
+    if (lines.length === 0) return null;
+    return {
+      entryDate: doc.docDate,
+      type: 'general',
+      vat: null,
+      description: `[매출원가] ${this.description(doc, ctx.partnerName)}`,
+      lines,
+    };
   }
 
   private async hasActiveChild(tx: Transaction, docId: string, kind: Doc['kind']) {

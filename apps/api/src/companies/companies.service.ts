@@ -5,6 +5,7 @@ import {
   companies,
   companyMembers,
   companySettings,
+  ensureStandardAccounts,
   fiscalYears,
   users,
 } from '@wellbuddy/db';
@@ -67,6 +68,8 @@ export class CompaniesService {
         address: input.address,
         isHeadquarters: true,
       });
+      // 표준 계정과목을 바로 넣는다(자동 전표가 계정을 찾을 수 있게)
+      await ensureStandardAccounts(tx, companyId);
       await this.audit.record(
         {
           action: 'company.create',

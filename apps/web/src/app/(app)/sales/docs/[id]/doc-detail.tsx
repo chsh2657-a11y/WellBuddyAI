@@ -11,7 +11,7 @@ import {
   type TradeDocKind,
 } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, XCircle } from 'lucide-react';
+import { ArrowRight, Printer, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -102,6 +102,12 @@ export function DocDetail({ id }: { id: string }) {
                 </Link>
               </Button>
             ))}
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/sales/docs/${d.id}/print`}>
+                <Printer />
+                {d.kind === 'shipment' || d.kind === 'sale' ? '거래명세서 인쇄' : '인쇄'}
+              </Link>
+            </Button>
             {writable && d.status !== 'cancelled' ? (
               <Button
                 size="sm"

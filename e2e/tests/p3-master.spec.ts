@@ -13,7 +13,8 @@ test('영업 기초정보: 품목 등록·엑셀 일괄등록, 창고 추가, �
     .getByRole('navigation', { name: '주 메뉴' })
     .getByRole('link', { name: '영업·구매·재고' })
     .click();
-  await expect(page).toHaveURL(/\/sales\/items/);
+  await expect(page).toHaveURL(/\/sales\/sales/);
+  await tab('품목').click();
   await expect(page.getByText('품목이 없습니다.', { exact: false })).toBeVisible();
 
   // ── 품목 추가 ──
