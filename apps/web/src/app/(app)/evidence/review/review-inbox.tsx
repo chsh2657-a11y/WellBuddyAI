@@ -250,7 +250,7 @@ export function ReviewInbox() {
                 />
               </TableHead>
               <TableHead>일자</TableHead>
-              <TableHead>거래</TableHead>
+              <TableHead className="min-w-44">거래</TableHead>
               <TableHead className="text-right">금액</TableHead>
               <TableHead className="min-w-64">분개 계정</TableHead>
               <TableHead className="min-w-56">추천 근거</TableHead>
@@ -363,14 +363,14 @@ function ReviewRow({
         />
       </TableCell>
       <TableCell className="whitespace-nowrap tabular-nums">{item.date}</TableCell>
-      <TableCell>
+      <TableCell className="min-w-44">
         <div className="font-medium">{label}</div>
         <div className="text-xs text-muted-foreground">
           {item.kindLabel}
           {item.sourceLabel ? ` · ${item.sourceLabel}` : ''}
         </div>
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="whitespace-nowrap text-right tabular-nums">
         {item.reversal ? '-' : ''}
         {formatWon(item.amount)}
       </TableCell>

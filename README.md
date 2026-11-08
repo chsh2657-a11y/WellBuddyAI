@@ -12,6 +12,17 @@
 - 조사 결과 및 개발계획: [docs/development-plan.md](docs/development-plan.md)
 - 개발 목표 체크리스트(진행 순서): [docs/CHECKLIST.md](docs/CHECKLIST.md)
 
+## 테스트용 실행 (Docker)
+
+Docker Desktop만 있으면 명령 한 줄로 전체(DB·API·워커·웹·메일함)를 띄워 써 볼 수 있다.
+
+```bash
+docker compose up -d --build   # 처음 5~10분
+# 웹 http://localhost:3000 · 데모 계정 demo@wellbuddy.local / demo1234! · 메일함 http://localhost:8025
+```
+
+시험 순서·샘플 파일·문제 해결: [docs/TESTING.md](docs/TESTING.md)
+
 ## 로컬 개발 시작
 
 ```bash

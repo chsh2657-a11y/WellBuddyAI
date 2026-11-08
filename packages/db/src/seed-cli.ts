@@ -52,7 +52,7 @@ try {
         .insert(companies)
         .values({
           name: '데모상사',
-          bizRegNo: '0000000000',
+          bizRegNo: '1248100998',
           representative: '홍길동',
           businessType: '도소매',
           businessItem: '사무용품',
@@ -66,7 +66,7 @@ try {
       await tx.insert(businessPlaces).values({
         companyId: company!.id,
         name: '본점',
-        bizRegNo: '0000000000',
+        bizRegNo: '1248100998',
         isHeadquarters: true,
       });
       await ensureStandardAccounts(tx, company!.id);

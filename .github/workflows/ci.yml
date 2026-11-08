@@ -141,3 +141,34 @@ jobs:
             e2e/playwright-report
             e2e/test-results
           retention-days: 7
+
+  docker:
+    name: docker compose (테스트용 실행)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Smoke test (health · web · demo login)
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:4000/api/health && break
+            sleep 3
+          done
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://localhost:3000/login && break
+            sleep 2
+          done
+          curl -fsS -o /dev/null http://localhost:3000/login
+          curl -fsS -o /dev/null -X POST -H 'content-type: application/json' \
+            -d '{"email":"demo@wellbuddy.local","password":"demo1234!"}' \
+            http://localhost:3000/api/auth/login
+          docker compose ps -a
+
+      - name: Logs
+        if: failure()
+        run: docker compose logs --tail 200
