@@ -83,7 +83,10 @@ export const PartnerInputSchema = z.object({
 });
 export type PartnerInput = z.infer<typeof PartnerInputSchema>;
 
-export const PartnerUpdateSchema = PartnerInputSchema.partial();
+/** 보낸 필드만 바꾼다(zod 4 는 partial 안의 기본값도 채우므로 구분의 기본값을 뺀다) */
+export const PartnerUpdateSchema = PartnerInputSchema.extend({
+  kind: z.enum(PARTNER_KINDS),
+}).partial();
 export type PartnerUpdateInput = z.infer<typeof PartnerUpdateSchema>;
 
 // ── 부서·프로젝트 ────────────────────────────────────────

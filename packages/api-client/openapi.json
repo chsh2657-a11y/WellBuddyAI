@@ -4790,7 +4790,6 @@
                     "maxLength": 100
                   },
                   "kind": {
-                    "default": "both",
                     "type": "string",
                     "enum": [
                       "customer",
@@ -24706,6 +24705,1623 @@
         ],
         "tags": [
           "auto-journal"
+        ]
+      }
+    },
+    "/api/items": {
+      "get": {
+        "operationId": "SalesMasterController_listItems",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "goods",
+                "product",
+                "material",
+                "service"
+              ]
+            }
+          },
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "품목(코드순)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "goods",
+                          "product",
+                          "material",
+                          "service"
+                        ]
+                      },
+                      "spec": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "barcode": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "vatType": {
+                        "type": "string",
+                        "enum": [
+                          "taxable",
+                          "zero_rated",
+                          "exempt"
+                        ]
+                      },
+                      "salesPrice": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "purchasePrice": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "salesAccountId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "purchaseAccountId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "safetyStock": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "trackLot": {
+                        "type": "boolean"
+                      },
+                      "trackSerial": {
+                        "type": "boolean"
+                      },
+                      "memo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "kind",
+                      "spec",
+                      "unit",
+                      "barcode",
+                      "vatType",
+                      "salesPrice",
+                      "purchasePrice",
+                      "salesAccountId",
+                      "purchaseAccountId",
+                      "safetyStock",
+                      "trackLot",
+                      "trackSerial",
+                      "memo",
+                      "isActive"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "post": {
+        "operationId": "SalesMasterController_createItem",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._-]{1,30}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kind": {
+                    "default": "goods",
+                    "type": "string",
+                    "enum": [
+                      "goods",
+                      "product",
+                      "material",
+                      "service"
+                    ]
+                  },
+                  "spec": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "unit": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 10
+                  },
+                  "barcode": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{4,64}$"
+                  },
+                  "vatType": {
+                    "default": "taxable",
+                    "type": "string",
+                    "enum": [
+                      "taxable",
+                      "zero_rated",
+                      "exempt"
+                    ]
+                  },
+                  "salesPrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "purchasePrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "salesAccountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "purchaseAccountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "safetyStock": {
+                    "nullable": true,
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 999999999999
+                  },
+                  "trackLot": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "trackSerial": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "코드를 비우면 자동 부여",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "goods",
+                        "product",
+                        "material",
+                        "service"
+                      ]
+                    },
+                    "spec": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "barcode": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vatType": {
+                      "type": "string",
+                      "enum": [
+                        "taxable",
+                        "zero_rated",
+                        "exempt"
+                      ]
+                    },
+                    "salesPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "purchasePrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "salesAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "purchaseAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "safetyStock": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "trackLot": {
+                      "type": "boolean"
+                    },
+                    "trackSerial": {
+                      "type": "boolean"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "spec",
+                    "unit",
+                    "barcode",
+                    "vatType",
+                    "salesPrice",
+                    "purchasePrice",
+                    "salesAccountId",
+                    "purchaseAccountId",
+                    "safetyStock",
+                    "trackLot",
+                    "trackSerial",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/items/by-barcode/{barcode}": {
+      "get": {
+        "operationId": "SalesMasterController_itemByBarcode",
+        "parameters": [
+          {
+            "name": "barcode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "바코드로 품목 찾기(없으면 404)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "goods",
+                        "product",
+                        "material",
+                        "service"
+                      ]
+                    },
+                    "spec": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "barcode": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vatType": {
+                      "type": "string",
+                      "enum": [
+                        "taxable",
+                        "zero_rated",
+                        "exempt"
+                      ]
+                    },
+                    "salesPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "purchasePrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "salesAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "purchaseAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "safetyStock": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "trackLot": {
+                      "type": "boolean"
+                    },
+                    "trackSerial": {
+                      "type": "boolean"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "spec",
+                    "unit",
+                    "barcode",
+                    "vatType",
+                    "salesPrice",
+                    "purchasePrice",
+                    "salesAccountId",
+                    "purchaseAccountId",
+                    "safetyStock",
+                    "trackLot",
+                    "trackSerial",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/items/{id}": {
+      "get": {
+        "operationId": "SalesMasterController_getItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "goods",
+                        "product",
+                        "material",
+                        "service"
+                      ]
+                    },
+                    "spec": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "barcode": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vatType": {
+                      "type": "string",
+                      "enum": [
+                        "taxable",
+                        "zero_rated",
+                        "exempt"
+                      ]
+                    },
+                    "salesPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "purchasePrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "salesAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "purchaseAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "safetyStock": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "trackLot": {
+                      "type": "boolean"
+                    },
+                    "trackSerial": {
+                      "type": "boolean"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "spec",
+                    "unit",
+                    "barcode",
+                    "vatType",
+                    "salesPrice",
+                    "purchasePrice",
+                    "salesAccountId",
+                    "purchaseAccountId",
+                    "safetyStock",
+                    "trackLot",
+                    "trackSerial",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "patch": {
+        "operationId": "SalesMasterController_updateItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._-]{1,30}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "goods",
+                      "product",
+                      "material",
+                      "service"
+                    ]
+                  },
+                  "spec": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10
+                  },
+                  "barcode": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{4,64}$"
+                  },
+                  "vatType": {
+                    "type": "string",
+                    "enum": [
+                      "taxable",
+                      "zero_rated",
+                      "exempt"
+                    ]
+                  },
+                  "salesPrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "purchasePrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "salesAccountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "purchaseAccountId": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "safetyStock": {
+                    "nullable": true,
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 999999999999
+                  },
+                  "trackLot": {
+                    "type": "boolean"
+                  },
+                  "trackSerial": {
+                    "type": "boolean"
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "goods",
+                        "product",
+                        "material",
+                        "service"
+                      ]
+                    },
+                    "spec": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "barcode": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vatType": {
+                      "type": "string",
+                      "enum": [
+                        "taxable",
+                        "zero_rated",
+                        "exempt"
+                      ]
+                    },
+                    "salesPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "purchasePrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "salesAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "purchaseAccountId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "safetyStock": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "trackLot": {
+                      "type": "boolean"
+                    },
+                    "trackSerial": {
+                      "type": "boolean"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "kind",
+                    "spec",
+                    "unit",
+                    "barcode",
+                    "vatType",
+                    "salesPrice",
+                    "purchasePrice",
+                    "salesAccountId",
+                    "purchaseAccountId",
+                    "safetyStock",
+                    "trackLot",
+                    "trackSerial",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "delete": {
+        "operationId": "SalesMasterController_removeItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/items/{id}/price": {
+      "get": {
+        "operationId": "SalesMasterController_itemPrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "side",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "sales",
+              "type": "string",
+              "enum": [
+                "sales",
+                "purchase"
+              ]
+            }
+          },
+          {
+            "name": "partnerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "단가 찾기: 거래처별 단가 → 품목 기본 단가",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "unitPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "source": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "partner",
+                        "item"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "unitPrice",
+                    "source"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/warehouses": {
+      "get": {
+        "operationId": "SalesMasterController_listWarehouses",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "창고(코드순). 없으면 기본창고를 만든다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "memo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "address",
+                      "memo",
+                      "isActive"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "post": {
+        "operationId": "SalesMasterController_createWarehouse",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "address": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "address",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/warehouses/{id}": {
+      "patch": {
+        "operationId": "SalesMasterController_updateWarehouse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "address": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "address",
+                    "memo",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "delete": {
+        "operationId": "SalesMasterController_removeWarehouse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/partner-prices": {
+      "get": {
+        "operationId": "SalesMasterController_listPrices",
+        "parameters": [
+          {
+            "name": "partnerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "거래처별 단가(거래처·품목으로 거름)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "partnerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "partnerName": {
+                        "type": "string"
+                      },
+                      "itemId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "itemCode": {
+                        "type": "string"
+                      },
+                      "itemName": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "salesPrice": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "purchasePrice": {
+                        "nullable": true,
+                        "type": "number"
+                      },
+                      "memo": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "partnerId",
+                      "partnerName",
+                      "itemId",
+                      "itemCode",
+                      "itemName",
+                      "unit",
+                      "salesPrice",
+                      "purchasePrice",
+                      "memo"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      },
+      "put": {
+        "operationId": "SalesMasterController_upsertPrice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "partnerId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "salesPrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "purchasePrice": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "partnerId",
+                  "itemId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "거래처·품목의 단가를 정한다(있으면 고침)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "partnerName": {
+                      "type": "string"
+                    },
+                    "itemId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "itemCode": {
+                      "type": "string"
+                    },
+                    "itemName": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "salesPrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "purchasePrice": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "partnerId",
+                    "partnerName",
+                    "itemId",
+                    "itemCode",
+                    "itemName",
+                    "unit",
+                    "salesPrice",
+                    "purchasePrice",
+                    "memo"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
+        ]
+      }
+    },
+    "/api/partner-prices/{id}": {
+      "delete": {
+        "operationId": "SalesMasterController_removePrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "sales-master"
         ]
       }
     }

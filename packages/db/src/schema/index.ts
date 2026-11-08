@@ -10,3 +10,4 @@ export * from './journal.js';
 export * from './notes.js';
 export * from './system.js';
 export * from './auto-journal.js';
+export * from './sales.js';

@@ -14,3 +14,4 @@ export * from './modules.js';
 export * from './notes.js';
 export * from './permissions.js';
 export * from './roles.js';
+export * from './sales.js';

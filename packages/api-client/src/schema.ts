@@ -2068,6 +2068,134 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_listItems'];
+    put?: never;
+    post: operations['SalesMasterController_createItem'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/items/by-barcode/{barcode}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_itemByBarcode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/items/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_getItem'];
+    put?: never;
+    post?: never;
+    delete: operations['SalesMasterController_removeItem'];
+    options?: never;
+    head?: never;
+    patch: operations['SalesMasterController_updateItem'];
+    trace?: never;
+  };
+  '/api/items/{id}/price': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_itemPrice'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/warehouses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_listWarehouses'];
+    put?: never;
+    post: operations['SalesMasterController_createWarehouse'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/warehouses/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['SalesMasterController_removeWarehouse'];
+    options?: never;
+    head?: never;
+    patch: operations['SalesMasterController_updateWarehouse'];
+    trace?: never;
+  };
+  '/api/partner-prices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['SalesMasterController_listPrices'];
+    put: operations['SalesMasterController_upsertPrice'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/partner-prices/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['SalesMasterController_removePrice'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4189,10 +4317,7 @@ export interface operations {
         'application/json': {
           code?: string | null;
           name?: string;
-          /**
-           * @default both
-           * @enum {string}
-           */
+          /** @enum {string} */
           kind?: 'customer' | 'supplier' | 'both' | 'other';
           bizRegNo?: string | null;
           representative?: string | null;
@@ -11286,6 +11411,648 @@ export interface operations {
     };
     responses: {
       /** @description 권한 필요: evidence (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_listItems: {
+    parameters: {
+      query?: {
+        q?: string;
+        kind?: 'goods' | 'product' | 'material' | 'service';
+        includeInactive?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 품목(코드순) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            spec: string | null;
+            unit: string;
+            barcode: string | null;
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            /** Format: uuid */
+            salesAccountId: string | null;
+            /** Format: uuid */
+            purchaseAccountId: string | null;
+            safetyStock: number | null;
+            trackLot: boolean;
+            trackSerial: boolean;
+            memo: string | null;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_createItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name: string;
+          /**
+           * @default goods
+           * @enum {string}
+           */
+          kind?: 'goods' | 'product' | 'material' | 'service';
+          spec?: string | null;
+          unit?: string | null;
+          barcode?: string | null;
+          /**
+           * @default taxable
+           * @enum {string}
+           */
+          vatType?: 'taxable' | 'zero_rated' | 'exempt';
+          salesPrice?: number | null;
+          purchasePrice?: number | null;
+          /** Format: uuid */
+          salesAccountId?: string | null;
+          /** Format: uuid */
+          purchaseAccountId?: string | null;
+          safetyStock?: number | null;
+          /** @default false */
+          trackLot?: boolean;
+          /** @default false */
+          trackSerial?: boolean;
+          memo?: string | null;
+          /** @default true */
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description 코드를 비우면 자동 부여 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            spec: string | null;
+            unit: string;
+            barcode: string | null;
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            /** Format: uuid */
+            salesAccountId: string | null;
+            /** Format: uuid */
+            purchaseAccountId: string | null;
+            safetyStock: number | null;
+            trackLot: boolean;
+            trackSerial: boolean;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_itemByBarcode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        barcode: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바코드로 품목 찾기(없으면 404) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            spec: string | null;
+            unit: string;
+            barcode: string | null;
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            /** Format: uuid */
+            salesAccountId: string | null;
+            /** Format: uuid */
+            purchaseAccountId: string | null;
+            safetyStock: number | null;
+            trackLot: boolean;
+            trackSerial: boolean;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_getItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            spec: string | null;
+            unit: string;
+            barcode: string | null;
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            /** Format: uuid */
+            salesAccountId: string | null;
+            /** Format: uuid */
+            purchaseAccountId: string | null;
+            safetyStock: number | null;
+            trackLot: boolean;
+            trackSerial: boolean;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_removeItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_updateItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name?: string;
+          /** @enum {string} */
+          kind?: 'goods' | 'product' | 'material' | 'service';
+          spec?: string | null;
+          unit?: string;
+          barcode?: string | null;
+          /** @enum {string} */
+          vatType?: 'taxable' | 'zero_rated' | 'exempt';
+          salesPrice?: number | null;
+          purchasePrice?: number | null;
+          /** Format: uuid */
+          salesAccountId?: string | null;
+          /** Format: uuid */
+          purchaseAccountId?: string | null;
+          safetyStock?: number | null;
+          trackLot?: boolean;
+          trackSerial?: boolean;
+          memo?: string | null;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            kind: 'goods' | 'product' | 'material' | 'service';
+            spec: string | null;
+            unit: string;
+            barcode: string | null;
+            /** @enum {string} */
+            vatType: 'taxable' | 'zero_rated' | 'exempt';
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            /** Format: uuid */
+            salesAccountId: string | null;
+            /** Format: uuid */
+            purchaseAccountId: string | null;
+            safetyStock: number | null;
+            trackLot: boolean;
+            trackSerial: boolean;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_itemPrice: {
+    parameters: {
+      query?: {
+        side?: 'sales' | 'purchase';
+        partnerId?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 단가 찾기: 거래처별 단가 → 품목 기본 단가 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            unitPrice: number | null;
+            /** @enum {string|null} */
+            source: 'partner' | 'item' | null;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_listWarehouses: {
+    parameters: {
+      query?: {
+        includeInactive?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 창고(코드순). 없으면 기본창고를 만든다 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string | null;
+            memo: string | null;
+            isActive: boolean;
+          }[];
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_createWarehouse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name: string;
+          address?: string | null;
+          memo?: string | null;
+          /** @default true */
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string | null;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_removeWarehouse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_updateWarehouse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          code?: string | null;
+          name?: string;
+          address?: string | null;
+          memo?: string | null;
+          isActive?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string | null;
+            memo: string | null;
+            isActive: boolean;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_listPrices: {
+    parameters: {
+      query?: {
+        partnerId?: string;
+        itemId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 거래처별 단가(거래처·품목으로 거름) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            /** Format: uuid */
+            itemId: string;
+            itemCode: string;
+            itemName: string;
+            unit: string;
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            memo: string | null;
+          }[];
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_upsertPrice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          partnerId: string;
+          /** Format: uuid */
+          itemId: string;
+          salesPrice?: number | null;
+          purchasePrice?: number | null;
+          memo?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 거래처·품목의 단가를 정한다(있으면 고침) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            partnerId: string;
+            partnerName: string;
+            /** Format: uuid */
+            itemId: string;
+            itemCode: string;
+            itemName: string;
+            unit: string;
+            salesPrice: number | null;
+            purchasePrice: number | null;
+            memo: string | null;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SalesMasterController_removePrice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 권한 필요: sales (write) */
       403: {
         headers: {
           [name: string]: unknown;

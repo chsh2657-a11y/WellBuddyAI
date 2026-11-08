@@ -22,6 +22,7 @@ import { APP_CONFIG, type AppConfig } from './config/env.js';
 import { DbModule } from './db/db.module.js';
 import { AutoJournalModule } from './auto-journal/auto-journal.module.js';
 import { EvidenceModule } from './evidence/evidence.module.js';
+import { SalesModule } from './sales/sales.module.js';
 import { FilesModule } from './files/files.module.js';
 import { HealthController } from './health/health.controller.js';
 import { ImportsModule } from './imports/imports.module.js';
@@ -64,6 +65,7 @@ export class AppModule implements NestModule {
         AccountingModule,
         EvidenceModule,
         AutoJournalModule,
+        SalesModule,
       ],
       controllers: [HealthController],
       providers: [

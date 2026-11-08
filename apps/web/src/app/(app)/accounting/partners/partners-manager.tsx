@@ -178,7 +178,14 @@ export function PartnersManager() {
           </p>
         ) : null}
       </CardContent>
-      <PartnerDialog partner={editing} onClose={() => setEditing(null)} />
+      {/* 열 때마다 새로 만든다(새로 추가할 때 이전 입력이 남지 않게) */}
+      {editing ? (
+        <PartnerDialog
+          key={editing === 'new' ? 'new' : editing.id}
+          partner={editing}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
     </Card>
   );
 }

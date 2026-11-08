@@ -142,4 +142,18 @@ describe('RLS 테넌트 격리', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ company_name: 'B상사', role: 'accountant' });
   });
+
+  it('company_id 가 있는 모든 테이블은 RLS 를 켜고 회사 격리 정책을 둔다(새 테이블 누락 방지)', async () => {
+    const { rows } = await owner.execute<{ table_name: string; rls: boolean; policies: number }>(
+      sql`select c.table_name,
+                 cl.relrowsecurity as rls,
+                 (select count(*)::int from pg_policies p
+                   where p.schemaname = 'public' and p.tablename = c.table_name) as policies
+            from information_schema.columns c
+            join pg_class cl on cl.relname = c.table_name and cl.relkind = 'r'
+           where c.table_schema = 'public' and c.column_name = 'company_id'`,
+    );
+    expect(rows.length).toBeGreaterThan(40);
+    expect(rows.filter((r) => !r.rls || r.policies === 0).map((r) => r.table_name)).toEqual([]);
+  });
 });

@@ -32,5 +32,6 @@ export const MODULE_PATHS: Partial<Record<ModuleKey, string>> = {
   dashboard: '/dashboard',
   accounting: '/accounting',
   evidence: '/evidence',
+  sales: '/sales',
   settings: '/settings',
 };
