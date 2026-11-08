@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadConfig } from './env.js';
+import { authRateLimit, loadConfig } from './env.js';
 
 const base = {
   NODE_ENV: 'test',
@@ -21,5 +21,11 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ ...base, FIELD_ENCRYPTION_KEY: 'abc' })).toThrow(
       /FIELD_ENCRYPTION_KEY/,
     );
+  });
+
+  it('가입·로그인 요청 제한은 기본 분당 20회이고 환경변수로 바꿀 수 있다', () => {
+    expect(authRateLimit({})).toBe(20);
+    expect(authRateLimit({ AUTH_RATE_LIMIT: '200' })).toBe(200);
+    expect(() => loadConfig({ ...base, AUTH_RATE_LIMIT: '0' })).toThrow(/AUTH_RATE_LIMIT/);
   });
 });

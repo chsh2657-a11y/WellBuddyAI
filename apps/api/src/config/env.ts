@@ -36,6 +36,8 @@ const EnvSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
+  /** 가입·로그인 요청 제한: IP 하나가 1분에 보낼 수 있는 횟수(E2E 를 한꺼번에 돌릴 때만 크게 둔다) */
+  AUTH_RATE_LIMIT: z.coerce.number().int().positive().default(20),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -64,6 +66,14 @@ export interface AppConfig {
 }
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
+
+/**
+ * 가입·로그인 요청 제한(@Throttle 은 데코레이터라 설정 객체를 받지 못해 요청마다 환경변수를 읽는다).
+ * 값은 앱을 띄울 때 loadConfig 가 이미 검증했다.
+ */
+export function authRateLimit(source: NodeJS.ProcessEnv = process.env): number {
+  return EnvSchema.shape.AUTH_RATE_LIMIT.parse(source.AUTH_RATE_LIMIT);
+}
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 

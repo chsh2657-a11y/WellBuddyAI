@@ -22,7 +22,7 @@ import type { Request, Response } from 'express';
 import type { z } from 'zod';
 import { requireContext } from '../common/request-context.js';
 import { ZodBody, ZodResponse } from '../common/zod.js';
-import { APP_CONFIG, type AppConfig } from '../config/env.js';
+import { APP_CONFIG, type AppConfig, authRateLimit } from '../config/env.js';
 import {
   clearAuthCookies,
   readRefreshToken,
@@ -34,7 +34,7 @@ import { type AuthResult, AuthService, type ClientMeta } from './auth.service.js
 import { AllowNoCompany, Public } from './decorators.js';
 import { SessionService } from './session.service.js';
 
-const AUTH_THROTTLE = { default: { limit: 20, ttl: 60_000 } };
+const AUTH_THROTTLE = { default: { limit: () => authRateLimit(), ttl: 60_000 } };
 
 function meta(req: Request): ClientMeta {
   return { ip: req.ip ?? null, userAgent: req.get('user-agent') ?? null };

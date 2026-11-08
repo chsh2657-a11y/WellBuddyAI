@@ -8,6 +8,10 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const CI = !!process.env.CI;
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
+const stringEnv = () =>
+  Object.fromEntries(
+    Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
+  );
 
 export default defineConfig({
   testDir: './tests',
@@ -40,6 +44,8 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @wellbuddy/api start',
+      // 시나리오마다 새로 가입하므로 가입·로그인 요청 제한(기본 분당 20회)을 넉넉히 둔다
+      env: { ...stringEnv(), AUTH_RATE_LIMIT: process.env.AUTH_RATE_LIMIT ?? '1000' },
       url: 'http://localhost:4000/api/health',
       reuseExistingServer: !CI,
       timeout: 60_000,
