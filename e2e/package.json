@@ -1,0 +1,16 @@
+{
+  "name": "@wellbuddy/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright E2E 테스트 (API + 웹을 띄워 실제 브라우저로 검증)",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint tests playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.4"
+  }
+}

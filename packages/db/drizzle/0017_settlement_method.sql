@@ -1,0 +1,2 @@
+ALTER TABLE "evidence_suggestions" DROP CONSTRAINT "evidence_suggestions_method_ck";--> statement-breakpoint
+ALTER TABLE "evidence_suggestions" ADD CONSTRAINT "evidence_suggestions_method_ck" CHECK (method in ('rule', 'settlement', 'history', 'ai', 'default', 'manual', 'none'));

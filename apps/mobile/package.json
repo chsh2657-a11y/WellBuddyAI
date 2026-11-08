@@ -1,0 +1,6 @@
+{
+  "name": "@wellbuddy/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "description": "출퇴근(지오펜스)·영수증 촬영·결재 승인·급여명세서 모바일 앱 — P6-08에서 Expo로 구성"
+}

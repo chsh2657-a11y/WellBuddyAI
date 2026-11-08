@@ -1,0 +1,29 @@
+{
+  "name": "@wellbuddy/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenAPI 문서에서 생성한 API 타입 + openapi-fetch 클라이언트 (모바일 앱·외부 연동용)",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "openapi.json"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "generate": "openapi-typescript openapi.json -o src/schema.ts && prettier --write src/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  }
+}
