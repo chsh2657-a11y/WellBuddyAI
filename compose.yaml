@@ -1,0 +1,117 @@
+# 테스트·체험용 전체 실행: docker compose up -d --build
+#   웹 http://localhost:3000 · API 문서 http://localhost:4000/api/docs · 메일함 http://localhost:8025
+#   데모 계정 demo@wellbuddy.local / demo1234!   (안내: docs/TESTING.md)
+# 개발할 때 인프라만 띄우려면 infra/docker-compose.yml 을 쓴다.
+# 아래 비밀키는 .env.example 과 같은 테스트 전용 값이다. 운영에 쓰지 않는다.
+name: wellbuddy
+
+x-app-env: &app-env
+  NODE_ENV: development
+  DATABASE_URL: postgres://wellbuddy_app:wellbuddy_app@postgres:5432/wellbuddy
+  DATABASE_URL_OWNER: postgres://wellbuddy_owner:wellbuddy_owner@postgres:5432/wellbuddy
+  REDIS_URL: redis://redis:6379
+  JWT_SECRET: test-only-jwt-secret-change-me-in-production-0000
+  FIELD_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+  FIELD_ENCRYPTION_KEY_ID: k1
+  API_PORT: '4000'
+  WEB_ORIGIN: http://localhost:${WEB_PORT:-3000}
+  STORAGE_DRIVER: local
+  STORAGE_LOCAL_DIR: /app/storage
+  SMTP_HOST: mailpit
+  SMTP_PORT: '1025'
+  QUEUE_INLINE: 'false'
+
+x-app: &app
+  image: wellbuddy-app:local
+  environment: *app-env
+  volumes:
+    - storage-data:/app/storage
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/db-setup.sh:/opt/wellbuddy/db-setup.sh:ro
+      - ./infra/postgres/docker-init.sh:/docker-entrypoint-initdb.d/10-wellbuddy.sh:ro
+    healthcheck:
+      # TCP 로 확인한다: 첫 초기화(롤·DB 생성) 중에는 소켓으로만 열려 있다
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres']
+      interval: 3s
+      retries: 40
+
+  redis:
+    image: redis:7
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - '${MAIL_PORT:-8025}:8025'
+
+  # DB 마이그레이션 + 데모 계정(이미 있으면 건너뜀). 끝나면 종료한다.
+  setup:
+    <<: *app
+    build:
+      context: .
+      args:
+        API_URL: http://api:4000
+    command: ['sh', '-c', 'pnpm db:migrate && pnpm db:seed']
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command: ['node', '--enable-source-maps', 'apps/api/dist/main.js']
+    ports:
+      - '${API_PORT:-4000}:4000'
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:4000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # 백그라운드 작업(메일 발송·예약 수집)
+  worker:
+    <<: *app
+    command: ['node', '--enable-source-maps', 'apps/api/dist/worker.js']
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    working_dir: /app/apps/web
+    command: ['node_modules/.bin/next', 'start', '--port', '3000']
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:4000
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  storage-data:

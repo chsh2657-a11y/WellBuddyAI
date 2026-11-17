@@ -1,0 +1,27 @@
+{
+  "name": "@wellbuddy/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "웹·API·앱이 함께 쓰는 zod 스키마, 역할·권한·메뉴·연동 정의, 공용 유틸",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wellbuddy/accounting-core": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

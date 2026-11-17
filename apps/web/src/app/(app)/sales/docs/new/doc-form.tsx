@@ -1,0 +1,535 @@
+'use client';
+
+import {
+  formatWon,
+  lineSupply,
+  todayInKorea,
+  type VatType,
+  vatFromSupply,
+} from '@wellbuddy/accounting-core';
+import {
+  FULL_CONVERSIONS,
+  isOrderKind,
+  isStockItem,
+  SALES_DOC_KINDS,
+  TRADE_DOC_KIND_LABELS,
+  type TradeDocKind,
+} from '@wellbuddy/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { BarcodeInput } from '@/components/barcode-input';
+import { Combobox } from '@/components/combobox';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { WonInput } from '@/components/won-input';
+import { ApiError, apiFetch } from '@/lib/api';
+import { formatQty, TRADE_DOCS_KEY, type TradeDoc } from '../../_lib/trade';
+import type { Item } from '../../items/items-manager';
+import type { Warehouse } from '../../warehouses/warehouses-manager';
+
+interface Partner {
+  id: string;
+  code: string;
+  name: string;
+}
+
+interface Row {
+  key: number;
+  itemId: string | null;
+  qty: string;
+  unitPrice: number;
+  /** 단가를 직접 고쳤으면 거래처를 바꿔도 다시 불러오지 않는다 */
+  priceTouched: boolean;
+  sourceLineId: string | null;
+  /** 앞 문서에서 넘길 수 있는 최대 수량 */
+  maxQty: number | null;
+  /** LOT·시리얼 번호(LOT·시리얼 관리 품목) */
+  lotNo: string;
+}
+
+interface LotRow {
+  itemId: string;
+  lotNo: string;
+  qty: number;
+}
+
+/** 재고를 내보내는 문서: 고를 수 있는 LOT·시리얼 목록을 보여 준다 */
+const OUTGOING_KINDS: readonly TradeDocKind[] = ['shipment', 'sale', 'purchase_return', 'transfer'];
+
+const EVIDENCE_OPTIONS = [
+  { value: '', label: '자동(과세 세금계산서·면세 계산서)' },
+  { value: 'tax_invoice', label: '세금계산서' },
+  { value: 'invoice', label: '계산서' },
+  { value: 'card', label: '신용카드' },
+  { value: 'cash_receipt', label: '현금영수증' },
+  { value: 'none', label: '증빙 없음' },
+];
+
+let nextKey = 1;
+const emptyRow = (): Row => ({
+  key: nextKey++,
+  itemId: null,
+  qty: '1',
+  unitPrice: 0,
+  priceTouched: false,
+  sourceLineId: null,
+  maxQty: null,
+  lotNo: '',
+});
+
+function amounts(row: Row, item: Item | undefined, withVat = true) {
+  const qty = Number(row.qty);
+  if (!item || !(qty > 0)) return { supply: 0, vat: 0 };
+  try {
+    const supply = lineSupply(qty, row.unitPrice);
+    return { supply, vat: withVat ? vatFromSupply(supply, item.vatType as VatType).vat : 0 };
+  } catch {
+    return { supply: 0, vat: 0 };
+  }
+}
+
+/** 거래 문서 입력(새로 또는 앞 문서에서 전환): 앞 문서를 먼저 불러온 뒤 그 값으로 양식을 연다 */
+export function DocForm({
+  kind,
+  sourceId,
+  prefill = [],
+}: {
+  kind: TradeDocKind;
+  sourceId?: string;
+  /** 미리 채울 품목·수량(적정재고 미달 → 발주서) */
+  prefill?: { itemId: string; qty: number }[];
+}) {
+  const source = useQuery({
+    queryKey: [...TRADE_DOCS_KEY, 'detail', sourceId],
+    queryFn: () => apiFetch<TradeDoc>(`/trade-docs/${sourceId}`),
+    enabled: !!sourceId,
+  });
+  if (sourceId && !source.data) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {source.isError ? '앞 단계 문서를 불러오지 못했습니다.' : '불러오는 중…'}
+      </p>
+    );
+  }
+  return <DocFormBody kind={kind} source={source.data ?? null} prefill={prefill} />;
+}
+
+/** 앞 문서의 줄(전체 전환은 그대로, 나머지는 남은 수량만) */
+function rowsFrom(source: TradeDoc, full: boolean): Row[] {
+  return source.lines
+    .filter((l) => full || l.remainingQty > 0)
+    .map((l) => ({
+      key: nextKey++,
+      itemId: l.itemId,
+      qty: String(full ? l.qty : l.remainingQty),
+      unitPrice: l.unitPrice,
+      priceTouched: true,
+      sourceLineId: l.id,
+      maxQty: full ? l.qty : l.remainingQty,
+      lotNo: l.lotNo ?? '',
+    }));
+}
+
+function DocFormBody({
+  kind,
+  source,
+  prefill,
+}: {
+  kind: TradeDocKind;
+  source: TradeDoc | null;
+  prefill: { itemId: string; qty: number }[];
+}) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const side = (SALES_DOC_KINDS as readonly string[]).includes(kind) ? 'sales' : 'purchase';
+  const full = !!source && FULL_CONVERSIONS[kind] === source.kind;
+  /** 창고 이동·기초재고: 거래처·증빙·부가세가 없다. 창고 이동은 금액도 없다 */
+  const stockDoc = kind === 'transfer' || kind === 'opening';
+  const showPrice = kind !== 'transfer';
+  const [docDate, setDocDate] = useState(todayInKorea());
+  const [partnerId, setPartnerId] = useState<string | null>(source?.partnerId ?? null);
+  /** 비어 있으면 첫 창고 */
+  const [warehouseChoice, setWarehouseChoice] = useState(source?.warehouseId ?? '');
+  /** 창고 이동의 받는 창고(비어 있으면 보내는 창고가 아닌 첫 창고) */
+  const [toWarehouseChoice, setToWarehouseChoice] = useState('');
+  const [evidenceType, setEvidenceType] = useState(source?.evidenceType ?? '');
+  const [dueDate, setDueDate] = useState('');
+  const [memo, setMemo] = useState('');
+  const [rows, setRows] = useState<Row[]>(() =>
+    source
+      ? rowsFrom(source, full)
+      : prefill.length
+        ? prefill.map((p) => ({ ...emptyRow(), itemId: p.itemId, qty: String(p.qty) }))
+        : [emptyRow()],
+  );
+
+  const partners = useQuery({
+    queryKey: ['partners', 'active'],
+    queryFn: () => apiFetch<Partner[]>('/partners'),
+  });
+  const items = useQuery({ queryKey: ['items', 'active'], queryFn: () => apiFetch<Item[]>('/items') });
+  const warehouses = useQuery({
+    queryKey: ['warehouses', 'active'],
+    queryFn: () => apiFetch<Warehouse[]>('/warehouses'),
+  });
+  const warehouseId = warehouseChoice || warehouses.data?.[0]?.id || '';
+  const toWarehouseId =
+    toWarehouseChoice || warehouses.data?.find((w) => w.id !== warehouseId)?.id || '';
+  const itemById = new Map(items.data?.map((i) => [i.id, i]));
+  const tracked = (itemId: string | null) => {
+    const item = itemId ? itemById.get(itemId) : undefined;
+    return item ? item.trackLot || item.trackSerial : false;
+  };
+  const lotColumn = rows.some((r) => tracked(r.itemId));
+  const lots = useQuery({
+    queryKey: ['inventory', 'lots', warehouseId],
+    queryFn: () => apiFetch<LotRow[]>(`/inventory/lots?warehouseId=${warehouseId}`),
+    enabled: lotColumn && OUTGOING_KINDS.includes(kind) && !!warehouseId,
+  });
+
+  async function lookupPrice(itemId: string, partner: string | null) {
+    const params = new URLSearchParams({ side });
+    if (partner) params.set('partnerId', partner);
+    const res = await apiFetch<{ unitPrice: number | null }>(`/items/${itemId}/price?${params}`);
+    return res.unitPrice ?? 0;
+  }
+
+  async function chooseItem(key: number, itemId: string | null) {
+    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, itemId, priceTouched: false } : r)));
+    if (!itemId || !showPrice) return;
+    const price = await lookupPrice(itemId, partnerId);
+    setRows((rs) =>
+      rs.map((r) => (r.key === key && r.itemId === itemId && !r.priceTouched ? { ...r, unitPrice: price } : r)),
+    );
+  }
+
+  async function choosePartner(id: string | null) {
+    setPartnerId(id);
+    // 거래처가 바뀌면 직접 고치지 않은 단가를 거래처별 단가로 다시 불러온다
+    for (const r of rows) {
+      if (!r.itemId || r.priceTouched) continue;
+      const price = await lookupPrice(r.itemId, id);
+      setRows((rs) =>
+        rs.map((x) => (x.key === r.key && !x.priceTouched ? { ...x, unitPrice: price } : x)),
+      );
+    }
+  }
+
+  /** 바코드(P3-13): 같은 품목 줄이 있으면 수량 +1, 없으면 빈 줄이나 새 줄에 넣는다 */
+  async function scan(code: string) {
+    let item: Item;
+    try {
+      item = await apiFetch<Item>(`/items/by-barcode/${encodeURIComponent(code)}`);
+    } catch {
+      toast.error(`바코드 ${code}에 맞는 품목이 없습니다.`);
+      return;
+    }
+    if (stockOnly && !isStockItem(item.kind)) {
+      toast.error(`'${item.name}'은(는) 재고가 없는 서비스 품목입니다.`);
+      return;
+    }
+    const lot = item.trackLot || item.trackSerial;
+    const same = lot ? undefined : rows.find((r) => r.itemId === item.id && !r.sourceLineId);
+    if (same) {
+      const qty = Math.round(((Number(same.qty) || 0) + 1) * 1000) / 1000;
+      update(same.key, { qty: String(qty) });
+      return;
+    }
+    const empty = rows.find((r) => !r.itemId);
+    const row = empty ?? emptyRow();
+    if (!empty) setRows((rs) => [...rs, row]);
+    await chooseItem(row.key, item.id);
+  }
+
+  const update = (key: number, patch: Partial<Row>) =>
+    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+
+  const totals = rows.reduce(
+    (t, r) => {
+      const a = amounts(r, r.itemId ? itemById.get(r.itemId) : undefined, !stockDoc);
+      return { supply: t.supply + a.supply, vat: t.vat + a.vat };
+    },
+    { supply: 0, vat: 0 },
+  );
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiFetch<TradeDoc>('/trade-docs', {
+        method: 'POST',
+        json: {
+          kind,
+          docDate,
+          partnerId: stockDoc ? null : partnerId,
+          warehouseId: warehouseId || null,
+          toWarehouseId: kind === 'transfer' ? toWarehouseId || null : null,
+          sourceDocId: source?.id ?? null,
+          evidenceType: stockDoc ? null : evidenceType || null,
+          dueDate: dueDate || null,
+          memo,
+          lines: rows
+            .filter((r) => r.itemId)
+            .map((r) => ({
+              itemId: r.itemId,
+              qty: Number(r.qty),
+              unitPrice: showPrice ? r.unitPrice : null,
+              sourceLineId: r.sourceLineId,
+              lotNo: r.lotNo.trim() || null,
+            })),
+        },
+      }),
+    onSuccess: (doc) => {
+      void queryClient.invalidateQueries({ queryKey: TRADE_DOCS_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success(`${TRADE_DOC_KIND_LABELS[kind]} ${doc.docNo}을(를) 저장했습니다.`);
+      router.push(`/sales/docs/${doc.id}`);
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : '저장하지 못했습니다.'),
+  });
+
+  const stockOnly = kind === 'receipt' || kind === 'shipment' || stockDoc;
+  const itemOptions = (items.data ?? [])
+    .filter((i) => !stockOnly || isStockItem(i.kind))
+    .map((i) => ({ id: i.id, code: i.code, name: i.name, hint: i.spec ?? undefined }));
+  const title = `${TRADE_DOC_KIND_LABELS[kind]} 입력`;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        {source ? (
+          <p className="text-sm text-muted-foreground">
+            {TRADE_DOC_KIND_LABELS[source.kind]} {source.docNo}에서 만듭니다.
+            {full ? ' 줄은 그대로 옮기고 단가만 고칠 수 있습니다.' : ' 남은 수량까지 넘길 수 있습니다.'}
+          </p>
+        ) : null}
+      </CardHeader>
+      <CardContent className="grid gap-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <FormField id="doc-date" label="일자">
+            <Input id="doc-date" type="date" value={docDate} onChange={(e) => setDocDate(e.target.value)} />
+          </FormField>
+          {!stockDoc ? (
+            <FormField id="doc-partner" label="거래처">
+              <Combobox
+                aria-label="거래처"
+                items={partners.data ?? []}
+                value={partnerId}
+                onChange={(id) => void choosePartner(id)}
+                disabled={!!source?.partnerId}
+                placeholder="거래처 검색"
+              />
+            </FormField>
+          ) : null}
+          <FormField id="doc-warehouse" label={kind === 'transfer' ? '보내는 창고' : '창고'}>
+            <Select
+              id="doc-warehouse"
+              value={warehouseId}
+              onChange={(e) => setWarehouseChoice(e.target.value)}
+              disabled={full}
+            >
+              {warehouses.data?.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+          {kind === 'transfer' ? (
+            <FormField id="doc-to-warehouse" label="받는 창고">
+              <Select
+                id="doc-to-warehouse"
+                value={toWarehouseId}
+                onChange={(e) => setToWarehouseChoice(e.target.value)}
+              >
+                {warehouses.data
+                  ?.filter((w) => w.id !== warehouseId)
+                  .map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+              </Select>
+            </FormField>
+          ) : null}
+          {stockDoc ? null : isOrderKind(kind) ? (
+            <FormField id="doc-due" label={kind === 'quote' ? '유효기한' : '납기'}>
+              <Input id="doc-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </FormField>
+          ) : (
+            <FormField id="doc-evidence" label="증빙">
+              <Select id="doc-evidence" value={evidenceType} onChange={(e) => setEvidenceType(e.target.value)}>
+                {EVIDENCE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          )}
+        </div>
+
+        {!full ? <BarcodeInput onScan={(code) => void scan(code)} /> : null}
+        <div className="overflow-x-auto rounded-md border">
+          <Table aria-label="품목 줄">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 text-center">#</TableHead>
+                <TableHead className="min-w-64">품목</TableHead>
+                <TableHead className="w-16">단위</TableHead>
+                <TableHead className="w-28">수량</TableHead>
+                {lotColumn ? <TableHead className="w-40">LOT·시리얼</TableHead> : null}
+                {showPrice ? (
+                  <>
+                    <TableHead className="w-36">{stockDoc ? '단가(원가)' : '단가'}</TableHead>
+                    <TableHead className="w-32 text-right">{stockDoc ? '금액' : '공급가액'}</TableHead>
+                  </>
+                ) : null}
+                {!stockDoc ? <TableHead className="w-28 text-right">부가세</TableHead> : null}
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((r, i) => {
+                const item = r.itemId ? itemById.get(r.itemId) : undefined;
+                const a = amounts(r, item, !stockDoc);
+                const n = i + 1;
+                return (
+                  <TableRow key={r.key}>
+                    <TableCell className="text-center tabular-nums text-muted-foreground">{n}</TableCell>
+                    <TableCell>
+                      <Combobox
+                        aria-label={`${n}행 품목`}
+                        items={itemOptions}
+                        value={r.itemId}
+                        onChange={(id) => void chooseItem(r.key, id)}
+                        disabled={!!r.sourceLineId}
+                        placeholder="품목명·코드"
+                      />
+                    </TableCell>
+                    <TableCell>{item?.unit ?? ''}</TableCell>
+                    <TableCell>
+                      <Input
+                        aria-label={`${n}행 수량`}
+                        inputMode="decimal"
+                        className="text-right"
+                        value={r.qty}
+                        readOnly={full}
+                        onChange={(e) => update(r.key, { qty: e.target.value })}
+                      />
+                      {r.maxQty != null && !full ? (
+                        <p className="mt-1 text-xs text-muted-foreground">최대 {formatQty(r.maxQty)}</p>
+                      ) : null}
+                    </TableCell>
+                    {lotColumn ? (
+                      <TableCell>
+                        {tracked(r.itemId) ? (
+                          <>
+                            <Input
+                              aria-label={`${n}행 LOT`}
+                              list={`lots-${r.key}`}
+                              placeholder={item?.trackSerial ? '시리얼 번호' : 'LOT 번호'}
+                              value={r.lotNo}
+                              readOnly={full}
+                              onChange={(e) => update(r.key, { lotNo: e.target.value })}
+                            />
+                            <datalist id={`lots-${r.key}`}>
+                              {lots.data
+                                ?.filter((l) => l.itemId === r.itemId && l.qty > 0)
+                                .map((l) => (
+                                  <option key={l.lotNo} value={l.lotNo}>
+                                    {formatQty(l.qty)}
+                                  </option>
+                                ))}
+                            </datalist>
+                          </>
+                        ) : null}
+                      </TableCell>
+                    ) : null}
+                    {showPrice ? (
+                      <>
+                        <TableCell>
+                          <WonInput
+                            aria-label={`${n}행 단가`}
+                            value={r.unitPrice}
+                            onValueChange={(v) => update(r.key, { unitPrice: v, priceTouched: true })}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{formatWon(a.supply)}</TableCell>
+                      </>
+                    ) : null}
+                    {!stockDoc ? (
+                      <TableCell className="text-right tabular-nums">{formatWon(a.vat)}</TableCell>
+                    ) : null}
+                    <TableCell>
+                      {!full ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`${n}행 지우기`}
+                          onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+                        >
+                          <Trash2 />
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            {showPrice ? (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={lotColumn ? 6 : 5} className="text-right font-medium">
+                    합계 {formatWon(totals.supply + totals.vat)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatWon(totals.supply)}</TableCell>
+                  {!stockDoc ? (
+                    <TableCell className="text-right tabular-nums">{formatWon(totals.vat)}</TableCell>
+                  ) : null}
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            ) : null}
+          </Table>
+        </div>
+        {!full ? (
+          <div>
+            <Button variant="outline" size="sm" onClick={() => setRows((rs) => [...rs, emptyRow()])}>
+              <Plus />줄 추가
+            </Button>
+          </div>
+        ) : null}
+
+        <FormField id="doc-memo" label="메모">
+          <Input id="doc-memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
+        </FormField>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => router.back()}>
+            취소
+          </Button>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={save.isPending || !rows.some((r) => r.itemId)}
+          >
+            {save.isPending ? '저장 중…' : '저장'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
