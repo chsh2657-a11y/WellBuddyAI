@@ -232,7 +232,14 @@ export function DocDetail({ id }: { id: string }) {
                 <TableRow key={l.id}>
                   <TableCell className="pl-5 text-center tabular-nums">{l.lineNo}</TableCell>
                   <TableCell className="tabular-nums">{l.itemCode}</TableCell>
-                  <TableCell className="font-medium">{l.itemName}</TableCell>
+                  <TableCell className="font-medium">
+                    {l.itemName}
+                    {l.lotNo ? (
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">
+                        LOT {l.lotNo}
+                      </span>
+                    ) : null}
+                  </TableCell>
                   <TableCell>{l.spec ?? ''}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatQty(l.qty)} {l.unit}

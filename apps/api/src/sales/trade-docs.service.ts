@@ -458,10 +458,29 @@ export class TradeDocsService {
                 ? warehouseId
                 : (l.warehouseId ?? fromSource?.warehouseId ?? warehouseId),
             sourceLineId: l.sourceLineId ?? null,
-            lotNo: l.lotNo ?? null,
+            // 반품·전환은 앞 문서 줄의 LOT·시리얼을 그대로 쓴다
+            lotNo: l.lotNo ?? fromSource?.lotNo ?? null,
             memo: l.memo ?? null,
           };
         });
+        if (this.movesStock(kind, source)) {
+          for (const l of lines) {
+            if (!l.item.trackLot && !l.item.trackSerial) continue;
+            const what = l.item.trackSerial ? '시리얼' : 'LOT';
+            if (!l.lotNo) {
+              throw new AppException(
+                'LOT_REQUIRED',
+                `${l.lineNo}행: '${l.item.name}'은(는) ${what} 번호를 입력해 주세요.`,
+              );
+            }
+            if (l.item.trackSerial && Math.abs(l.qty) !== 1) {
+              throw new AppException(
+                'SERIAL_QTY',
+                `${l.lineNo}행: 시리얼 관리 품목('${l.item.name}')은 한 줄에 1개씩 입력합니다.`,
+              );
+            }
+          }
+        }
         const supplyTotal = lines.reduce((s, l) => s + l.supply, 0);
         const vatTotal = lines.reduce((s, l) => s + l.vat, 0);
 
@@ -550,6 +569,21 @@ export class TradeDocsService {
       }
       throw e;
     }
+  }
+
+  /** 이 문서가 스스로 재고를 움직이는가(입고 → 구매, 출고 → 판매 전환은 앞 문서가 움직였다) */
+  private movesStock(kind: TradeDocKind, source: Doc | null) {
+    if (kind === 'purchase') return source?.kind !== 'receipt';
+    if (kind === 'sale') return source?.kind !== 'shipment';
+    return [
+      'receipt',
+      'purchase_return',
+      'shipment',
+      'sales_return',
+      'opening',
+      'transfer',
+      'adjustment',
+    ].includes(kind);
   }
 
   /** 거래처·창고가 이 회사 것인지(다른 회사 것은 보이지 않는다) */
@@ -836,13 +870,36 @@ export class TradeDocsService {
    * 줄면 이동평균 원가로 매출원가/재고자산, 늘면 그 반대 전표가 생긴다.
    */
   async stockCount(input: StockCountInput) {
-    const ids = input.counts.map((c) => c.itemId);
-    if (new Set(ids).size !== ids.length) {
-      throw new AppException('DUPLICATE_ITEM', '같은 품목을 두 번 입력했습니다.');
+    const key = (itemId: string, lotNo: string | null | undefined) => `${itemId}|${lotNo ?? ''}`;
+    const keys = input.counts.map((c) => key(c.itemId, c.lotNo));
+    if (new Set(keys).size !== keys.length) {
+      throw new AppException('DUPLICATE_ITEM', '같은 품목(LOT)을 두 번 입력했습니다.');
     }
+    const ids = [...new Set(input.counts.map((c) => c.itemId))];
     const lines = await this.db.tenant(async (tx) => {
+      const flags = await tx
+        .select({
+          id: items.id,
+          name: items.name,
+          lot: sql<boolean>`(${items.trackLot} or ${items.trackSerial})`,
+        })
+        .from(items)
+        .where(inArray(items.id, ids));
+      for (const c of input.counts) {
+        const item = flags.find((f) => f.id === c.itemId);
+        if (item?.lot && !c.lotNo) {
+          throw new AppException(
+            'LOT_REQUIRED',
+            `'${item.name}'은(는) LOT·시리얼별로 실사 수량을 넣어 주세요.`,
+          );
+        }
+      }
       const book = await tx
-        .select({ itemId: stockMoves.itemId, qty: sql<string>`sum(${stockMoves.qty})` })
+        .select({
+          itemId: stockMoves.itemId,
+          lotNo: stockMoves.lotNo,
+          qty: sql<string>`sum(${stockMoves.qty})`,
+        })
         .from(stockMoves)
         .where(
           and(
@@ -851,11 +908,18 @@ export class TradeDocsService {
             lte(stockMoves.moveDate, input.docDate),
           ),
         )
-        .groupBy(stockMoves.itemId);
-      const bookQty = new Map(book.map((b) => [b.itemId, toMilli(Number(b.qty))]));
+        .groupBy(stockMoves.itemId, stockMoves.lotNo);
+      const lotItem = new Set(flags.filter((f) => f.lot).map((f) => f.id));
+      const bookQty = new Map<string, number>();
+      for (const b of book) {
+        // LOT 를 쓰지 않는 품목은 LOT 와 관계없이 합친다
+        const k = key(b.itemId, lotItem.has(b.itemId) ? b.lotNo : null);
+        bookQty.set(k, (bookQty.get(k) ?? 0) + toMilli(Number(b.qty)));
+      }
       return input.counts.flatMap((c) => {
-        const diff = toMilli(c.countedQty) - (bookQty.get(c.itemId) ?? 0);
-        return diff === 0 ? [] : [{ itemId: c.itemId, qty: fromMilli(diff) }];
+        const lotNo = lotItem.has(c.itemId) ? (c.lotNo ?? null) : null;
+        const diff = toMilli(c.countedQty) - (bookQty.get(key(c.itemId, lotNo)) ?? 0);
+        return diff === 0 ? [] : [{ itemId: c.itemId, qty: fromMilli(diff), lotNo }];
       });
     });
     if (lines.length === 0) {
@@ -881,7 +945,7 @@ export class TradeDocsService {
           unitPrice: null,
           warehouseId: null,
           sourceLineId: null,
-          lotNo: null,
+          lotNo: l.lotNo,
           memo: null,
         })),
       },

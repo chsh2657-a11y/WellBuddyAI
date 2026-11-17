@@ -2,9 +2,11 @@
 
 import { MODULES } from '@wellbuddy/shared';
 import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
 import { formatWon } from '@/lib/format';
@@ -54,6 +56,67 @@ function Kpi({
     </Link>
   ) : (
     body
+  );
+}
+
+interface StockAlert {
+  itemId: string;
+  code: string;
+  name: string;
+  unit: string;
+  qty: number;
+  safetyStock: number;
+  shortfall: number;
+}
+
+const qty = (v: number) => v.toLocaleString('ko-KR', { maximumFractionDigits: 3 });
+
+/** 적정재고 미달(P3-14): 모자란 수량만큼 발주서를 바로 만든다 */
+function LowStockCard() {
+  const alerts = useQuery({
+    queryKey: ['inventory', 'alerts'],
+    queryFn: () => apiFetch<StockAlert[]>('/inventory/alerts'),
+    retry: false,
+  });
+  const list = alerts.data ?? [];
+  if (list.length === 0) return null;
+  const order = list.map((a) => `${a.itemId}:${a.shortfall}`).join(',');
+  return (
+    <Card className="mt-6" aria-label="적정재고 미달">
+      <CardHeader className="flex-row flex-wrap items-center gap-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <AlertTriangle className="size-4 text-warning" />
+          적정재고 미달
+          <Badge variant="warning">{list.length}개 품목</Badge>
+        </CardTitle>
+        <div className="ml-auto flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/sales/inventory">재고 보기</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href={`/sales/docs/new?kind=purchase_order&items=${order}`}>발주서 만들기</Link>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ul className="grid gap-1 text-sm">
+          {list.slice(0, 5).map((a) => (
+            <li key={a.itemId} className="flex items-center gap-3">
+              <span className="font-medium">{a.name}</span>
+              <span className="text-muted-foreground tabular-nums">
+                현재 {qty(a.qty)} / 적정 {qty(a.safetyStock)} {a.unit}
+              </span>
+              <span className="ml-auto tabular-nums text-warning">
+                {qty(a.shortfall)} {a.unit} 부족
+              </span>
+            </li>
+          ))}
+          {list.length > 5 ? (
+            <li className="text-xs text-muted-foreground">외 {list.length - 5}개 품목</li>
+          ) : null}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -164,6 +227,8 @@ export function DashboardView() {
           </div>
         </>
       ) : null}
+
+      {can(session, 'sales', 'read') ? <LowStockCard /> : null}
 
       <Card className="mt-6">
         <CardHeader>

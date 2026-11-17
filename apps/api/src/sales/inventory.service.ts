@@ -1,5 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { costMoves, fromMilli, stockShortages, toMilli } from '@wellbuddy/accounting-core';
+import {
+  costMoves,
+  fromMilli,
+  serialDuplicates,
+  stockShortages,
+  toMilli,
+} from '@wellbuddy/accounting-core';
 import {
   accounts,
   items,
@@ -33,8 +39,16 @@ export interface StockQuery {
 export interface LedgerQuery {
   itemId: string;
   warehouseId?: string;
+  /** LOT·시리얼 하나만(추적) */
+  lotNo?: string;
   from: string;
   to: string;
+}
+
+export interface LotQuery {
+  itemId?: string;
+  warehouseId?: string;
+  date?: string;
 }
 
 export interface SummaryQuery {
@@ -73,7 +87,18 @@ export class InventoryService {
     const ids = [...new Set(itemIds)];
     if (ids.length === 0) return changedDocs;
     // 같은 품목을 동시에 고치지 않게 품목 행을 잠근다
-    await tx.select({ id: items.id }).from(items).where(inArray(items.id, ids)).for('update');
+    const flags = await tx
+      .select({
+        id: items.id,
+        name: items.name,
+        trackLot: items.trackLot,
+        trackSerial: items.trackSerial,
+      })
+      .from(items)
+      .where(inArray(items.id, ids))
+      .for('update');
+    const lotItems = new Set(flags.filter((f) => f.trackLot || f.trackSerial).map((f) => f.id));
+    const serialItems = new Set(flags.filter((f) => f.trackSerial).map((f) => f.id));
     const rows = await tx
       .select({
         id: stockMoves.id,
@@ -90,8 +115,25 @@ export class InventoryService {
       .from(stockMoves)
       .where(inArray(stockMoves.itemId, ids));
 
-    const shortages = stockShortages(rows);
+    // LOT·시리얼 품목은 LOT 별로 재고가 모자라지 않은지 본다
+    const shortages = [
+      ...stockShortages(rows.filter((r) => !lotItems.has(r.itemId))),
+      ...stockShortages(
+        rows.filter((r) => lotItems.has(r.itemId)),
+        { byLot: true },
+      ),
+    ];
     if (shortages.length > 0) throw await this.shortageError(tx, shortages);
+    const [duplicate] = serialDuplicates(rows.filter((r) => serialItems.has(r.itemId)));
+    if (duplicate) {
+      const name = flags.find((f) => f.id === duplicate.itemId)?.name ?? '';
+      throw new AppException(
+        'DUPLICATE_SERIAL',
+        `'${name}' 시리얼 ${duplicate.lotNo}이(가) ${duplicate.date}에 이미 재고에 있습니다.`,
+        HttpStatus.CONFLICT,
+        { itemId: duplicate.itemId, lotNo: duplicate.lotNo, date: duplicate.date },
+      );
+    }
 
     const { amounts } = costMoves(rows);
     for (const row of rows) {
@@ -127,7 +169,7 @@ export class InventoryService {
     const unit = item.get(first.itemId)?.unit ?? '';
     return new AppException(
       'INSUFFICIENT_STOCK',
-      `'${first.itemName}' 재고가 ${first.warehouseName}에서 ${first.date}에 ${qtyText(first.short)}${unit} 모자랍니다.` +
+      `'${first.itemName}'${first.lotNo ? `(LOT ${first.lotNo})` : ''} 재고가 ${first.warehouseName}에서 ${first.date}에 ${qtyText(first.short)}${unit} 모자랍니다.` +
         (details.length > 1 ? ` (외 ${details.length - 1}건)` : ''),
       HttpStatus.CONFLICT,
       { shortages: details },
@@ -210,6 +252,7 @@ export class InventoryService {
       const scope = and(
         eq(stockMoves.itemId, query.itemId),
         query.warehouseId ? eq(stockMoves.warehouseId, query.warehouseId) : undefined,
+        query.lotNo ? eq(stockMoves.lotNo, query.lotNo) : undefined,
       );
       const [opening] = await tx
         .select({
@@ -271,6 +314,61 @@ export class InventoryService {
         lines,
         closing: { qty: fromMilli(qtyMilli), value },
       };
+    });
+  }
+
+  /** 적정재고 미달(P3-14): 회사 전체 수량이 적정재고보다 적은 사용 중 품목과 모자란 수량 */
+  async alerts() {
+    const rows = await this.stock({});
+    return rows
+      .filter((r) => r.isActive && r.belowSafety && r.safetyStock != null)
+      .map((r) => ({
+        itemId: r.itemId,
+        code: r.code,
+        name: r.name,
+        unit: r.unit,
+        qty: r.totalQty,
+        safetyStock: r.safetyStock!,
+        shortfall: fromMilli(toMilli(r.safetyStock!) - toMilli(r.totalQty)),
+      }));
+  }
+
+  /** LOT·시리얼별 재고(LOT·시리얼 관리 품목만, 0 이 아닌 것) */
+  async lots(query: LotQuery) {
+    return this.db.tenant(async (tx) => {
+      const rows = await tx
+        .select({
+          itemId: stockMoves.itemId,
+          itemName: items.name,
+          lotNo: stockMoves.lotNo,
+          warehouseId: stockMoves.warehouseId,
+          warehouseName: warehouses.name,
+          qty: sql<string>`sum(${stockMoves.qty})`,
+          firstDate: sql<string>`min(${stockMoves.moveDate})`,
+        })
+        .from(stockMoves)
+        .innerJoin(items, eq(items.id, stockMoves.itemId))
+        .innerJoin(warehouses, eq(warehouses.id, stockMoves.warehouseId))
+        .where(
+          and(
+            sql`(${items.trackLot} or ${items.trackSerial})`,
+            sql`${stockMoves.lotNo} is not null`,
+            query.itemId ? eq(stockMoves.itemId, query.itemId) : undefined,
+            query.warehouseId ? eq(stockMoves.warehouseId, query.warehouseId) : undefined,
+            query.date ? lte(stockMoves.moveDate, query.date) : undefined,
+          ),
+        )
+        .groupBy(
+          stockMoves.itemId,
+          items.name,
+          stockMoves.lotNo,
+          stockMoves.warehouseId,
+          warehouses.name,
+        )
+        .orderBy(asc(items.name), asc(stockMoves.lotNo), asc(warehouses.name));
+      return rows
+        .map((r) => ({ ...r, lotNo: r.lotNo!, qty: fromMilli(toMilli(Number(r.qty))) }))
+        .filter((r) => r.qty !== 0);
     });
   }
 

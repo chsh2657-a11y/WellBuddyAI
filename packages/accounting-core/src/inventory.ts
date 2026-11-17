@@ -149,3 +149,40 @@ export function stockShortages(moves: StockMove[], options: { byLot?: boolean } 
   }
   return [...found.values()];
 }
+
+export interface SerialDuplicate {
+  itemId: string;
+  lotNo: string;
+  date: string;
+}
+
+/**
+ * 시리얼 중복 찾기: 같은 품목·시리얼이 하루를 마칠 때 회사 전체에 2개 이상 남는 곳.
+ * 창고 이동(none)은 회사 전체 수량을 바꾸지 않으므로 빼고, 같은 날 판매·반품처럼 들고 나는 것은 하루 끝에서 본다.
+ */
+export function serialDuplicates(moves: StockMove[]): SerialDuplicate[] {
+  const running = new Map<string, number>();
+  const found = new Map<string, SerialDuplicate>();
+  const byDay = new Map<string, StockMove[]>();
+  for (const move of sortMoves(moves)) {
+    if (!move.lotNo || move.costing === 'none') continue;
+    const list = byDay.get(move.date) ?? [];
+    list.push(move);
+    byDay.set(move.date, list);
+  }
+  for (const [date, list] of byDay) {
+    const touched = new Set<string>();
+    for (const move of list) {
+      const key = `${move.itemId}|${move.lotNo}`;
+      running.set(key, (running.get(key) ?? 0) + toMilli(move.qty));
+      touched.add(key);
+    }
+    for (const key of touched) {
+      if ((running.get(key) ?? 0) > 1000 && !found.has(key)) {
+        const [itemId, lotNo] = key.split('|') as [string, string];
+        found.set(key, { itemId, lotNo, date });
+      }
+    }
+  }
+  return [...found.values()];
+}

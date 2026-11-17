@@ -20,6 +20,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { BarcodeInput } from '@/components/barcode-input';
 import { Combobox } from '@/components/combobox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +58,18 @@ interface Row {
   sourceLineId: string | null;
   /** 앞 문서에서 넘길 수 있는 최대 수량 */
   maxQty: number | null;
+  /** LOT·시리얼 번호(LOT·시리얼 관리 품목) */
+  lotNo: string;
 }
+
+interface LotRow {
+  itemId: string;
+  lotNo: string;
+  qty: number;
+}
+
+/** 재고를 내보내는 문서: 고를 수 있는 LOT·시리얼 목록을 보여 준다 */
+const OUTGOING_KINDS: readonly TradeDocKind[] = ['shipment', 'sale', 'purchase_return', 'transfer'];
 
 const EVIDENCE_OPTIONS = [
   { value: '', label: '자동(과세 세금계산서·면세 계산서)' },
@@ -77,6 +89,7 @@ const emptyRow = (): Row => ({
   priceTouched: false,
   sourceLineId: null,
   maxQty: null,
+  lotNo: '',
 });
 
 function amounts(row: Row, item: Item | undefined, withVat = true) {
@@ -91,7 +104,16 @@ function amounts(row: Row, item: Item | undefined, withVat = true) {
 }
 
 /** 거래 문서 입력(새로 또는 앞 문서에서 전환): 앞 문서를 먼저 불러온 뒤 그 값으로 양식을 연다 */
-export function DocForm({ kind, sourceId }: { kind: TradeDocKind; sourceId?: string }) {
+export function DocForm({
+  kind,
+  sourceId,
+  prefill = [],
+}: {
+  kind: TradeDocKind;
+  sourceId?: string;
+  /** 미리 채울 품목·수량(적정재고 미달 → 발주서) */
+  prefill?: { itemId: string; qty: number }[];
+}) {
   const source = useQuery({
     queryKey: [...TRADE_DOCS_KEY, 'detail', sourceId],
     queryFn: () => apiFetch<TradeDoc>(`/trade-docs/${sourceId}`),
@@ -104,7 +126,7 @@ export function DocForm({ kind, sourceId }: { kind: TradeDocKind; sourceId?: str
       </p>
     );
   }
-  return <DocFormBody kind={kind} source={source.data ?? null} />;
+  return <DocFormBody kind={kind} source={source.data ?? null} prefill={prefill} />;
 }
 
 /** 앞 문서의 줄(전체 전환은 그대로, 나머지는 남은 수량만) */
@@ -119,10 +141,19 @@ function rowsFrom(source: TradeDoc, full: boolean): Row[] {
       priceTouched: true,
       sourceLineId: l.id,
       maxQty: full ? l.qty : l.remainingQty,
+      lotNo: l.lotNo ?? '',
     }));
 }
 
-function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | null }) {
+function DocFormBody({
+  kind,
+  source,
+  prefill,
+}: {
+  kind: TradeDocKind;
+  source: TradeDoc | null;
+  prefill: { itemId: string; qty: number }[];
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const side = (SALES_DOC_KINDS as readonly string[]).includes(kind) ? 'sales' : 'purchase';
@@ -139,7 +170,13 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
   const [evidenceType, setEvidenceType] = useState(source?.evidenceType ?? '');
   const [dueDate, setDueDate] = useState('');
   const [memo, setMemo] = useState('');
-  const [rows, setRows] = useState<Row[]>(() => (source ? rowsFrom(source, full) : [emptyRow()]));
+  const [rows, setRows] = useState<Row[]>(() =>
+    source
+      ? rowsFrom(source, full)
+      : prefill.length
+        ? prefill.map((p) => ({ ...emptyRow(), itemId: p.itemId, qty: String(p.qty) }))
+        : [emptyRow()],
+  );
 
   const partners = useQuery({
     queryKey: ['partners', 'active'],
@@ -154,6 +191,16 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
   const toWarehouseId =
     toWarehouseChoice || warehouses.data?.find((w) => w.id !== warehouseId)?.id || '';
   const itemById = new Map(items.data?.map((i) => [i.id, i]));
+  const tracked = (itemId: string | null) => {
+    const item = itemId ? itemById.get(itemId) : undefined;
+    return item ? item.trackLot || item.trackSerial : false;
+  };
+  const lotColumn = rows.some((r) => tracked(r.itemId));
+  const lots = useQuery({
+    queryKey: ['inventory', 'lots', warehouseId],
+    queryFn: () => apiFetch<LotRow[]>(`/inventory/lots?warehouseId=${warehouseId}`),
+    enabled: lotColumn && OUTGOING_KINDS.includes(kind) && !!warehouseId,
+  });
 
   async function lookupPrice(itemId: string, partner: string | null) {
     const params = new URLSearchParams({ side });
@@ -181,6 +228,32 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
         rs.map((x) => (x.key === r.key && !x.priceTouched ? { ...x, unitPrice: price } : x)),
       );
     }
+  }
+
+  /** 바코드(P3-13): 같은 품목 줄이 있으면 수량 +1, 없으면 빈 줄이나 새 줄에 넣는다 */
+  async function scan(code: string) {
+    let item: Item;
+    try {
+      item = await apiFetch<Item>(`/items/by-barcode/${encodeURIComponent(code)}`);
+    } catch {
+      toast.error(`바코드 ${code}에 맞는 품목이 없습니다.`);
+      return;
+    }
+    if (stockOnly && !isStockItem(item.kind)) {
+      toast.error(`'${item.name}'은(는) 재고가 없는 서비스 품목입니다.`);
+      return;
+    }
+    const lot = item.trackLot || item.trackSerial;
+    const same = lot ? undefined : rows.find((r) => r.itemId === item.id && !r.sourceLineId);
+    if (same) {
+      const qty = Math.round(((Number(same.qty) || 0) + 1) * 1000) / 1000;
+      update(same.key, { qty: String(qty) });
+      return;
+    }
+    const empty = rows.find((r) => !r.itemId);
+    const row = empty ?? emptyRow();
+    if (!empty) setRows((rs) => [...rs, row]);
+    await chooseItem(row.key, item.id);
   }
 
   const update = (key: number, patch: Partial<Row>) =>
@@ -215,6 +288,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
               qty: Number(r.qty),
               unitPrice: showPrice ? r.unitPrice : null,
               sourceLineId: r.sourceLineId,
+              lotNo: r.lotNo.trim() || null,
             })),
         },
       }),
@@ -309,6 +383,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
           )}
         </div>
 
+        {!full ? <BarcodeInput onScan={(code) => void scan(code)} /> : null}
         <div className="overflow-x-auto rounded-md border">
           <Table aria-label="품목 줄">
             <TableHeader>
@@ -317,6 +392,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
                 <TableHead className="min-w-64">품목</TableHead>
                 <TableHead className="w-16">단위</TableHead>
                 <TableHead className="w-28">수량</TableHead>
+                {lotColumn ? <TableHead className="w-40">LOT·시리얼</TableHead> : null}
                 {showPrice ? (
                   <>
                     <TableHead className="w-36">{stockDoc ? '단가(원가)' : '단가'}</TableHead>
@@ -359,6 +435,31 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
                         <p className="mt-1 text-xs text-muted-foreground">최대 {formatQty(r.maxQty)}</p>
                       ) : null}
                     </TableCell>
+                    {lotColumn ? (
+                      <TableCell>
+                        {tracked(r.itemId) ? (
+                          <>
+                            <Input
+                              aria-label={`${n}행 LOT`}
+                              list={`lots-${r.key}`}
+                              placeholder={item?.trackSerial ? '시리얼 번호' : 'LOT 번호'}
+                              value={r.lotNo}
+                              readOnly={full}
+                              onChange={(e) => update(r.key, { lotNo: e.target.value })}
+                            />
+                            <datalist id={`lots-${r.key}`}>
+                              {lots.data
+                                ?.filter((l) => l.itemId === r.itemId && l.qty > 0)
+                                .map((l) => (
+                                  <option key={l.lotNo} value={l.lotNo}>
+                                    {formatQty(l.qty)}
+                                  </option>
+                                ))}
+                            </datalist>
+                          </>
+                        ) : null}
+                      </TableCell>
+                    ) : null}
                     {showPrice ? (
                       <>
                         <TableCell>
@@ -393,7 +494,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
             {showPrice ? (
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-right font-medium">
+                  <TableCell colSpan={lotColumn ? 6 : 5} className="text-right font-medium">
                     합계 {formatWon(totals.supply + totals.vat)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatWon(totals.supply)}</TableCell>

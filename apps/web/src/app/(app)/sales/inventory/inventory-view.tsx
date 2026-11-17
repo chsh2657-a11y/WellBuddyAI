@@ -54,6 +54,7 @@ interface Ledger {
     kindLabel: string;
     partnerName: string | null;
     warehouseName: string;
+    lotNo: string | null;
     inQty: number;
     outQty: number;
     amount: number;
@@ -117,6 +118,10 @@ function StockView() {
   const [date, setDate] = useState(todayInKorea());
   const [warehouseId, setWarehouseId] = useState('');
   const [itemId, setItemId] = useState<string | null>(null);
+  /** 재고수불부를 LOT·시리얼 하나로 좁힌다(추적) */
+  const [lotNo, setLotNo] = useState('');
+  /** 적정재고 미달 품목만 */
+  const [belowOnly, setBelowOnly] = useState(false);
   const [from, setFrom] = useState(addDays(todayInKorea(), -30));
   const [to, setTo] = useState(todayInKorea());
 
@@ -132,8 +137,18 @@ function StockView() {
   });
   const ledgerParams = new URLSearchParams({ itemId: itemId ?? '', from, to });
   if (warehouseId) ledgerParams.set('warehouseId', warehouseId);
+  if (lotNo) ledgerParams.set('lotNo', lotNo);
+  const lots = useQuery({
+    queryKey: ['inventory', 'lots', 'item', itemId],
+    queryFn: () =>
+      apiFetch<{ lotNo: string; warehouseName: string; qty: number }[]>(
+        `/inventory/lots?itemId=${itemId}`,
+      ),
+    enabled: !!itemId,
+  });
+  const lotNames = [...new Set(lots.data?.map((l) => l.lotNo))];
   const ledger = useQuery({
-    queryKey: ['inventory', 'ledger', itemId, from, to, warehouseId],
+    queryKey: ['inventory', 'ledger', itemId, from, to, warehouseId, lotNo],
     queryFn: () => apiFetch<Ledger>(`/inventory/ledger?${ledgerParams}`),
     enabled: !!itemId,
   });
@@ -166,6 +181,14 @@ function StockView() {
               </option>
             ))}
           </Select>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={belowOnly}
+              onChange={(e) => setBelowOnly(e.target.checked)}
+            />
+            적정재고 미달만
+          </label>
           <p className="ml-auto text-sm text-muted-foreground">
             재고금액은 품목별 이동평균(모든 창고 합계)입니다.
           </p>
@@ -186,43 +209,48 @@ function StockView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stock.data?.map((r) => (
-                <TableRow
-                  key={r.itemId}
-                  className={cn('cursor-pointer', r.itemId === itemId && 'bg-primary-soft/40')}
-                  onClick={() => setItemId(r.itemId)}
-                >
-                  <TableCell className="pl-5 tabular-nums">{r.code}</TableCell>
-                  <TableCell className="font-medium">
-                    {r.name}
-                    {r.spec ? <span className="ml-1 text-muted-foreground">{r.spec}</span> : null}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {r.warehouses
-                      .map((w) => `${whName.get(w.warehouseId) ?? ''} ${formatQty(w.qty)}`)
-                      .join(' · ') || '—'}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatQty(r.qty)} {r.unit}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {r.unitCost == null ? '—' : formatWon(r.unitCost)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatWon(r.value)}</TableCell>
-                  <TableCell className="pr-5 text-right tabular-nums">
-                    {r.safetyStock == null ? (
-                      '—'
-                    ) : r.belowSafety ? (
-                      <Badge variant="warning">
-                        <AlertTriangle className="size-3" />
-                        {formatQty(r.safetyStock)} 미달
-                      </Badge>
-                    ) : (
-                      formatQty(r.safetyStock)
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {stock.data
+                ?.filter((r) => !belowOnly || r.belowSafety)
+                .map((r) => (
+                  <TableRow
+                    key={r.itemId}
+                    className={cn('cursor-pointer', r.itemId === itemId && 'bg-primary-soft/40')}
+                    onClick={() => {
+                      setItemId(r.itemId);
+                      setLotNo('');
+                    }}
+                  >
+                    <TableCell className="pl-5 tabular-nums">{r.code}</TableCell>
+                    <TableCell className="font-medium">
+                      {r.name}
+                      {r.spec ? <span className="ml-1 text-muted-foreground">{r.spec}</span> : null}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {r.warehouses
+                        .map((w) => `${whName.get(w.warehouseId) ?? ''} ${formatQty(w.qty)}`)
+                        .join(' · ') || '—'}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatQty(r.qty)} {r.unit}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {r.unitCost == null ? '—' : formatWon(r.unitCost)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{formatWon(r.value)}</TableCell>
+                    <TableCell className="pr-5 text-right tabular-nums">
+                      {r.safetyStock == null ? (
+                        '—'
+                      ) : r.belowSafety ? (
+                        <Badge variant="warning">
+                          <AlertTriangle className="size-3" />
+                          {formatQty(r.safetyStock)} 미달
+                        </Badge>
+                      ) : (
+                        formatQty(r.safetyStock)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
             <TableFooter>
               <TableRow>
@@ -261,6 +289,21 @@ function StockView() {
               value={to}
               onChange={(e) => setTo(e.target.value)}
             />
+            {lotNames.length || lotNo ? (
+              <Select
+                aria-label="LOT·시리얼"
+                className="w-44"
+                value={lotNo}
+                onChange={(e) => setLotNo(e.target.value)}
+              >
+                <option value="">전체 LOT</option>
+                {lotNames.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </Select>
+            ) : null}
           </CardHeader>
           <CardContent className="overflow-x-auto px-0 pb-2">
             <Table aria-label="재고수불부">
@@ -301,7 +344,12 @@ function StockView() {
                       </Link>
                     </TableCell>
                     <TableCell>{l.partnerName ?? '—'}</TableCell>
-                    <TableCell>{l.warehouseName}</TableCell>
+                    <TableCell>
+                      {l.warehouseName}
+                      {l.lotNo ? (
+                        <span className="ml-1 text-xs text-muted-foreground">LOT {l.lotNo}</span>
+                      ) : null}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {l.inQty ? formatQty(l.inQty) : ''}
                     </TableCell>

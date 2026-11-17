@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { BarcodeInput } from '@/components/barcode-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
@@ -33,6 +34,18 @@ interface StockRow {
   isActive: boolean;
 }
 
+interface LotRow {
+  itemId: string;
+  lotNo: string;
+  qty: number;
+}
+
+/** 실사할 한 칸: 품목(LOT·시리얼 관리 품목은 LOT 마다) */
+interface Entry extends StockRow {
+  key: string;
+  lotNo: string | null;
+}
+
 /** 재고 실사(P3-11): 창고·기준일의 장부 수량 옆에 실사 수량을 넣으면 차이만 재고 조정으로 남긴다 */
 export function CountForm() {
   const [date, setDate] = useState(todayInKorea());
@@ -48,6 +61,32 @@ export function CountForm() {
       apiFetch<StockRow[]>(`/inventory/stock?${new URLSearchParams({ date, warehouseId })}`),
     enabled: !!warehouseId,
   });
+  const lots = useQuery({
+    queryKey: ['inventory', 'lots', warehouseId, date],
+    queryFn: () =>
+      apiFetch<LotRow[]>(`/inventory/lots?${new URLSearchParams({ date, warehouseId })}`),
+    enabled: !!warehouseId,
+  });
+  const items = useQuery({
+    queryKey: ['items', 'active'],
+    queryFn: () =>
+      apiFetch<{ id: string; barcode: string | null; trackLot: boolean; trackSerial: boolean }[]>(
+        '/items',
+      ),
+  });
+  const tracked = new Set(items.data?.filter((i) => i.trackLot || i.trackSerial).map((i) => i.id));
+  const entries: Entry[] | undefined =
+    stock.data && lots.data && items.data
+      ? stock.data
+          .filter((r) => r.isActive || r.qty !== 0)
+          .flatMap((r): Entry[] =>
+            tracked.has(r.itemId)
+              ? lots.data
+                  .filter((l) => l.itemId === r.itemId)
+                  .map((l) => ({ ...r, key: `${r.itemId}|${l.lotNo}`, lotNo: l.lotNo, qty: l.qty }))
+              : [{ ...r, key: r.itemId, lotNo: null }],
+          )
+      : undefined;
 
   return (
     <Card>
@@ -82,13 +121,16 @@ export function CountForm() {
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-4">
-        {stock.data ? (
+        {entries ? (
           // 창고·날짜가 바뀌면 입력을 새로 시작한다
           <CountTable
             key={`${date}|${warehouseId}`}
             date={date}
             warehouseId={warehouseId}
-            rows={stock.data.filter((r) => r.isActive || r.qty !== 0)}
+            rows={entries}
+            barcodes={
+              new Map(items.data?.flatMap((i) => (i.barcode ? [[i.barcode, i.id] as const] : [])))
+            }
           />
         ) : (
           <p className="px-6 text-sm text-muted-foreground">불러오는 중…</p>
@@ -102,19 +144,42 @@ function CountTable({
   date,
   warehouseId,
   rows,
+  barcodes,
 }: {
   date: string;
   warehouseId: string;
-  rows: StockRow[];
+  rows: Entry[];
+  /** 바코드 → 품목 */
+  barcodes: Map<string, string>;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [counted, setCounted] = useState<Record<string, string>>(() =>
-    Object.fromEntries(rows.map((r) => [r.itemId, String(r.qty)])),
+    Object.fromEntries(rows.map((r) => [r.key, String(r.qty)])),
   );
   const [memo, setMemo] = useState('');
-  const parsed = (r: StockRow) => {
-    const v = counted[r.itemId]?.trim() ?? '';
+  /** 스캔으로 세는 품목: 처음 스캔하면 1부터 센다 */
+  const [scanned, setScanned] = useState<Set<string>>(() => new Set());
+  const scan = (code: string) => {
+    const itemId = barcodes.get(code);
+    const entry = rows.find((r) => r.itemId === itemId);
+    if (!entry) {
+      toast.error(`바코드 ${code}에 맞는 품목이 이 창고 목록에 없습니다.`);
+      return;
+    }
+    if (entry.lotNo) {
+      toast.error(`'${entry.name}'은(는) LOT·시리얼별로 수량을 직접 입력해 주세요.`);
+      return;
+    }
+    const first = !scanned.has(entry.key);
+    setScanned((s) => new Set(s).add(entry.key));
+    setCounted((c) => {
+      const now = first ? 0 : Number(c[entry.key]) || 0;
+      return { ...c, [entry.key]: String(Math.round((now + 1) * 1000) / 1000) };
+    });
+  };
+  const parsed = (r: Entry) => {
+    const v = counted[r.key]?.trim() ?? '';
     const n = Number(v.replaceAll(',', ''));
     return v !== '' && Number.isFinite(n) && n >= 0 ? n : null;
   };
@@ -132,7 +197,7 @@ function CountTable({
           docDate: date,
           warehouseId,
           memo,
-          counts: changed.map((r) => ({ itemId: r.itemId, countedQty: parsed(r) })),
+          counts: changed.map((r) => ({ itemId: r.itemId, lotNo: r.lotNo, countedQty: parsed(r) })),
         },
       }),
     onSuccess: (doc) => {
@@ -146,6 +211,12 @@ function CountTable({
 
   return (
     <div className="grid gap-4">
+      <div className="px-6">
+        <BarcodeInput onScan={scan} />
+        <p className="mt-1 text-xs text-muted-foreground">
+          스캔한 품목은 0부터 다시 세어 한 번에 1개씩 늘어납니다.
+        </p>
+      </div>
       <div className="overflow-x-auto">
         <Table aria-label="재고 실사">
           <TableHeader>
@@ -162,22 +233,25 @@ function CountTable({
               const n = parsed(r);
               const diff = n === null ? null : Math.round((n - r.qty) * 1000) / 1000;
               return (
-                <TableRow key={r.itemId}>
+                <TableRow key={r.key}>
                   <TableCell className="pl-6 tabular-nums">{r.code}</TableCell>
                   <TableCell className="font-medium">
                     {r.name}
                     {r.spec ? <span className="ml-1 text-muted-foreground">{r.spec}</span> : null}
+                    {r.lotNo ? (
+                      <span className="ml-1 text-xs text-muted-foreground">LOT {r.lotNo}</span>
+                    ) : null}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatQty(r.qty)} {r.unit}
                   </TableCell>
                   <TableCell>
                     <Input
-                      aria-label={`${r.name} 실사 수량`}
+                      aria-label={`${r.name}${r.lotNo ? ` ${r.lotNo}` : ''} 실사 수량`}
                       inputMode="decimal"
                       className="text-right"
-                      value={counted[r.itemId] ?? ''}
-                      onChange={(e) => setCounted((c) => ({ ...c, [r.itemId]: e.target.value }))}
+                      value={counted[r.key] ?? ''}
+                      onChange={(e) => setCounted((c) => ({ ...c, [r.key]: e.target.value }))}
                     />
                   </TableCell>
                   <TableCell

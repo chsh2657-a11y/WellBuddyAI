@@ -219,6 +219,8 @@ export const StockRowSchema = z.object({
 export const LedgerQuerySchema = z.object({
   itemId: z.uuid(),
   warehouseId: z.uuid().optional(),
+  /** LOT·시리얼 하나의 이력(추적) */
+  lotNo: z.string().trim().min(1).max(50).optional(),
   from: IsoDate,
   to: IsoDate,
 });
@@ -299,4 +301,32 @@ export const InventoryReconcileSchema = z.object({
       ),
     }),
   ),
+});
+
+export const LotQuerySchema = z.object({
+  itemId: z.uuid().optional(),
+  warehouseId: z.uuid().optional(),
+  date: IsoDate.optional(),
+});
+
+export const LotRowSchema = z.object({
+  itemId: z.uuid(),
+  itemName: z.string(),
+  lotNo: z.string(),
+  warehouseId: z.uuid(),
+  warehouseName: z.string(),
+  qty: z.number(),
+  /** 처음 들어온 날 */
+  firstDate: z.string(),
+});
+
+export const InventoryAlertSchema = z.object({
+  itemId: z.uuid(),
+  code: z.string(),
+  name: z.string(),
+  unit: z.string(),
+  qty: z.number(),
+  safetyStock: z.number(),
+  /** 적정재고까지 모자란 수량 */
+  shortfall: z.number(),
 });

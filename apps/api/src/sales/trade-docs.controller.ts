@@ -16,12 +16,15 @@ import { UuidParam, ZodBody, ZodQuery, ZodResponse } from '../common/zod.js';
 import { TaxInvoiceIssueSchema } from '../evidence/evidence.schemas.js';
 import { InventoryService } from './inventory.service.js';
 import {
+  InventoryAlertSchema,
   InventoryReconcileQuerySchema,
   InventoryReconcileSchema,
   InventorySummaryQuerySchema,
   InventorySummarySchema,
   LedgerQuerySchema,
   LedgerSchema,
+  LotQuerySchema,
+  LotRowSchema,
   StockQuerySchema,
   StockRowSchema,
   TradeDocListQuerySchema,
@@ -111,6 +114,24 @@ export class TradeDocsController {
   @ZodResponse(LedgerSchema, { description: '재고수불부(기간 입출고와 누계)' })
   ledger(@ZodQuery(LedgerQuerySchema) query: z.infer<typeof LedgerQuerySchema>) {
     return this.inventory.ledger(query);
+  }
+
+  @RequirePermission('sales', 'read')
+  @Get('inventory/alerts')
+  @ZodResponse(z.array(InventoryAlertSchema), {
+    description: '적정재고 미달 품목(회사 전체 수량 < 적정재고)과 모자란 수량',
+  })
+  alerts() {
+    return this.inventory.alerts();
+  }
+
+  @RequirePermission('sales', 'read')
+  @Get('inventory/lots')
+  @ZodResponse(z.array(LotRowSchema), {
+    description: 'LOT·시리얼별 재고(LOT·시리얼 관리 품목, 창고별)',
+  })
+  lots(@ZodQuery(LotQuerySchema) query: z.infer<typeof LotQuerySchema>) {
+    return this.inventory.lots(query);
   }
 
   @RequirePermission('sales', 'read')

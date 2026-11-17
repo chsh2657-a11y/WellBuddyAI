@@ -311,6 +311,23 @@ describe('창고 이동·재고 실사·기초재고(P3-10·11)', () => {
     });
   });
 
+  it('적정재고 미달: 회사 전체 수량이 적정재고보다 적은 품목과 모자란 수량', async () => {
+    expect((await owner.get('/api/inventory/alerts').expect(200)).body).toEqual([]);
+    await owner.patch(`/api/items/${item.toner}`).send({ safetyStock: 10 }).expect(200);
+    await owner.patch(`/api/items/${item.product}`).send({ safetyStock: 6 }).expect(200);
+    expect((await owner.get('/api/inventory/alerts').expect(200)).body).toEqual([
+      {
+        itemId: item.toner,
+        code: expect.any(String),
+        name: '토너',
+        unit: 'BOX',
+        qty: 6,
+        safetyStock: 10,
+        shortfall: 4,
+      },
+    ]);
+  });
+
   it('받은 재고를 이미 쓴 창고 이동은 취소하지 못한다', async () => {
     const res = await owner
       .post(`/api/trade-docs/${transfer.id}/cancel`)

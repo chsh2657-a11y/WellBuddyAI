@@ -357,6 +357,8 @@ export const StockCountInputSchema = z.object({
     .array(
       z.object({
         itemId: z.uuid({ error: '품목을 선택해 주세요.' }),
+        /** LOT·시리얼 관리 품목은 LOT 별로 */
+        lotNo: optionalText(50),
         countedQty: NonNegativeQuantitySchema,
       }),
     )

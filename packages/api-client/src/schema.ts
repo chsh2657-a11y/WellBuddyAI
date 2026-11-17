@@ -2308,6 +2308,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/inventory/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_alerts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/inventory/lots': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_lots'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/inventory/summary': {
     parameters: {
       query?: never;
@@ -12926,6 +12958,7 @@ export interface operations {
           counts: {
             /** Format: uuid */
             itemId: string;
+            lotNo?: string | null;
             countedQty: number;
           }[];
         };
@@ -13143,6 +13176,7 @@ export interface operations {
       query: {
         itemId: string;
         warehouseId?: string;
+        lotNo?: string;
         from: string;
         to: string;
       };
@@ -13201,6 +13235,83 @@ export interface operations {
               balanceValue: number;
             }[];
           };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_alerts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 적정재고 미달 품목(회사 전체 수량 < 적정재고)과 모자란 수량 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            itemId: string;
+            code: string;
+            name: string;
+            unit: string;
+            qty: number;
+            safetyStock: number;
+            shortfall: number;
+          }[];
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_lots: {
+    parameters: {
+      query?: {
+        itemId?: string;
+        warehouseId?: string;
+        date?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description LOT·시리얼별 재고(LOT·시리얼 관리 품목, 창고별) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            itemId: string;
+            itemName: string;
+            lotNo: string;
+            /** Format: uuid */
+            warehouseId: string;
+            warehouseName: string;
+            qty: number;
+            firstDate: string;
+          }[];
         };
       };
       /** @description 권한 필요: sales (read) */

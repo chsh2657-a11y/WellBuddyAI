@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   costMoves,
   lineSupply,
+  serialDuplicates,
   type StockMove,
   sortMoves,
   stockShortages,
@@ -163,5 +164,42 @@ describe('재고 부족', () => {
     expect(stockShortages(moves, { byLot: true })).toEqual([
       { itemId: 'A', warehouseId: 'W1', lotNo: 'L2', date: '2026-10-02', short: 1 },
     ]);
+  });
+});
+
+describe('시리얼 중복', () => {
+  const sn = (date: string, qty: number, lotNo: string, extra: Partial<StockMove> = {}) =>
+    move(date, qty, qty > 0 ? 'fixed' : 'average', qty > 0 ? 1000 : undefined, { lotNo, ...extra });
+
+  it('같은 시리얼이 회사 전체에 2개가 되는 날을 찾는다(창고가 달라도)', () => {
+    expect(
+      serialDuplicates([
+        sn('2026-10-01', 1, 'SN1'),
+        sn('2026-10-02', 1, 'SN2'),
+        sn('2026-10-03', 1, 'SN1', { warehouseId: 'W2' }),
+      ]),
+    ).toEqual([{ itemId: 'A', lotNo: 'SN1', date: '2026-10-03' }]);
+  });
+
+  it('나갔다가 다시 들어오면(반품) 중복이 아니고, 같은 날 판매·반품도 하루 끝에서 본다', () => {
+    expect(
+      serialDuplicates([
+        sn('2026-10-01', 1, 'SN1'),
+        sn('2026-10-02', -1, 'SN1'),
+        sn('2026-10-05', 1, 'SN1'),
+        sn('2026-10-06', -1, 'SN1'),
+        sn('2026-10-06', 1, 'SN1'),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('창고 이동은 회사 전체 수량을 바꾸지 않으므로 보지 않는다', () => {
+    expect(
+      serialDuplicates([
+        sn('2026-10-01', 1, 'SN1'),
+        move('2026-10-02', -1, 'none', undefined, { lotNo: 'SN1' }),
+        move('2026-10-02', 1, 'none', undefined, { lotNo: 'SN1', warehouseId: 'W2' }),
+      ]),
+    ).toEqual([]);
   });
 });
