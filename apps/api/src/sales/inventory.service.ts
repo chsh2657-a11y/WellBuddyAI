@@ -364,11 +364,18 @@ export class InventoryService {
           stockMoves.lotNo,
           stockMoves.warehouseId,
           warehouses.name,
-        )
-        .orderBy(asc(items.name), asc(stockMoves.lotNo), asc(warehouses.name));
+        );
+      // DB 정렬 규칙(C·en_US 등)에 따라 한글 순서가 달라지므로 여기서 한국어 순으로 정렬한다
+      const ko = (a: string, b: string) => a.localeCompare(b, 'ko');
       return rows
         .map((r) => ({ ...r, lotNo: r.lotNo!, qty: fromMilli(toMilli(Number(r.qty))) }))
-        .filter((r) => r.qty !== 0);
+        .filter((r) => r.qty !== 0)
+        .sort(
+          (a, b) =>
+            ko(a.itemName, b.itemName) ||
+            ko(a.lotNo, b.lotNo) ||
+            ko(a.warehouseName, b.warehouseName),
+        );
     });
   }
 
