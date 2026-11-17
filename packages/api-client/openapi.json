@@ -28448,6 +28448,544 @@
         ]
       }
     },
+    "/api/inventory/counts": {
+      "post": {
+        "operationId": "TradeDocsController_stockCount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "docDate": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "warehouseId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "memo": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "counts": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "itemId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "countedQty": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 999999999999
+                        }
+                      },
+                      "required": [
+                        "itemId",
+                        "countedQty"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "docDate",
+                  "warehouseId",
+                  "counts"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "재고 실사: 장부와 다른 수량을 재고 조정 문서로 남기고 감모·과잉 전표를 만든다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "quote",
+                        "sales_order",
+                        "shipment",
+                        "sale",
+                        "sales_return",
+                        "purchase_order",
+                        "receipt",
+                        "purchase",
+                        "purchase_return",
+                        "transfer",
+                        "adjustment",
+                        "opening"
+                      ]
+                    },
+                    "kindLabel": {
+                      "type": "string"
+                    },
+                    "docNo": {
+                      "type": "string"
+                    },
+                    "docDate": {
+                      "type": "string"
+                    },
+                    "partnerId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "warehouseId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "toWarehouseId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "sourceDocId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open",
+                        "closed",
+                        "posted",
+                        "cancelled"
+                      ]
+                    },
+                    "evidenceType": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "supplyTotal": {
+                      "type": "number"
+                    },
+                    "vatTotal": {
+                      "type": "number"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "dueDate": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "memo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "partnerName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "partnerBizRegNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "warehouseName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "toWarehouseName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "sourceDoc": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "quote",
+                            "sales_order",
+                            "shipment",
+                            "sale",
+                            "sales_return",
+                            "purchase_order",
+                            "receipt",
+                            "purchase",
+                            "purchase_return",
+                            "transfer",
+                            "adjustment",
+                            "opening"
+                          ]
+                        },
+                        "docNo": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                        "docNo"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdByName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "cancelReason": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "cancelledAt": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "entry": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "number": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "pending",
+                            "posted",
+                            "reversed"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "costEntry": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "number": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "pending",
+                            "posted",
+                            "reversed"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "taxInvoice": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "evidenceId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "issueId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "issued",
+                            "sent",
+                            "failed",
+                            "collected"
+                          ]
+                        },
+                        "approvalNo": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "issueDate": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "number"
+                        },
+                        "sharedWith": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "evidenceId",
+                        "issueId",
+                        "status",
+                        "approvalNo",
+                        "issueDate",
+                        "totalAmount",
+                        "sharedWith"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "lines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "lineNo": {
+                            "type": "number"
+                          },
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "itemCode": {
+                            "type": "string"
+                          },
+                          "itemName": {
+                            "type": "string"
+                          },
+                          "spec": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "qty": {
+                            "type": "number"
+                          },
+                          "unitPrice": {
+                            "type": "number"
+                          },
+                          "supply": {
+                            "type": "number"
+                          },
+                          "vat": {
+                            "type": "number"
+                          },
+                          "warehouseId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "warehouseName": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "sourceLineId": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "lotNo": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "memo": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "processedQty": {
+                            "type": "number"
+                          },
+                          "remainingQty": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "lineNo",
+                          "itemId",
+                          "itemCode",
+                          "itemName",
+                          "spec",
+                          "unit",
+                          "qty",
+                          "unitPrice",
+                          "supply",
+                          "vat",
+                          "warehouseId",
+                          "warehouseName",
+                          "sourceLineId",
+                          "lotNo",
+                          "memo",
+                          "processedQty",
+                          "remainingQty"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "quote",
+                              "sales_order",
+                              "shipment",
+                              "sale",
+                              "sales_return",
+                              "purchase_order",
+                              "receipt",
+                              "purchase",
+                              "purchase_return",
+                              "transfer",
+                              "adjustment",
+                              "opening"
+                            ]
+                          },
+                          "docNo": {
+                            "type": "string"
+                          },
+                          "docDate": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "closed",
+                              "posted",
+                              "cancelled"
+                            ]
+                          },
+                          "total": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "docNo",
+                          "docDate",
+                          "status",
+                          "total"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "kindLabel",
+                    "docNo",
+                    "docDate",
+                    "partnerId",
+                    "warehouseId",
+                    "toWarehouseId",
+                    "sourceDocId",
+                    "status",
+                    "evidenceType",
+                    "supplyTotal",
+                    "vatTotal",
+                    "total",
+                    "dueDate",
+                    "memo",
+                    "createdAt",
+                    "partnerName",
+                    "partnerBizRegNo",
+                    "warehouseName",
+                    "toWarehouseName",
+                    "sourceDoc",
+                    "createdByName",
+                    "cancelReason",
+                    "cancelledAt",
+                    "entry",
+                    "costEntry",
+                    "taxInvoice",
+                    "lines",
+                    "children"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "trade-docs"
+        ]
+      }
+    },
     "/api/inventory/stock": {
       "get": {
         "operationId": "TradeDocsController_stock",

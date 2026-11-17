@@ -1,8 +1,9 @@
 'use client';
 
 import { addDays, formatWon, todayInKorea } from '@wellbuddy/accounting-core';
+import { STOCK_DOC_KINDS } from '@wellbuddy/shared';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { DocsList } from '../_components/docs-list';
 import { formatQty } from '../_lib/trade';
 import type { Warehouse } from '../warehouses/warehouses-manager';
 import { ReconcileView } from './reconcile-view';
@@ -60,7 +62,12 @@ interface Ledger {
   }[];
 }
 
-const VIEWS = { stock: '현재고', summary: '수불현황', reconcile: '장부 대사' } as const;
+const VIEWS = {
+  stock: '현재고',
+  summary: '수불현황',
+  reconcile: '장부 대사',
+  docs: '재고 문서',
+} as const;
 type View = keyof typeof VIEWS;
 
 /** 재고: 현재고·재고수불부, 기간 수불현황, 재고금액–재고자산 계정 대사 */
@@ -81,7 +88,26 @@ export function InventoryView() {
           </Button>
         ))}
       </div>
-      {view === 'stock' ? <StockView /> : view === 'summary' ? <SummaryView /> : <ReconcileView />}
+      {view === 'stock' ? (
+        <StockView />
+      ) : view === 'summary' ? (
+        <SummaryView />
+      ) : view === 'reconcile' ? (
+        <ReconcileView />
+      ) : (
+        <DocsList
+          kinds={STOCK_DOC_KINDS}
+          label="재고 문서"
+          actions={
+            <Button asChild size="sm" variant="outline">
+              <Link href="/sales/inventory/count">
+                <ClipboardCheck />
+                재고 실사
+              </Link>
+            </Button>
+          }
+        />
+      )}
     </div>
   );
 }

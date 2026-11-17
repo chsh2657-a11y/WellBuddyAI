@@ -284,13 +284,14 @@ export class TradePostingService {
    * 매출원가 전표: 재고 이동 금액(이동평균)으로 만든다.
    * - 출고·판매(직접): (차) 매출원가 / (대) 재고자산
    * - 판매반품: (차) 재고자산 / (대) 매출원가
+   * - 재고 조정(실사): 줄면 (차) 매출원가 / (대) 재고자산, 늘면 그 반대
    */
   private async costEntry(
     tx: Transaction,
     doc: Doc,
     ctx: NonNullable<Awaited<ReturnType<TradePostingService['context']>>>,
   ): Promise<DesiredEntry | null> {
-    if (!['shipment', 'sale', 'sales_return'].includes(doc.kind)) return null;
+    if (!['shipment', 'sale', 'sales_return', 'adjustment'].includes(doc.kind)) return null;
     const amounts = await this.moveAmountsIn(tx, doc.id);
     const debit = new Map<string, number>();
     const credit = new Map<string, number>();
@@ -320,7 +321,10 @@ export class TradePostingService {
       entryDate: doc.docDate,
       type: 'general',
       vat: null,
-      description: `[매출원가] ${this.description(doc, ctx.partnerName)}`,
+      description:
+        doc.kind === 'adjustment'
+          ? this.description(doc, ctx.partnerName)
+          : `[매출원가] ${this.description(doc, ctx.partnerName)}`,
       lines,
     };
   }

@@ -10,7 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -32,10 +32,13 @@ import { STATUS_VARIANT, TRADE_DOCS_KEY, type TradeDocSummary } from '../_lib/tr
 export function DocsList({
   kinds,
   label,
+  actions,
 }: {
   /** 이 목록에 보일 문서 종류(순서대로 칩·새 문서 버튼) */
   kinds: readonly TradeDocKind[];
   label: string;
+  /** 새 문서 버튼 옆에 더 둘 버튼(예: 재고 실사) */
+  actions?: ReactNode;
 }) {
   const { data: session } = useSession();
   const writable = can(session, 'sales', 'write');
@@ -85,6 +88,7 @@ export function DocsList({
                   </Link>
                 </Button>
               ))}
+              {actions}
             </div>
           ) : null}
         </div>

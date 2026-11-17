@@ -252,7 +252,7 @@ export const TRADE_DOC_SOURCES: Partial<Record<TradeDocKind, readonly TradeDocKi
   purchase_return: ['purchase'],
 };
 
-/** 지금 입력할 수 있는 문서(창고 이동·재고 조정·기초재고는 다음 단계에서 연다) */
+/** 거래 문서 화면에서 직접 입력하는 문서(재고 조정은 재고 실사에서 만든다) */
 export const ENABLED_TRADE_DOC_KINDS: readonly TradeDocKind[] = [
   'quote',
   'sales_order',
@@ -263,6 +263,8 @@ export const ENABLED_TRADE_DOC_KINDS: readonly TradeDocKind[] = [
   'receipt',
   'purchase',
   'purchase_return',
+  'transfer',
+  'opening',
 ];
 
 /** 앞 문서에서 줄을 그대로 옮기는 전환(수량 고정): 입고 → 구매, 출고 → 판매 */
@@ -345,3 +347,20 @@ export const TradeTaxInvoiceIssueSchema = z.object({
   ),
 });
 export type TradeTaxInvoiceIssueInput = z.infer<typeof TradeTaxInvoiceIssueSchema>;
+
+/** 재고 실사(P3-11): 창고·기준일의 품목별 실사 수량. 장부 수량과 다른 품목만 재고 조정으로 남긴다 */
+export const StockCountInputSchema = z.object({
+  docDate: IsoDate,
+  warehouseId: z.uuid({ error: '창고를 선택해 주세요.' }),
+  memo: optionalText(500),
+  counts: z
+    .array(
+      z.object({
+        itemId: z.uuid({ error: '품목을 선택해 주세요.' }),
+        countedQty: NonNegativeQuantitySchema,
+      }),
+    )
+    .min(1, { error: '실사 수량을 하나 이상 입력해 주세요.' })
+    .max(1000, { error: '한 번에 1,000개 품목까지 실사할 수 있습니다.' }),
+});
+export type StockCountInput = z.infer<typeof StockCountInputSchema>;

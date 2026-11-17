@@ -79,12 +79,12 @@ const emptyRow = (): Row => ({
   maxQty: null,
 });
 
-function amounts(row: Row, item: Item | undefined) {
+function amounts(row: Row, item: Item | undefined, withVat = true) {
   const qty = Number(row.qty);
   if (!item || !(qty > 0)) return { supply: 0, vat: 0 };
   try {
     const supply = lineSupply(qty, row.unitPrice);
-    return { supply, vat: vatFromSupply(supply, item.vatType as VatType).vat };
+    return { supply, vat: withVat ? vatFromSupply(supply, item.vatType as VatType).vat : 0 };
   } catch {
     return { supply: 0, vat: 0 };
   }
@@ -127,10 +127,15 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
   const queryClient = useQueryClient();
   const side = (SALES_DOC_KINDS as readonly string[]).includes(kind) ? 'sales' : 'purchase';
   const full = !!source && FULL_CONVERSIONS[kind] === source.kind;
+  /** 창고 이동·기초재고: 거래처·증빙·부가세가 없다. 창고 이동은 금액도 없다 */
+  const stockDoc = kind === 'transfer' || kind === 'opening';
+  const showPrice = kind !== 'transfer';
   const [docDate, setDocDate] = useState(todayInKorea());
   const [partnerId, setPartnerId] = useState<string | null>(source?.partnerId ?? null);
   /** 비어 있으면 첫 창고 */
   const [warehouseChoice, setWarehouseChoice] = useState(source?.warehouseId ?? '');
+  /** 창고 이동의 받는 창고(비어 있으면 보내는 창고가 아닌 첫 창고) */
+  const [toWarehouseChoice, setToWarehouseChoice] = useState('');
   const [evidenceType, setEvidenceType] = useState(source?.evidenceType ?? '');
   const [dueDate, setDueDate] = useState('');
   const [memo, setMemo] = useState('');
@@ -146,6 +151,8 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
     queryFn: () => apiFetch<Warehouse[]>('/warehouses'),
   });
   const warehouseId = warehouseChoice || warehouses.data?.[0]?.id || '';
+  const toWarehouseId =
+    toWarehouseChoice || warehouses.data?.find((w) => w.id !== warehouseId)?.id || '';
   const itemById = new Map(items.data?.map((i) => [i.id, i]));
 
   async function lookupPrice(itemId: string, partner: string | null) {
@@ -157,7 +164,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
 
   async function chooseItem(key: number, itemId: string | null) {
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, itemId, priceTouched: false } : r)));
-    if (!itemId) return;
+    if (!itemId || !showPrice) return;
     const price = await lookupPrice(itemId, partnerId);
     setRows((rs) =>
       rs.map((r) => (r.key === key && r.itemId === itemId && !r.priceTouched ? { ...r, unitPrice: price } : r)),
@@ -181,7 +188,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
 
   const totals = rows.reduce(
     (t, r) => {
-      const a = amounts(r, r.itemId ? itemById.get(r.itemId) : undefined);
+      const a = amounts(r, r.itemId ? itemById.get(r.itemId) : undefined, !stockDoc);
       return { supply: t.supply + a.supply, vat: t.vat + a.vat };
     },
     { supply: 0, vat: 0 },
@@ -194,10 +201,11 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
         json: {
           kind,
           docDate,
-          partnerId,
+          partnerId: stockDoc ? null : partnerId,
           warehouseId: warehouseId || null,
+          toWarehouseId: kind === 'transfer' ? toWarehouseId || null : null,
           sourceDocId: source?.id ?? null,
-          evidenceType: evidenceType || null,
+          evidenceType: stockDoc ? null : evidenceType || null,
           dueDate: dueDate || null,
           memo,
           lines: rows
@@ -205,7 +213,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
             .map((r) => ({
               itemId: r.itemId,
               qty: Number(r.qty),
-              unitPrice: r.unitPrice,
+              unitPrice: showPrice ? r.unitPrice : null,
               sourceLineId: r.sourceLineId,
             })),
         },
@@ -219,7 +227,7 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
     onError: (e) => toast.error(e instanceof ApiError ? e.message : '저장하지 못했습니다.'),
   });
 
-  const stockOnly = kind === 'receipt' || kind === 'shipment';
+  const stockOnly = kind === 'receipt' || kind === 'shipment' || stockDoc;
   const itemOptions = (items.data ?? [])
     .filter((i) => !stockOnly || isStockItem(i.kind))
     .map((i) => ({ id: i.id, code: i.code, name: i.name, hint: i.spec ?? undefined }));
@@ -241,17 +249,19 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
           <FormField id="doc-date" label="일자">
             <Input id="doc-date" type="date" value={docDate} onChange={(e) => setDocDate(e.target.value)} />
           </FormField>
-          <FormField id="doc-partner" label="거래처">
-            <Combobox
-              aria-label="거래처"
-              items={partners.data ?? []}
-              value={partnerId}
-              onChange={(id) => void choosePartner(id)}
-              disabled={!!source?.partnerId}
-              placeholder="거래처 검색"
-            />
-          </FormField>
-          <FormField id="doc-warehouse" label="창고">
+          {!stockDoc ? (
+            <FormField id="doc-partner" label="거래처">
+              <Combobox
+                aria-label="거래처"
+                items={partners.data ?? []}
+                value={partnerId}
+                onChange={(id) => void choosePartner(id)}
+                disabled={!!source?.partnerId}
+                placeholder="거래처 검색"
+              />
+            </FormField>
+          ) : null}
+          <FormField id="doc-warehouse" label={kind === 'transfer' ? '보내는 창고' : '창고'}>
             <Select
               id="doc-warehouse"
               value={warehouseId}
@@ -265,7 +275,24 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
               ))}
             </Select>
           </FormField>
-          {isOrderKind(kind) ? (
+          {kind === 'transfer' ? (
+            <FormField id="doc-to-warehouse" label="받는 창고">
+              <Select
+                id="doc-to-warehouse"
+                value={toWarehouseId}
+                onChange={(e) => setToWarehouseChoice(e.target.value)}
+              >
+                {warehouses.data
+                  ?.filter((w) => w.id !== warehouseId)
+                  .map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+              </Select>
+            </FormField>
+          ) : null}
+          {stockDoc ? null : isOrderKind(kind) ? (
             <FormField id="doc-due" label={kind === 'quote' ? '유효기한' : '납기'}>
               <Input id="doc-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </FormField>
@@ -290,16 +317,20 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
                 <TableHead className="min-w-64">품목</TableHead>
                 <TableHead className="w-16">단위</TableHead>
                 <TableHead className="w-28">수량</TableHead>
-                <TableHead className="w-36">단가</TableHead>
-                <TableHead className="w-32 text-right">공급가액</TableHead>
-                <TableHead className="w-28 text-right">부가세</TableHead>
+                {showPrice ? (
+                  <>
+                    <TableHead className="w-36">{stockDoc ? '단가(원가)' : '단가'}</TableHead>
+                    <TableHead className="w-32 text-right">{stockDoc ? '금액' : '공급가액'}</TableHead>
+                  </>
+                ) : null}
+                {!stockDoc ? <TableHead className="w-28 text-right">부가세</TableHead> : null}
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((r, i) => {
                 const item = r.itemId ? itemById.get(r.itemId) : undefined;
-                const a = amounts(r, item);
+                const a = amounts(r, item, !stockDoc);
                 const n = i + 1;
                 return (
                   <TableRow key={r.key}>
@@ -328,15 +359,21 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
                         <p className="mt-1 text-xs text-muted-foreground">최대 {formatQty(r.maxQty)}</p>
                       ) : null}
                     </TableCell>
-                    <TableCell>
-                      <WonInput
-                        aria-label={`${n}행 단가`}
-                        value={r.unitPrice}
-                        onValueChange={(v) => update(r.key, { unitPrice: v, priceTouched: true })}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatWon(a.supply)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{formatWon(a.vat)}</TableCell>
+                    {showPrice ? (
+                      <>
+                        <TableCell>
+                          <WonInput
+                            aria-label={`${n}행 단가`}
+                            value={r.unitPrice}
+                            onValueChange={(v) => update(r.key, { unitPrice: v, priceTouched: true })}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{formatWon(a.supply)}</TableCell>
+                      </>
+                    ) : null}
+                    {!stockDoc ? (
+                      <TableCell className="text-right tabular-nums">{formatWon(a.vat)}</TableCell>
+                    ) : null}
                     <TableCell>
                       {!full ? (
                         <Button
@@ -353,16 +390,20 @@ function DocFormBody({ kind, source }: { kind: TradeDocKind; source: TradeDoc | 
                 );
               })}
             </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={5} className="text-right font-medium">
-                  합계 {formatWon(totals.supply + totals.vat)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">{formatWon(totals.supply)}</TableCell>
-                <TableCell className="text-right tabular-nums">{formatWon(totals.vat)}</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableFooter>
+            {showPrice ? (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5} className="text-right font-medium">
+                    합계 {formatWon(totals.supply + totals.vat)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatWon(totals.supply)}</TableCell>
+                  {!stockDoc ? (
+                    <TableCell className="text-right tabular-nums">{formatWon(totals.vat)}</TableCell>
+                  ) : null}
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            ) : null}
           </Table>
         </div>
         {!full ? (

@@ -2260,6 +2260,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/inventory/counts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TradeDocsController_stockCount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/inventory/stock': {
     parameters: {
       query?: never;
@@ -12880,6 +12896,184 @@ export interface operations {
             tradeDocId: string | null;
             tradeDocNo: string | null;
             createdAt: string;
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_stockCount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          docDate: string;
+          /** Format: uuid */
+          warehouseId: string;
+          memo?: string | null;
+          counts: {
+            /** Format: uuid */
+            itemId: string;
+            countedQty: number;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description 재고 실사: 장부와 다른 수량을 재고 조정 문서로 남기고 감모·과잉 전표를 만든다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind:
+              | 'quote'
+              | 'sales_order'
+              | 'shipment'
+              | 'sale'
+              | 'sales_return'
+              | 'purchase_order'
+              | 'receipt'
+              | 'purchase'
+              | 'purchase_return'
+              | 'transfer'
+              | 'adjustment'
+              | 'opening';
+            kindLabel: string;
+            docNo: string;
+            docDate: string;
+            /** Format: uuid */
+            partnerId: string | null;
+            /** Format: uuid */
+            warehouseId: string | null;
+            /** Format: uuid */
+            toWarehouseId: string | null;
+            /** Format: uuid */
+            sourceDocId: string | null;
+            /** @enum {string} */
+            status: 'open' | 'closed' | 'posted' | 'cancelled';
+            evidenceType: string | null;
+            supplyTotal: number;
+            vatTotal: number;
+            total: number;
+            dueDate: string | null;
+            memo: string | null;
+            createdAt: string;
+            partnerName: string | null;
+            partnerBizRegNo: string | null;
+            warehouseName: string | null;
+            toWarehouseName: string | null;
+            sourceDoc: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+            } | null;
+            createdByName: string | null;
+            cancelReason: string | null;
+            cancelledAt: string | null;
+            entry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            costEntry: {
+              /** Format: uuid */
+              id: string;
+              number: string;
+              /** @enum {string} */
+              status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            taxInvoice: {
+              /** Format: uuid */
+              evidenceId: string | null;
+              /** Format: uuid */
+              issueId: string | null;
+              /** @enum {string} */
+              status: 'issued' | 'sent' | 'failed' | 'collected';
+              approvalNo: string | null;
+              issueDate: string;
+              totalAmount: number;
+              sharedWith: number;
+            } | null;
+            lines: {
+              /** Format: uuid */
+              id: string;
+              lineNo: number;
+              /** Format: uuid */
+              itemId: string;
+              itemCode: string;
+              itemName: string;
+              spec: string | null;
+              unit: string;
+              qty: number;
+              unitPrice: number;
+              supply: number;
+              vat: number;
+              /** Format: uuid */
+              warehouseId: string | null;
+              warehouseName: string | null;
+              /** Format: uuid */
+              sourceLineId: string | null;
+              lotNo: string | null;
+              memo: string | null;
+              processedQty: number;
+              remainingQty: number;
+            }[];
+            children: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind:
+                | 'quote'
+                | 'sales_order'
+                | 'shipment'
+                | 'sale'
+                | 'sales_return'
+                | 'purchase_order'
+                | 'receipt'
+                | 'purchase'
+                | 'purchase_return'
+                | 'transfer'
+                | 'adjustment'
+                | 'opening';
+              docNo: string;
+              docDate: string;
+              /** @enum {string} */
+              status: 'open' | 'closed' | 'posted' | 'cancelled';
+              total: number;
+            }[];
           };
         };
       };

@@ -179,6 +179,10 @@ export const tradeDocs = pgTable(
     ),
     check('trade_docs_status_ck', sql`status in ('open', 'closed', 'posted', 'cancelled')`),
     check('trade_docs_total_ck', sql`total = supply_total + vat_total`),
+    check(
+      'trade_docs_transfer_ck',
+      sql`kind <> 'transfer' or (to_warehouse_id is not null and to_warehouse_id <> warehouse_id)`,
+    ),
     tenantIsolationPolicy(),
   ],
 );
@@ -213,7 +217,8 @@ export const tradeDocLines = pgTable(
     index('trade_doc_lines_doc_idx').on(t.docId),
     index('trade_doc_lines_source_idx').on(t.sourceLineId),
     index('trade_doc_lines_item_idx').on(t.companyId, t.itemId),
-    check('trade_doc_lines_qty_ck', sql`qty > 0`),
+    /** 재고 조정 줄만 음수(감소)가 될 수 있다(서비스에서 확인) */
+    check('trade_doc_lines_qty_ck', sql`qty <> 0`),
     check('trade_doc_lines_amount_ck', sql`unit_price >= 0 and supply >= 0 and vat >= 0`),
     tenantIsolationPolicy(),
   ],

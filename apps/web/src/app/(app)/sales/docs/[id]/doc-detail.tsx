@@ -101,9 +101,11 @@ export function DocDetail({ id }: { id: string }) {
               <Badge variant={STATUS_VARIANT[d.status]}>{TRADE_DOC_STATUS_LABELS[d.status]}</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              {d.docDate} · {d.partnerName ?? '거래처 없음'}
+              {d.docDate}
+              {d.partnerName ? ` · ${d.partnerName}` : ''}
               {d.partnerBizRegNo ? ` (${formatBizRegNo(d.partnerBizRegNo)})` : ''} ·{' '}
               {d.warehouseName ?? '창고 없음'}
+              {d.toWarehouseName ? ` → ${d.toWarehouseName}` : ''}
               {d.createdByName ? ` · 작성 ${d.createdByName}` : ''}
             </p>
             {d.cancelReason ? (

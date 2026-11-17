@@ -1,6 +1,8 @@
 import { Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  type StockCountInput,
+  StockCountInputSchema,
   type TradeDocCancelInput,
   TradeDocCancelSchema,
   type TradeDocInput,
@@ -83,6 +85,16 @@ export class TradeDocsController {
     @ZodBody(TradeTaxInvoiceIssueSchema) body: TradeTaxInvoiceIssueInput,
   ) {
     return this.taxInvoices.issue(id, body);
+  }
+
+  @RequirePermission('sales', 'write')
+  @Post('inventory/counts')
+  @ZodResponse(TradeDocSchema, {
+    status: 201,
+    description: '재고 실사: 장부와 다른 수량을 재고 조정 문서로 남기고 감모·과잉 전표를 만든다',
+  })
+  stockCount(@ZodBody(StockCountInputSchema) body: StockCountInput) {
+    return this.docs.stockCount(body);
   }
 
   @RequirePermission('sales', 'read')

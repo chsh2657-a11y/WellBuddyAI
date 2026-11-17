@@ -1,5 +1,11 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { lineSupply, MoneyError, vatFromSupply } from '@wellbuddy/accounting-core';
+import {
+  fromMilli,
+  lineSupply,
+  MoneyError,
+  toMilli,
+  vatFromSupply,
+} from '@wellbuddy/accounting-core';
 import {
   items,
   journalEntries,
@@ -21,6 +27,7 @@ import {
   isStockItem,
   PURCHASE_DOC_KINDS,
   SALES_DOC_KINDS,
+  type StockCountInput,
   TRADE_DOC_KIND_LABELS,
   TRADE_DOC_PREFIXES,
   TRADE_DOC_SOURCES,
@@ -28,7 +35,21 @@ import {
   type TradeDocKind,
   type TradeDocStatus,
 } from '@wellbuddy/shared';
-import { and, asc, count, desc, eq, gte, ilike, inArray, like, lte, ne, or } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  like,
+  lte,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { AuditService } from '../audit/audit.service.js';
 import { isForeignKeyViolation, isUniqueViolation } from '../common/db-errors.js';
@@ -335,13 +356,20 @@ export class TradeDocsService {
 
   // ── 작성 ─────────────────────────────────────────────
 
-  async create(input: TradeDocInput) {
+  /** internal: 재고 실사가 만드는 재고 조정(줄 수량이 음수일 수 있다) */
+  async create(input: TradeDocInput, options: { internal?: boolean } = {}) {
     const { companyId, userId } = requireCompanyContext();
-    if (!ENABLED_TRADE_DOC_KINDS.includes(input.kind)) {
+    if (input.kind === 'adjustment' && !options.internal) {
+      throw new AppException('USE_STOCK_COUNT', '재고 조정은 재고 실사에서 입력해 주세요.');
+    }
+    if (!ENABLED_TRADE_DOC_KINDS.includes(input.kind) && !options.internal) {
       throw new AppException(
         'KIND_NOT_READY',
         `${TRADE_DOC_KIND_LABELS[input.kind]}는 아직 입력할 수 없습니다.`,
       );
+    }
+    if (input.kind === 'transfer' && !input.toWarehouseId) {
+      throw new AppException('TO_WAREHOUSE_REQUIRED', '받는 창고를 선택해 주세요.');
     }
     try {
       const id = await this.db.tenant(async (tx) => {
@@ -396,16 +424,22 @@ export class TradeDocsService {
           input.warehouseId ??
           source?.warehouseId ??
           (await this.warehousesService.ensureDefaultIn(tx)).id;
+        if (kind === 'transfer' && input.toWarehouseId === warehouseId) {
+          throw new AppException('SAME_WAREHOUSE', '보내는 창고와 받는 창고가 같습니다.');
+        }
+        // 창고 이동·재고 조정은 금액을 정하지 않는다(원가는 이동평균이 정한다)
+        const valued = kind !== 'transfer' && kind !== 'adjustment';
         const side = (SALES_DOC_KINDS as readonly string[]).includes(kind) ? 'sales' : 'purchase';
         const prices = await this.itemsService.pricesIn(tx, side, itemIds, input.partnerId);
         const lines = input.lines.map((l, i) => {
           const item = itemById.get(l.itemId)!;
           const fromSource = l.sourceLineId ? sourceLineById.get(l.sourceLineId) : undefined;
-          const unitPrice =
-            l.unitPrice ?? fromSource?.unitPrice ?? prices.get(l.itemId)?.unitPrice ?? 0;
-          let supply: number;
+          const unitPrice = valued
+            ? (l.unitPrice ?? fromSource?.unitPrice ?? prices.get(l.itemId)?.unitPrice ?? 0)
+            : 0;
+          let supply = 0;
           try {
-            supply = lineSupply(l.qty, unitPrice);
+            if (valued) supply = lineSupply(l.qty, unitPrice);
           } catch (e) {
             if (e instanceof MoneyError)
               throw new AppException('AMOUNT_INVALID', `${i + 1}행: ${e.message}`);
@@ -419,7 +453,10 @@ export class TradeDocsService {
             unitPrice,
             supply,
             vat,
-            warehouseId: l.warehouseId ?? fromSource?.warehouseId ?? warehouseId,
+            warehouseId:
+              kind === 'transfer'
+                ? warehouseId
+                : (l.warehouseId ?? fromSource?.warehouseId ?? warehouseId),
             sourceLineId: l.sourceLineId ?? null,
             lotNo: l.lotNo ?? null,
             memo: l.memo ?? null,
@@ -437,7 +474,7 @@ export class TradeDocsService {
             docDate: input.docDate,
             partnerId: input.partnerId ?? null,
             warehouseId,
-            toWarehouseId: input.toWarehouseId ?? null,
+            toWarehouseId: kind === 'transfer' ? (input.toWarehouseId ?? null) : null,
             sourceDocId: source?.id ?? null,
             status: isOrderKind(kind) ? 'open' : 'posted',
             evidenceType: needsPartner(kind) ? (input.evidenceType ?? null) : null,
@@ -667,6 +704,28 @@ export class TradeDocsService {
   ) {
     const { companyId } = requireCompanyContext();
     // 금액이 정해진 이동(입고·구매·구매반품)과 이동평균으로 정하는 이동(출고·판매·판매반품)
+    if (doc.kind === 'transfer') {
+      // 창고 이동: 보내는 창고에서 빼고 받는 창고에 넣는다. 품목 원가(회사 전체 이동평균)는 그대로
+      const rows = lines.flatMap((l) =>
+        [
+          { warehouseId: doc.warehouseId!, qty: -l.qty },
+          { warehouseId: doc.toWarehouseId!, qty: l.qty },
+        ].map((m) => ({
+          companyId,
+          itemId: l.itemId,
+          warehouseId: m.warehouseId,
+          moveDate: doc.docDate,
+          qty: m.qty,
+          amount: 0,
+          costing: 'none' as const,
+          docId: doc.id,
+          docLineId: l.id,
+          lotNo: l.lotNo,
+        })),
+      );
+      if (rows.length) await tx.insert(stockMoves).values(rows);
+      return;
+    }
     const plan: Record<string, { sign: 1 | -1; costing: 'fixed' | 'average' } | null> = {
       receipt: { sign: 1, costing: 'fixed' },
       purchase: source?.kind === 'receipt' ? null : { sign: 1, costing: 'fixed' },
@@ -674,6 +733,9 @@ export class TradeDocsService {
       shipment: { sign: -1, costing: 'average' },
       sale: source?.kind === 'shipment' ? null : { sign: -1, costing: 'average' },
       sales_return: { sign: 1, costing: 'average' },
+      opening: { sign: 1, costing: 'fixed' },
+      // 재고 조정 줄은 수량에 부호가 있다(늘면 +, 줄면 -)
+      adjustment: { sign: 1, costing: 'average' },
     };
     const rule = plan[doc.kind];
     if (!rule) return;
@@ -768,6 +830,64 @@ export class TradeDocsService {
   }
 
   // ── 취소 ─────────────────────────────────────────────
+
+  /**
+   * 재고 실사(P3-11): 창고·기준일의 장부 수량과 실사 수량의 차이를 재고 조정 문서로 남긴다.
+   * 줄면 이동평균 원가로 매출원가/재고자산, 늘면 그 반대 전표가 생긴다.
+   */
+  async stockCount(input: StockCountInput) {
+    const ids = input.counts.map((c) => c.itemId);
+    if (new Set(ids).size !== ids.length) {
+      throw new AppException('DUPLICATE_ITEM', '같은 품목을 두 번 입력했습니다.');
+    }
+    const lines = await this.db.tenant(async (tx) => {
+      const book = await tx
+        .select({ itemId: stockMoves.itemId, qty: sql<string>`sum(${stockMoves.qty})` })
+        .from(stockMoves)
+        .where(
+          and(
+            eq(stockMoves.warehouseId, input.warehouseId),
+            inArray(stockMoves.itemId, ids),
+            lte(stockMoves.moveDate, input.docDate),
+          ),
+        )
+        .groupBy(stockMoves.itemId);
+      const bookQty = new Map(book.map((b) => [b.itemId, toMilli(Number(b.qty))]));
+      return input.counts.flatMap((c) => {
+        const diff = toMilli(c.countedQty) - (bookQty.get(c.itemId) ?? 0);
+        return diff === 0 ? [] : [{ itemId: c.itemId, qty: fromMilli(diff) }];
+      });
+    });
+    if (lines.length === 0) {
+      throw new AppException(
+        'NO_DIFFERENCE',
+        '장부 수량과 실사 수량이 모두 같아 조정할 것이 없습니다.',
+      );
+    }
+    return this.create(
+      {
+        kind: 'adjustment',
+        docDate: input.docDate,
+        warehouseId: input.warehouseId,
+        partnerId: null,
+        toWarehouseId: null,
+        sourceDocId: null,
+        evidenceType: null,
+        dueDate: null,
+        memo: input.memo ?? '재고 실사',
+        lines: lines.map((l) => ({
+          itemId: l.itemId,
+          qty: l.qty,
+          unitPrice: null,
+          warehouseId: null,
+          sourceLineId: null,
+          lotNo: null,
+          memo: null,
+        })),
+      },
+      { internal: true },
+    );
+  }
 
   async cancel(id: string, reason: string) {
     const { userId } = requireCompanyContext();

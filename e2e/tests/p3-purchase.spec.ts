@@ -85,6 +85,8 @@ test('구매 흐름: 발주서 → 입고(일부) → 구매(단가 수정) → 
   await page.getByLabel('1행 단가').fill('39000');
   await page.getByRole('button', { name: '저장' }).click();
   await expect(page.getByText(/구매 PU-\d{8}-001을\(를\) 저장했습니다\./)).toBeVisible();
+  // 토스트가 먼저 뜨고 상세 화면으로 넘어가므로 주소가 바뀐 뒤에 기억한다
+  await page.waitForURL(/\/sales\/docs\/[0-9a-f-]{36}$/);
   const purchaseUrl = page.url();
   await expect(page.getByRole('table', { name: '문서 줄' }).locator('tfoot')).toContainText(
     '합계 257,400',
