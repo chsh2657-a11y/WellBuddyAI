@@ -128,6 +128,19 @@ export const TradeDocSchema = TradeDocHeaderSchema.extend({
   cancelledAt: z.string().nullable(),
   entry: EntryRefSchema,
   costEntry: EntryRefSchema,
+  /** 짝지은 세금계산서: 이 판매에서 발행(issueId)했거나 수집한 것을 자동으로 이은 것(collected) */
+  taxInvoice: z
+    .object({
+      evidenceId: z.uuid().nullable(),
+      issueId: z.uuid().nullable(),
+      status: z.enum(['issued', 'sent', 'failed', 'collected']),
+      approvalNo: z.string().nullable(),
+      issueDate: z.string(),
+      totalAmount: z.number(),
+      /** 월합계로 함께 이은 다른 문서 수 */
+      sharedWith: z.number(),
+    })
+    .nullable(),
   lines: z.array(
     z.object({
       id: z.uuid(),
@@ -230,6 +243,60 @@ export const LedgerSchema = z.object({
       amount: z.number(),
       balanceQty: z.number(),
       balanceValue: z.number(),
+    }),
+  ),
+});
+
+export const InventorySummaryQuerySchema = z.object({
+  from: IsoDate,
+  to: IsoDate,
+  warehouseId: z.uuid().optional(),
+});
+
+const QtyValue = z.object({ qty: z.number(), value: z.number() });
+
+export const InventorySummarySchema = z.object({
+  rows: z.array(
+    z.object({
+      itemId: z.uuid(),
+      code: z.string(),
+      name: z.string(),
+      spec: z.string().nullable(),
+      unit: z.string(),
+      opening: QtyValue,
+      in: QtyValue,
+      out: QtyValue,
+      closing: QtyValue,
+    }),
+  ),
+  totals: z.object({ opening: z.number(), in: z.number(), out: z.number(), closing: z.number() }),
+});
+
+export const InventoryReconcileQuerySchema = z.object({ date: IsoDate.optional() });
+
+export const InventoryReconcileSchema = z.object({
+  date: z.string(),
+  balanced: z.boolean(),
+  rows: z.array(
+    z.object({
+      accountId: z.uuid(),
+      code: z.string(),
+      name: z.string(),
+      stockValue: z.number(),
+      ledgerBalance: z.number(),
+      difference: z.number(),
+      /** 승인을 기다리는 영업 전표(장부 잔액에 아직 없음) */
+      pendingTrade: z.number(),
+      /** 재고 계정을 직접 움직인 일반 전표(차이의 원인 후보) */
+      otherEntries: z.array(
+        z.object({
+          id: z.uuid(),
+          number: z.string(),
+          date: z.string(),
+          description: z.string().nullable(),
+          amount: z.number(),
+        }),
+      ),
     }),
   ),
 });

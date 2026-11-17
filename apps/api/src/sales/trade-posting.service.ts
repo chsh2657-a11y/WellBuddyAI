@@ -22,6 +22,7 @@ import { and, eq, inArray, ne } from 'drizzle-orm';
 import { JournalsService } from '../accounting/journals.service.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
+import { moveInvoiceEntryIn } from './trade-invoices.js';
 
 type Doc = typeof tradeDocs.$inferSelect;
 type Item = typeof items.$inferSelect;
@@ -78,6 +79,10 @@ export class TradePostingService {
         .update(tradeDocs)
         .set({ entryId, costEntryId, updatedAt: new Date() })
         .where(eq(tradeDocs.id, doc.id));
+    }
+    // 짝지은 세금계산서는 새 매출·매입 전표를 가리키게 한다
+    if (entryId && entryId !== doc.entryId && doc.taxInvoiceId) {
+      await moveInvoiceEntryIn(tx, doc.taxInvoiceId, doc.entryId, entryId);
     }
   }
 

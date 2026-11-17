@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -22,6 +23,8 @@ import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatQty } from '../_lib/trade';
 import type { Warehouse } from '../warehouses/warehouses-manager';
+import { ReconcileView } from './reconcile-view';
+import { SummaryView } from './summary-view';
 
 interface StockRow {
   itemId: string;
@@ -57,8 +60,34 @@ interface Ledger {
   }[];
 }
 
-/** 재고: 현재고(품목·창고별 수량, 이동평균 재고금액)와 품목을 고르면 재고수불부 */
+const VIEWS = { stock: '현재고', summary: '수불현황', reconcile: '장부 대사' } as const;
+type View = keyof typeof VIEWS;
+
+/** 재고: 현재고·재고수불부, 기간 수불현황, 재고금액–재고자산 계정 대사 */
 export function InventoryView() {
+  const [view, setView] = useState<View>('stock');
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap gap-1" role="group" aria-label="재고 보기">
+        {(Object.keys(VIEWS) as View[]).map((v) => (
+          <Button
+            key={v}
+            size="sm"
+            variant={view === v ? 'default' : 'outline'}
+            aria-pressed={view === v}
+            onClick={() => setView(v)}
+          >
+            {VIEWS[v]}
+          </Button>
+        ))}
+      </div>
+      {view === 'stock' ? <StockView /> : view === 'summary' ? <SummaryView /> : <ReconcileView />}
+    </div>
+  );
+}
+
+/** 현재고(품목·창고별 수량, 이동평균 재고금액)와 품목을 고르면 재고수불부 */
+function StockView() {
   const [date, setDate] = useState(todayInKorea());
   const [warehouseId, setWarehouseId] = useState('');
   const [itemId, setItemId] = useState<string | null>(null);

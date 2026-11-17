@@ -5,12 +5,19 @@ import {
   TradeDocCancelSchema,
   type TradeDocInput,
   TradeDocInputSchema,
+  type TradeTaxInvoiceIssueInput,
+  TradeTaxInvoiceIssueSchema,
 } from '@wellbuddy/shared';
 import { z } from 'zod';
 import { RequirePermission } from '../auth/decorators.js';
 import { UuidParam, ZodBody, ZodQuery, ZodResponse } from '../common/zod.js';
+import { TaxInvoiceIssueSchema } from '../evidence/evidence.schemas.js';
 import { InventoryService } from './inventory.service.js';
 import {
+  InventoryReconcileQuerySchema,
+  InventoryReconcileSchema,
+  InventorySummaryQuerySchema,
+  InventorySummarySchema,
   LedgerQuerySchema,
   LedgerSchema,
   StockQuerySchema,
@@ -20,6 +27,7 @@ import {
   TradeDocSchema,
 } from './sales.schemas.js';
 import { TradeDocsService } from './trade-docs.service.js';
+import { TradeTaxInvoiceService } from './trade-tax-invoice.service.js';
 
 /** 거래 문서(견적·주문·발주·입고·구매·반품)와 재고 조회 */
 @ApiTags('trade-docs')
@@ -28,6 +36,7 @@ export class TradeDocsController {
   constructor(
     private readonly docs: TradeDocsService,
     private readonly inventory: InventoryService,
+    private readonly taxInvoices: TradeTaxInvoiceService,
   ) {}
 
   @RequirePermission('sales', 'read')
@@ -62,6 +71,20 @@ export class TradeDocsController {
     return this.docs.cancel(id, body.reason);
   }
 
+  @RequirePermission('sales', 'write')
+  @Post('trade-docs/:id/tax-invoice')
+  @ZodResponse(TaxInvoiceIssueSchema, {
+    status: 201,
+    description:
+      '판매에서 전자세금계산서 발행(P3-08): 품목 줄·금액·거래처로 발행하고 증빙을 판매 전표에 잇는다',
+  })
+  issueTaxInvoice(
+    @UuidParam('id') id: string,
+    @ZodBody(TradeTaxInvoiceIssueSchema) body: TradeTaxInvoiceIssueInput,
+  ) {
+    return this.taxInvoices.issue(id, body);
+  }
+
   @RequirePermission('sales', 'read')
   @Get('inventory/stock')
   @ZodResponse(z.array(StockRowSchema), {
@@ -76,5 +99,27 @@ export class TradeDocsController {
   @ZodResponse(LedgerSchema, { description: '재고수불부(기간 입출고와 누계)' })
   ledger(@ZodQuery(LedgerQuerySchema) query: z.infer<typeof LedgerQuerySchema>) {
     return this.inventory.ledger(query);
+  }
+
+  @RequirePermission('sales', 'read')
+  @Get('inventory/summary')
+  @ZodResponse(InventorySummarySchema, {
+    description: '재고수불현황(기간): 품목별 기초·입고·출고·기말 수량과 금액',
+  })
+  summary(
+    @ZodQuery(InventorySummaryQuerySchema) query: z.infer<typeof InventorySummaryQuerySchema>,
+  ) {
+    return this.inventory.summary(query);
+  }
+
+  @RequirePermission('sales', 'read')
+  @Get('inventory/reconcile')
+  @ZodResponse(InventoryReconcileSchema, {
+    description: '재고–장부 대사: 재고 계정별 재고금액과 장부 잔액, 차이의 원인 후보 전표',
+  })
+  reconcile(
+    @ZodQuery(InventoryReconcileQuerySchema) query: z.infer<typeof InventoryReconcileQuerySchema>,
+  ) {
+    return this.inventory.reconcile(query.date);
   }
 }

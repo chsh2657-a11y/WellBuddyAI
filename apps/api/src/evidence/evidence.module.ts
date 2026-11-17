@@ -38,6 +38,12 @@ import { UploadService } from './upload.service.js';
     ReceiptsService,
     TaxInvoiceIssuesService,
   ],
-  exports: [SourcesService, EvidenceStore, EvidenceService, CollectionScheduler],
+  exports: [
+    SourcesService,
+    EvidenceStore,
+    EvidenceService,
+    CollectionScheduler,
+    TaxInvoiceIssuesService,
+  ],
 })
 export class EvidenceModule {}

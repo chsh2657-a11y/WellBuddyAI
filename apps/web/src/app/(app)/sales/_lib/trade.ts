@@ -51,6 +51,16 @@ export interface TradeDoc extends TradeDocSummary {
   cancelledAt: string | null;
   entry: { id: string; number: string; status: string } | null;
   costEntry: { id: string; number: string; status: string } | null;
+  /** 이 판매에서 발행했거나 수집해 자동으로 짝지은 세금계산서 */
+  taxInvoice: {
+    evidenceId: string | null;
+    issueId: string | null;
+    status: 'issued' | 'sent' | 'failed' | 'collected';
+    approvalNo: string | null;
+    issueDate: string;
+    totalAmount: number;
+    sharedWith: number;
+  } | null;
   lines: TradeDocLine[];
   children: {
     id: string;

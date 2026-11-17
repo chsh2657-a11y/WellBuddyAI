@@ -1,15 +1,25 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { costMoves, fromMilli, stockShortages, toMilli } from '@wellbuddy/accounting-core';
 import {
+  accounts,
   items,
+  journalEntries,
+  journalLines,
   partners,
   stockMoves,
   tradeDocs,
   type Transaction,
   warehouses,
 } from '@wellbuddy/db';
-import { TRADE_DOC_KIND_LABELS } from '@wellbuddy/shared';
-import { and, asc, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm';
+import {
+  formatJournalNo,
+  ITEM_KIND_ACCOUNTS,
+  LEDGER_STATUSES,
+  TRADE_DOC_KIND_LABELS,
+} from '@wellbuddy/shared';
+import { and, asc, desc, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm';
+import { ReportsService } from '../accounting/reports.service.js';
+import { todayKst } from '../common/dates.js';
 import { AppException } from '../common/errors.js';
 import { DbService } from '../db/db.service.js';
 
@@ -27,6 +37,19 @@ export interface LedgerQuery {
   to: string;
 }
 
+export interface SummaryQuery {
+  from: string;
+  to: string;
+  warehouseId?: string;
+}
+
+/** 품목 구분 기본 재고 계정 */
+const DEFAULT_INVENTORY_CODES = ['146', '150', '153'];
+
+/** 영업 문서가 만든 전표와 그 역분개(대사에서 일반 전표와 나눈다) */
+const fromTrade = sql`(${journalEntries.source} = 'trade' or (${journalEntries.source} = 'reversal' and exists (
+  select 1 from journal_entries o where o.id = ${journalEntries.reversalOfId} and o.source = 'trade')))`;
+
 const qtyText = (v: number) => v.toLocaleString('ko-KR', { maximumFractionDigits: 3 });
 
 /**
@@ -35,7 +58,10 @@ const qtyText = (v: number) => v.toLocaleString('ko-KR', { maximumFractionDigits
  */
 @Injectable()
 export class InventoryService {
-  constructor(private readonly db: DbService) {}
+  constructor(
+    private readonly db: DbService,
+    private readonly reports: ReportsService,
+  ) {}
 
   /**
    * 품목들의 이동을 처음부터 다시 계산한다.
@@ -245,6 +271,195 @@ export class InventoryService {
         lines,
         closing: { qty: fromMilli(qtyMilli), value },
       };
+    });
+  }
+
+  /** 재고수불현황: 기간의 품목별 기초·입고·출고·기말(창고를 고르지 않으면 창고 간 이동은 뺀다) */
+  async summary(query: SummaryQuery) {
+    if (query.from > query.to) {
+      throw new AppException('RANGE_INVALID', '시작일이 종료일보다 늦습니다.');
+    }
+    return this.db.tenant(async (tx) => {
+      const before = sql`${stockMoves.moveDate} < ${query.from}`;
+      const during = sql`${stockMoves.moveDate} >= ${query.from}`;
+      const sum = (expr: ReturnType<typeof sql>, filter: ReturnType<typeof sql>) =>
+        sql<string>`coalesce(sum(${expr}) filter (where ${filter}), 0)`;
+      const rows = await tx
+        .select({
+          itemId: stockMoves.itemId,
+          code: items.code,
+          name: items.name,
+          spec: items.spec,
+          unit: items.unit,
+          openQty: sum(sql`${stockMoves.qty}`, before),
+          openValue: sum(sql`${stockMoves.amount}`, before),
+          inQty: sum(sql`${stockMoves.qty}`, sql`${during} and ${stockMoves.qty} > 0`),
+          inValue: sum(sql`${stockMoves.amount}`, sql`${during} and ${stockMoves.qty} > 0`),
+          outQty: sum(sql`-${stockMoves.qty}`, sql`${during} and ${stockMoves.qty} < 0`),
+          outValue: sum(sql`-${stockMoves.amount}`, sql`${during} and ${stockMoves.qty} < 0`),
+        })
+        .from(stockMoves)
+        .innerJoin(items, eq(items.id, stockMoves.itemId))
+        .where(
+          and(
+            lte(stockMoves.moveDate, query.to),
+            query.warehouseId
+              ? eq(stockMoves.warehouseId, query.warehouseId)
+              : sql`${stockMoves.costing} <> 'none'`,
+          ),
+        )
+        .groupBy(stockMoves.itemId, items.code, items.name, items.spec, items.unit)
+        .orderBy(asc(items.code));
+      const qty = (v: string) => fromMilli(toMilli(Number(v)));
+      const result = rows
+        .map((r) => {
+          const opening = { qty: qty(r.openQty), value: Number(r.openValue) };
+          const inflow = { qty: qty(r.inQty), value: Number(r.inValue) };
+          const outflow = { qty: qty(r.outQty), value: Number(r.outValue) };
+          return {
+            itemId: r.itemId,
+            code: r.code,
+            name: r.name,
+            spec: r.spec,
+            unit: r.unit,
+            opening,
+            in: inflow,
+            out: outflow,
+            closing: {
+              qty: fromMilli(toMilli(opening.qty) + toMilli(inflow.qty) - toMilli(outflow.qty)),
+              value: opening.value + inflow.value - outflow.value,
+            },
+          };
+        })
+        .filter(
+          (r) =>
+            r.opening.qty !== 0 ||
+            r.opening.value !== 0 ||
+            r.in.qty !== 0 ||
+            r.out.qty !== 0 ||
+            r.closing.value !== 0,
+        );
+      const total = (pick: (r: (typeof result)[number]) => number) =>
+        result.reduce((s, r) => s + pick(r), 0);
+      return {
+        rows: result,
+        totals: {
+          opening: total((r) => r.opening.value),
+          in: total((r) => r.in.value),
+          out: total((r) => r.out.value),
+          closing: total((r) => r.closing.value),
+        },
+      };
+    });
+  }
+
+  /**
+   * 재고–장부 대사: 재고 계정(품목의 재고 계정, 비우면 구분 기본 146·150·153)마다
+   * 기준일 재고금액과 장부 잔액을 견주고, 차이의 원인이 될 전표(승인 대기 영업 전표, 일반 전표)를 보인다.
+   */
+  async reconcile(date?: string) {
+    const asOf = date ?? todayKst();
+    return this.db.tenant(async (tx) => {
+      const accountRows = await tx
+        .select({ id: accounts.id, code: accounts.code, name: accounts.name })
+        .from(accounts);
+      const byCode = new Map(accountRows.map((a) => [a.code, a]));
+      const byId = new Map(accountRows.map((a) => [a.id, a]));
+
+      const values = await tx
+        .select({
+          kind: items.kind,
+          accountId: items.purchaseAccountId,
+          value: sql<string>`coalesce(sum(${stockMoves.amount}), 0)`,
+        })
+        .from(stockMoves)
+        .innerJoin(items, eq(items.id, stockMoves.itemId))
+        .where(lte(stockMoves.moveDate, asOf))
+        .groupBy(items.kind, items.purchaseAccountId);
+      const stockValue = new Map<string, number>();
+      for (const r of values) {
+        const id = r.accountId ?? byCode.get(ITEM_KIND_ACCOUNTS[r.kind].purchase)?.id;
+        if (id) stockValue.set(id, (stockValue.get(id) ?? 0) + Number(r.value));
+      }
+      const ids = [
+        ...new Set([
+          ...stockValue.keys(),
+          ...DEFAULT_INVENTORY_CODES.flatMap((c) => (byCode.get(c) ? [byCode.get(c)!.id] : [])),
+        ]),
+      ];
+      const { yearStart, balances } = await this.reports.accountBalancesIn(tx, ids, asOf);
+
+      const net = sql<string>`coalesce(sum(${journalLines.debit} - ${journalLines.credit}), 0)`;
+      const pending = await tx
+        .select({ accountId: journalLines.accountId, amount: net })
+        .from(journalLines)
+        .innerJoin(journalEntries, eq(journalEntries.id, journalLines.entryId))
+        .where(
+          and(
+            inArray(journalLines.accountId, ids),
+            inArray(journalEntries.status, ['draft', 'pending']),
+            eq(journalEntries.source, 'trade'),
+            lte(journalEntries.entryDate, asOf),
+          ),
+        )
+        .groupBy(journalLines.accountId);
+      const others = await tx
+        .select({
+          accountId: journalLines.accountId,
+          id: journalEntries.id,
+          entryDate: journalEntries.entryDate,
+          entryNo: journalEntries.entryNo,
+          description: journalEntries.description,
+          amount: net,
+        })
+        .from(journalLines)
+        .innerJoin(journalEntries, eq(journalEntries.id, journalLines.entryId))
+        .where(
+          and(
+            inArray(journalLines.accountId, ids),
+            inArray(journalEntries.status, [...LEDGER_STATUSES]),
+            gte(journalEntries.entryDate, yearStart),
+            lte(journalEntries.entryDate, asOf),
+            sql`not ${fromTrade}`,
+          ),
+        )
+        .groupBy(
+          journalLines.accountId,
+          journalEntries.id,
+          journalEntries.entryDate,
+          journalEntries.entryNo,
+          journalEntries.description,
+        )
+        .orderBy(desc(journalEntries.entryDate), desc(journalEntries.entryNo));
+
+      const rows = ids
+        .map((id) => {
+          const account = byId.get(id)!;
+          const stock = stockValue.get(id) ?? 0;
+          const ledger = balances.get(id) ?? 0;
+          return {
+            accountId: id,
+            code: account.code,
+            name: account.name,
+            stockValue: stock,
+            ledgerBalance: ledger,
+            difference: ledger - stock,
+            pendingTrade: Number(pending.find((p) => p.accountId === id)?.amount ?? 0),
+            otherEntries: others
+              .filter((o) => o.accountId === id && Number(o.amount) !== 0)
+              .slice(0, 20)
+              .map((o) => ({
+                id: o.id,
+                number: formatJournalNo(o.entryDate, o.entryNo),
+                date: o.entryDate,
+                description: o.description,
+                amount: Number(o.amount),
+              })),
+          };
+        })
+        .filter((r) => r.stockValue !== 0 || r.ledgerBalance !== 0 || r.pendingTrade !== 0)
+        .sort((a, b) => a.code.localeCompare(b.code));
+      return { date: asOf, balanced: rows.every((r) => r.difference === 0), rows };
     });
   }
 }

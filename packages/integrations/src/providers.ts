@@ -84,6 +84,19 @@ export interface TaxInvoiceDraft {
   itemName: string;
   /** 우리 쪽 관리번호(중복 발행 방지, 영문·숫자·-·_ 24자 이내) */
   mgtKey: string;
+  /** 영수(대금을 받음, 기본) 또는 청구(외상) */
+  purpose?: 'receipt' | 'claim';
+  /** 품목 줄(최대 99줄). 비우면 itemName 한 줄로 보낸다 */
+  lines?: TaxInvoiceDraftLine[];
+}
+
+export interface TaxInvoiceDraftLine {
+  itemName: string;
+  spec?: string | null;
+  qty?: number | null;
+  unitPrice?: number | null;
+  supplyAmount: number;
+  vatAmount: number;
 }
 
 export interface IssuedTaxInvoice {

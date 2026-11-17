@@ -291,6 +291,9 @@ export const TaxInvoiceIssueSchema = z.object({
   /** 등록한 매출 세금계산서(증빙)와 그 처리 상태 */
   taxInvoiceId: z.uuid().nullable(),
   evidenceStatus: status.nullable(),
+  /** 판매에서 발행했으면 그 판매(P3-08) */
+  tradeDocId: z.uuid().nullable(),
+  tradeDocNo: nullableString,
   createdAt: z.string(),
 });
 

@@ -10,7 +10,7 @@ async function pick(page: Page, combobox: string, text: string, option: RegExp) 
   await page.getByRole('option', { name: option }).click();
 }
 
-test('판매 흐름: 견적서 → 주문서 → 출고(매출원가) → 판매(매출) → 거래명세서 인쇄 → 재고', async ({
+test('판매 흐름: 견적서 → 주문서 → 출고(매출원가) → 판매(매출) → 전자세금계산서 → 거래명세서 인쇄 → 재고·대사', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -77,6 +77,24 @@ test('판매 흐름: 견적서 → 주문서 → 출고(매출원가) → 판매
   expect(await closing('401')).toBe(168_000);
   expect(await closing('108')).toBe(184_800);
 
+  // ── 전자세금계산서 발행(모의): 매출 세금계산서는 판매 전표에 이어져 다시 분개하지 않는다 ──
+  expect(
+    (
+      await api.put('/api/integrations/taxinvoice', { data: { enabled: true, provider: 'mock' } })
+    ).status(),
+  ).toBe(200);
+  await page.getByRole('button', { name: '전자세금계산서 발행' }).click();
+  const dialog = page.getByRole('dialog', { name: '전자세금계산서 발행' });
+  await expect(dialog.getByLabel('작성일자')).toHaveValue(today);
+  await dialog.getByLabel('공급받는자 이메일').fill('tax@hanbit.test');
+  await dialog.getByRole('button', { name: '발행' }).click();
+  await expect(page.getByText(/전자세금계산서를 발행했습니다\(승인번호 \d{24}\)\./)).toBeVisible();
+  await expect(page.getByText('발행', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '전자세금계산서 발행' })).toHaveCount(0);
+  expect((await api.post('/api/auto-journal/run')).status()).toBe(200);
+  expect(await closing('401')).toBe(168_000);
+  expect(await closing('108')).toBe(184_800);
+
   // ── 거래명세서 인쇄 ──
   await page.getByRole('link', { name: '거래명세서 인쇄' }).click();
   const sheet = page.getByRole('article', { name: '거래명세서' });
@@ -92,6 +110,19 @@ test('판매 흐름: 견적서 → 주문서 → 출고(매출원가) → 판매
   await expect(
     page.getByRole('table', { name: '현재고' }).getByRole('row', { name: /레이저 토너/ }),
   ).toContainText('280,000');
+  const views = page.getByRole('group', { name: '재고 보기' });
+  await views.getByRole('button', { name: '수불현황' }).click();
+  const summaryRow = page
+    .getByRole('table', { name: '재고수불현황' })
+    .getByRole('row', { name: /레이저 토너/ });
+  await expect(summaryRow).toContainText('10 BOX');
+  await expect(summaryRow).toContainText('3 BOX');
+  await views.getByRole('button', { name: '장부 대사' }).click();
+  await expect(page.getByText('일치', { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByRole('table', { name: '재고 장부 대사' }).getByRole('row', { name: /146 상품/ }),
+  ).toContainText('280,000');
+  await snap(page, 'p3-08-inventory-reconcile');
   await page.goto('/sales/sales');
   const list = page.getByRole('table', { name: '판매 문서' });
   await expect(list.getByRole('row')).toHaveCount(5); // 머리글 + 견적·주문·출고·판매

@@ -11,8 +11,9 @@ import {
   type TradeDocKind,
 } from '@wellbuddy/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Printer, XCircle } from 'lucide-react';
+import { ArrowRight, FileText, Printer, XCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,21 @@ import {
 import { ApiError, apiFetch } from '@/lib/api';
 import { can, useSession } from '@/lib/session';
 import { formatQty, STATUS_VARIANT, TRADE_DOCS_KEY, type TradeDoc } from '../../_lib/trade';
+import { TaxInvoiceDialog } from './tax-invoice-dialog';
+
+const TAX_INVOICE_STATUS: Record<string, string> = {
+  issued: '발행',
+  sent: '국세청 전송',
+  failed: '전송 실패',
+  collected: '수집분 자동 연결',
+};
+
+/** 이 판매에서 전자세금계산서를 발행할 수 있는가 */
+const canIssueTaxInvoice = (doc: TradeDoc) =>
+  doc.kind === 'sale' &&
+  doc.status === 'posted' &&
+  !doc.taxInvoice &&
+  (!doc.evidenceType || doc.evidenceType === 'tax_invoice' || doc.evidenceType === 'invoice');
 
 const JOURNAL_STATUS: Record<string, string> = {
   draft: '작성중',
@@ -53,6 +69,7 @@ export function DocDetail({ id }: { id: string }) {
   const { data: session } = useSession();
   const writable = can(session, 'sales', 'write');
   const queryClient = useQueryClient();
+  const [issuing, setIssuing] = useState(false);
   const doc = useQuery({
     queryKey: [...TRADE_DOCS_KEY, 'detail', id],
     queryFn: () => apiFetch<TradeDoc>(`/trade-docs/${id}`),
@@ -102,6 +119,12 @@ export function DocDetail({ id }: { id: string }) {
                 </Link>
               </Button>
             ))}
+            {writable && canIssueTaxInvoice(d) ? (
+              <Button size="sm" variant="outline" onClick={() => setIssuing(true)}>
+                <FileText />
+                전자세금계산서 발행
+              </Button>
+            ) : null}
             <Button asChild size="sm" variant="outline">
               <Link href={`/sales/docs/${d.id}/print`}>
                 <Printer />
@@ -150,6 +173,24 @@ export function DocDetail({ id }: { id: string }) {
                 {!d.entry && !d.costEntry ? '—' : null}
               </dd>
             </div>
+            {d.taxInvoice ? (
+              <div>
+                <dt className="text-muted-foreground">세금계산서</dt>
+                <dd>
+                  <Link className="underline" href={d.taxInvoice.issueId ? '/evidence/issue' : '/evidence/records'}>
+                    {d.taxInvoice.approvalNo ?? '승인번호 대기'}
+                  </Link>{' '}
+                  <Badge variant={d.taxInvoice.status === 'failed' ? 'danger' : 'success'}>
+                    {TAX_INVOICE_STATUS[d.taxInvoice.status]}
+                  </Badge>
+                  {d.taxInvoice.sharedWith > 0 ? (
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      월합계(다른 문서 {d.taxInvoice.sharedWith}건과 함께, 합계 {formatWon(d.taxInvoice.totalAmount)})
+                    </span>
+                  ) : null}
+                </dd>
+              </div>
+            ) : null}
             {d.dueDate ? (
               <div>
                 <dt className="text-muted-foreground">{d.kind === 'quote' ? '유효기한' : '납기'}</dt>
@@ -236,6 +277,7 @@ export function DocDetail({ id }: { id: string }) {
           </CardContent>
         </Card>
       ) : null}
+      {issuing ? <TaxInvoiceDialog doc={d} onClose={() => setIssuing(false)} /> : null}
     </div>
   );
 }

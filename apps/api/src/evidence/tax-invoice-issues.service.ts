@@ -6,12 +6,14 @@ import {
   type EvidenceSource,
   taxInvoiceIssues,
   taxInvoices,
+  tradeDocs,
   type Transaction,
 } from '@wellbuddy/db';
 import {
   type IssuedTaxInvoice,
   ProviderError,
   ProviderRegistry,
+  type TaxInvoiceDraftLine,
   type TaxInvoiceIssuer,
   type TaxInvoiceRecord,
   taxInvoiceHash,
@@ -19,13 +21,22 @@ import {
 import type { TaxInvoiceCancelInput, TaxInvoiceIssueInput } from '@wellbuddy/shared';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { AuditService } from '../audit/audit.service.js';
+import { isUniqueViolation } from '../common/db-errors.js';
 import { AppException } from '../common/errors.js';
 import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
 import { IntegrationsService } from '../integrations/integrations.service.js';
+import { linkInvoiceIn, releaseInvoiceIn } from '../sales/trade-invoices.js';
 import { EvidenceStore } from './evidence-store.service.js';
 
 type IssueRow = typeof taxInvoiceIssues.$inferSelect;
+
+/** 판매 문서에서 발행할 때(P3-08): 관리번호·품목 줄을 정해 주고, 발행되면 증빙을 판매 전표에 잇는다 */
+export interface TradeIssueLink {
+  tradeDocId: string;
+  mgtKey: string;
+  lines: TaxInvoiceDraftLine[];
+}
 
 /** 공급자에 보내는 우리 쪽 관리번호: WB + 작성일 + 무작위 8자(영문·숫자 18자) */
 function newMgtKey(issueDate: string) {
@@ -49,28 +60,40 @@ export class TaxInvoiceIssuesService {
   async list() {
     const rows = await this.db.tenant((tx) =>
       tx
-        .select({ issue: taxInvoiceIssues, evidenceStatus: taxInvoices.status })
+        .select({
+          issue: taxInvoiceIssues,
+          evidenceStatus: taxInvoices.status,
+          tradeDocNo: tradeDocs.docNo,
+        })
         .from(taxInvoiceIssues)
         .leftJoin(taxInvoices, eq(taxInvoices.id, taxInvoiceIssues.taxInvoiceId))
+        .leftJoin(tradeDocs, eq(tradeDocs.id, taxInvoiceIssues.tradeDocId))
         .orderBy(desc(taxInvoiceIssues.createdAt))
         .limit(500),
     );
-    return rows.map(({ issue, evidenceStatus }) => this.toDto(issue, evidenceStatus));
+    return rows.map(({ issue, evidenceStatus, tradeDocNo }) =>
+      this.toDto(issue, evidenceStatus, tradeDocNo),
+    );
   }
 
-  private async get(id: string) {
+  async get(id: string) {
     const [row] = await this.db.tenant((tx) =>
       tx
-        .select({ issue: taxInvoiceIssues, evidenceStatus: taxInvoices.status })
+        .select({
+          issue: taxInvoiceIssues,
+          evidenceStatus: taxInvoices.status,
+          tradeDocNo: tradeDocs.docNo,
+        })
         .from(taxInvoiceIssues)
         .leftJoin(taxInvoices, eq(taxInvoices.id, taxInvoiceIssues.taxInvoiceId))
+        .leftJoin(tradeDocs, eq(tradeDocs.id, taxInvoiceIssues.tradeDocId))
         .where(eq(taxInvoiceIssues.id, id)),
     );
     if (!row) throw new NotFoundException();
-    return this.toDto(row.issue, row.evidenceStatus);
+    return this.toDto(row.issue, row.evidenceStatus, row.tradeDocNo);
   }
 
-  private toDto(row: IssueRow, evidenceStatus: string | null) {
+  private toDto(row: IssueRow, evidenceStatus: string | null, tradeDocNo: string | null) {
     return {
       id: row.id,
       mgtKey: row.mgtKey,
@@ -90,6 +113,8 @@ export class TaxInvoiceIssuesService {
       message: row.message,
       taxInvoiceId: row.taxInvoiceId,
       evidenceStatus,
+      tradeDocId: row.tradeDocId,
+      tradeDocNo,
       createdAt: row.createdAt.toISOString(),
     };
   }
@@ -165,15 +190,17 @@ export class TaxInvoiceIssuesService {
       .select({ id: taxInvoices.id })
       .from(taxInvoices)
       .where(eq(taxInvoices.dedupeHash, taxInvoiceHash(record)));
+    // 판매에서 발행했으면 판매 전표에 이어 다시 분개하지 않는다
+    if (evidence && row.tradeDocId) await linkInvoiceIn(tx, evidence.id, [row.tradeDocId]);
     return evidence?.id ?? null;
   }
 
-  async issue(input: TaxInvoiceIssueInput) {
+  async issue(input: TaxInvoiceIssueInput, link?: TradeIssueLink) {
     const { companyId, userId } = requireCompanyContext();
     const { issuer, provider, company } = await this.issuer();
     const vatAmount =
       input.kind === 'tax' ? (input.vatAmount ?? vatFromSupply(input.supplyAmount).vat) : 0;
-    const mgtKey = newMgtKey(input.issueDate);
+    const mgtKey = link?.mgtKey ?? newMgtKey(input.issueDate);
     const result = await this.call(() =>
       issuer.issue({
         issueDate: input.issueDate,
@@ -187,6 +214,7 @@ export class TaxInvoiceIssuesService {
         vatAmount,
         itemName: input.itemName,
         mgtKey,
+        ...(link ? { purpose: 'claim' as const, lines: link.lines } : {}),
       }),
     );
 
@@ -210,9 +238,20 @@ export class TaxInvoiceIssuesService {
           totalAmount: input.supplyAmount + vatAmount,
           approvalNo: result.approvalNo,
           message: result.message ?? null,
+          tradeDocId: link?.tradeDocId ?? null,
           createdBy: userId,
         })
-        .returning();
+        .returning()
+        .catch((e: unknown) => {
+          if (isUniqueViolation(e)) {
+            throw new AppException(
+              'TAX_INVOICE_ALREADY_LINKED',
+              '이미 이 판매로 발행한 전자세금계산서가 있습니다.',
+              HttpStatus.CONFLICT,
+            );
+          }
+          throw e;
+        });
       if (result.approvalNo) {
         const taxInvoiceId = await this.registerEvidence(tx, row!, result.approvalNo, company);
         await tx
@@ -231,6 +270,7 @@ export class TaxInvoiceIssuesService {
             buyerBizNo: input.buyerBizNo,
             totalAmount: input.supplyAmount + vatAmount,
             approvalNo: result.approvalNo,
+            tradeDocId: link?.tradeDocId,
           },
         },
         tx,
@@ -261,7 +301,12 @@ export class TaxInvoiceIssuesService {
     let notice: string | null = null;
     await this.db.tenant(async (tx) => {
       const row = await this.row(tx, id);
-      if (row.taxInvoiceId) {
+      if (row.tradeDocId) {
+        // 판매에서 발행한 것: 판매 전표는 그대로 두고 증빙만 분개하지 않음으로 돌린다
+        if (row.taxInvoiceId) await releaseInvoiceIn(tx, row.taxInvoiceId);
+        notice =
+          '판매 전표는 그대로 둡니다. 다시 발행하거나, 판매가 잘못됐다면 판매를 취소해 주세요.';
+      } else if (row.taxInvoiceId) {
         // 아직 분개하지 않은 매출 증빙은 제외하고, 이미 전표가 있으면 역분개를 안내한다
         const [ignored] = await tx
           .update(taxInvoices)

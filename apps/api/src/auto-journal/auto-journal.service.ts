@@ -48,6 +48,7 @@ import { buildEntry } from './engine/lines.js';
 import { type CardLike, matchReceipts, pairCancellations } from './engine/matching.js';
 import { findRule } from './engine/rules.js';
 import { matchSettlement, type OpenInvoice } from './engine/settlement.js';
+import { matchTradeInvoicesIn } from '../sales/trade-invoices.js';
 import { type LoadedItem, loadItems } from './evidence-items.js';
 
 const EVIDENCE_TABLES = {
@@ -426,9 +427,20 @@ export class AutoJournalService {
 
   // ── 자동 매칭(P2-19) ──────────────────────────────
 
-  /** 카드 승인·취소 상쇄, 영수증 ↔ 카드 승인. 매칭된 증빙 열쇠를 돌려준다 */
+  /**
+   * 카드 승인·취소 상쇄, 영수증 ↔ 카드 승인, 세금계산서 ↔ 판매·구매 문서(이미 문서 전표가 있음).
+   * 매칭된 증빙 열쇠를 돌려준다
+   */
   private async match(tx: Transaction, items: LoadedItem[]): Promise<Set<string>> {
     const matched = new Set<string>();
+    const invoiceIds = items
+      .filter((i) => i.evidenceKind === 'tax_invoice')
+      .map((i) => i.evidenceId);
+    if (invoiceIds.length > 0) {
+      for (const id of await matchTradeInvoicesIn(tx, { invoiceIds })) {
+        matched.add(`tax_invoice:${id}`);
+      }
+    }
     const cards: CardLike[] = items
       .filter((i) => i.card)
       .map((i) => ({
@@ -663,9 +675,10 @@ export class AutoJournalService {
   async run() {
     const { ai, error: aiSetupError } = await this.aiClassifier();
     const plan = await this.db.tenant(async (tx) => {
-      const ctx = await this.context(tx);
       const items = await loadItems(tx, { statuses: ['pending', 'review'] });
       const matched = await this.match(tx, items);
+      // 짝지은 세금계산서도 이번 실행의 외상 반제 후보가 되게 매칭 뒤에 읽는다
+      const ctx = await this.context(tx);
       const existing = await this.suggestionsFor(tx, items);
       const planned = items
         .filter((item) => !matched.has(refKey(item)))

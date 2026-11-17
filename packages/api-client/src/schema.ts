@@ -2244,6 +2244,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/trade-docs/{id}/tax-invoice': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TradeDocsController_issueTaxInvoice'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/inventory/stock': {
     parameters: {
       query?: never;
@@ -2268,6 +2284,38 @@ export interface paths {
       cookie?: never;
     };
     get: operations['TradeDocsController_ledger'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/inventory/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/inventory/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TradeDocsController_reconcile'];
     put?: never;
     post?: never;
     delete?: never;
@@ -9836,6 +9884,9 @@ export interface operations {
             taxInvoiceId: string | null;
             /** @enum {string|null} */
             evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            /** Format: uuid */
+            tradeDocId: string | null;
+            tradeDocNo: string | null;
             createdAt: string;
           }[];
         };
@@ -9907,6 +9958,9 @@ export interface operations {
             taxInvoiceId: string | null;
             /** @enum {string|null} */
             evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            /** Format: uuid */
+            tradeDocId: string | null;
+            tradeDocNo: string | null;
             createdAt: string;
           };
         };
@@ -9967,6 +10021,9 @@ export interface operations {
             taxInvoiceId: string | null;
             /** @enum {string|null} */
             evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            /** Format: uuid */
+            tradeDocId: string | null;
+            tradeDocNo: string | null;
             createdAt: string;
             notice: string | null;
           };
@@ -10022,6 +10079,9 @@ export interface operations {
             taxInvoiceId: string | null;
             /** @enum {string|null} */
             evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            /** Format: uuid */
+            tradeDocId: string | null;
+            tradeDocNo: string | null;
             createdAt: string;
           };
         };
@@ -12358,6 +12418,18 @@ export interface operations {
               /** @enum {string} */
               status: 'draft' | 'pending' | 'posted' | 'reversed';
             } | null;
+            taxInvoice: {
+              /** Format: uuid */
+              evidenceId: string | null;
+              /** Format: uuid */
+              issueId: string | null;
+              /** @enum {string} */
+              status: 'issued' | 'sent' | 'failed' | 'collected';
+              approvalNo: string | null;
+              issueDate: string;
+              totalAmount: number;
+              sharedWith: number;
+            } | null;
             lines: {
               /** Format: uuid */
               id: string;
@@ -12510,6 +12582,18 @@ export interface operations {
               number: string;
               /** @enum {string} */
               status: 'draft' | 'pending' | 'posted' | 'reversed';
+            } | null;
+            taxInvoice: {
+              /** Format: uuid */
+              evidenceId: string | null;
+              /** Format: uuid */
+              issueId: string | null;
+              /** @enum {string} */
+              status: 'issued' | 'sent' | 'failed' | 'collected';
+              approvalNo: string | null;
+              issueDate: string;
+              totalAmount: number;
+              sharedWith: number;
             } | null;
             lines: {
               /** Format: uuid */
@@ -12670,6 +12754,18 @@ export interface operations {
               /** @enum {string} */
               status: 'draft' | 'pending' | 'posted' | 'reversed';
             } | null;
+            taxInvoice: {
+              /** Format: uuid */
+              evidenceId: string | null;
+              /** Format: uuid */
+              issueId: string | null;
+              /** @enum {string} */
+              status: 'issued' | 'sent' | 'failed' | 'collected';
+              approvalNo: string | null;
+              issueDate: string;
+              totalAmount: number;
+              sharedWith: number;
+            } | null;
             lines: {
               /** Format: uuid */
               id: string;
@@ -12717,6 +12813,73 @@ export interface operations {
               status: 'open' | 'closed' | 'posted' | 'cancelled';
               total: number;
             }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (write) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_issueTaxInvoice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          issueDate?: string | null;
+          buyerCeoName?: string | null;
+          /** Format: email */
+          buyerEmail?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description 판매에서 전자세금계산서 발행(P3-08): 품목 줄·금액·거래처로 발행하고 증빙을 판매 전표에 잇는다 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            mgtKey: string;
+            provider: string;
+            /** @enum {string} */
+            status: 'issued' | 'sent' | 'cancelled' | 'failed';
+            /** @enum {string} */
+            kind: 'tax' | 'zero' | 'exempt';
+            issueDate: string;
+            buyerBizNo: string;
+            buyerName: string;
+            buyerCeoName: string | null;
+            buyerEmail: string | null;
+            itemName: string;
+            supplyAmount: number;
+            vatAmount: number;
+            totalAmount: number;
+            approvalNo: string | null;
+            message: string | null;
+            /** Format: uuid */
+            taxInvoiceId: string | null;
+            /** @enum {string|null} */
+            evidenceStatus: 'pending' | 'review' | 'posted' | 'ignored' | 'matched' | null;
+            /** Format: uuid */
+            tradeDocId: string | null;
+            tradeDocNo: string | null;
+            createdAt: string;
           };
         };
       };
@@ -12842,6 +13005,118 @@ export interface operations {
               amount: number;
               balanceQty: number;
               balanceValue: number;
+            }[];
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_summary: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        warehouseId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 재고수불현황(기간): 품목별 기초·입고·출고·기말 수량과 금액 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            rows: {
+              /** Format: uuid */
+              itemId: string;
+              code: string;
+              name: string;
+              spec: string | null;
+              unit: string;
+              opening: {
+                qty: number;
+                value: number;
+              };
+              in: {
+                qty: number;
+                value: number;
+              };
+              out: {
+                qty: number;
+                value: number;
+              };
+              closing: {
+                qty: number;
+                value: number;
+              };
+            }[];
+            totals: {
+              opening: number;
+              in: number;
+              out: number;
+              closing: number;
+            };
+          };
+        };
+      };
+      /** @description 권한 필요: sales (read) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TradeDocsController_reconcile: {
+    parameters: {
+      query?: {
+        date?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 재고–장부 대사: 재고 계정별 재고금액과 장부 잔액, 차이의 원인 후보 전표 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            date: string;
+            balanced: boolean;
+            rows: {
+              /** Format: uuid */
+              accountId: string;
+              code: string;
+              name: string;
+              stockValue: number;
+              ledgerBalance: number;
+              difference: number;
+              pendingTrade: number;
+              otherEntries: {
+                /** Format: uuid */
+                id: string;
+                number: string;
+                date: string;
+                description: string | null;
+                amount: number;
+              }[];
             }[];
           };
         };

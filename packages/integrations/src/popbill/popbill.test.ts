@@ -4,7 +4,7 @@ import { createProviderRegistry, MockTaxInvoiceIssuer, mockApprovalNo } from '..
 import { ProviderError } from '../registry.js';
 import { LINKHUB_AUTH_URL, POPBILL_HOSTS, PopbillClient } from './client.js';
 import { PopbillHometaxProvider } from './hometax.js';
-import { issueStatusOf, PopbillTaxInvoiceIssuer } from './issuer.js';
+import { issueStatusOf, PopbillTaxInvoiceIssuer, popbillTaxinvoice } from './issuer.js';
 
 const SECRET = Buffer.from('popbill-secret-key').toString('base64');
 const NOW = new Date('2026-09-29T12:00:00.000Z');
@@ -379,6 +379,51 @@ describe('팝빌 전자세금계산서 발행', () => {
       status: 'sent',
       approvalNo: '20260929410000110000ABCD',
     });
+  });
+
+  it('품목 줄을 주면 줄마다 detailList 로 보내고, 외상은 청구로 발행한다', () => {
+    const body = popbillTaxinvoice(
+      {
+        ...draft,
+        purpose: 'claim',
+        supplyAmount: 1_165_000,
+        vatAmount: 116_500,
+        itemName: '레이저 토너 외 1건',
+        lines: [
+          {
+            itemName: '레이저 토너',
+            spec: 'TN-2480',
+            qty: 3,
+            unitPrice: 55_000,
+            supplyAmount: 165_000,
+            vatAmount: 16_500,
+          },
+          { itemName: '설치비', qty: null, supplyAmount: 1_000_000, vatAmount: 100_000 },
+        ],
+      },
+      { corpNum: '1248100998', corpName: '우리회사' },
+    );
+    expect(body.purposeType).toBe('청구');
+    expect(body.supplyCostTotal).toBe('1165000');
+    expect(body.detailList).toEqual([
+      {
+        serialNum: 1,
+        purchaseDT: '20260929',
+        itemName: '레이저 토너',
+        spec: 'TN-2480',
+        qty: '3',
+        unitCost: '55000',
+        supplyCost: '165000',
+        tax: '16500',
+      },
+      {
+        serialNum: 2,
+        purchaseDT: '20260929',
+        itemName: '설치비',
+        supplyCost: '1000000',
+        tax: '100000',
+      },
+    ]);
   });
 
   it('상태코드: 발행·전송완료·전송실패·취소', () => {

@@ -5,6 +5,8 @@ import {
   journalEntries,
   partners,
   stockMoves,
+  taxInvoiceIssues,
+  taxInvoices,
   tradeDocLines,
   tradeDocs,
   type Transaction,
@@ -35,6 +37,7 @@ import { requireCompanyContext } from '../common/request-context.js';
 import { DbService } from '../db/db.service.js';
 import { InventoryService } from './inventory.service.js';
 import { ItemsService } from './items.service.js';
+import { matchTradeInvoicesIn, unlinkDocIn } from './trade-invoices.js';
 import { TradePostingService } from './trade-posting.service.js';
 import { WarehousesService } from './warehouses.service.js';
 
@@ -56,6 +59,14 @@ const needsPartner = (kind: TradeDocKind) =>
   (PURCHASE_DOC_KINDS as readonly string[]).includes(kind);
 
 const qtyText = (v: number) => v.toLocaleString('ko-KR', { maximumFractionDigits: 3 });
+
+/** 세금계산서와 짝지을 수 있는 문서(매출·매입) */
+const INVOICE_KINDS: readonly TradeDocKind[] = [
+  'sale',
+  'sales_return',
+  'purchase',
+  'purchase_return',
+];
 
 export interface TradeDocListQuery {
   kinds?: TradeDocKind[];
@@ -204,6 +215,7 @@ export class TradeDocsService {
 
     return {
       ...this.header(doc),
+      taxInvoice: await this.taxInvoiceIn(tx, doc),
       partnerName: row.partnerName,
       partnerBizRegNo: row.partnerBizRegNo,
       warehouseName: row.warehouseName,
@@ -239,6 +251,47 @@ export class TradeDocsService {
         };
       }),
       children,
+    };
+  }
+
+  /** 이 판매에서 발행한 계산서(진행 중) 또는 자동으로 짝지은 수집 계산서 */
+  private async taxInvoiceIn(tx: Transaction, doc: Doc) {
+    const sharedWith = async () => {
+      if (!doc.taxInvoiceId) return 0;
+      const [row] = await tx
+        .select({ n: count() })
+        .from(tradeDocs)
+        .where(and(eq(tradeDocs.taxInvoiceId, doc.taxInvoiceId), ne(tradeDocs.id, doc.id)));
+      return row?.n ?? 0;
+    };
+    const [issue] = await tx
+      .select()
+      .from(taxInvoiceIssues)
+      .where(
+        and(eq(taxInvoiceIssues.tradeDocId, doc.id), ne(taxInvoiceIssues.status, 'cancelled')),
+      );
+    if (issue) {
+      return {
+        evidenceId: issue.taxInvoiceId,
+        issueId: issue.id,
+        status: issue.status as 'issued' | 'sent' | 'failed',
+        approvalNo: issue.approvalNo,
+        issueDate: issue.issueDate,
+        totalAmount: issue.totalAmount,
+        sharedWith: 0,
+      };
+    }
+    if (!doc.taxInvoiceId) return null;
+    const [inv] = await tx.select().from(taxInvoices).where(eq(taxInvoices.id, doc.taxInvoiceId));
+    if (!inv) return null;
+    return {
+      evidenceId: inv.id,
+      issueId: null,
+      status: 'collected' as const,
+      approvalNo: inv.approvalNo,
+      issueDate: inv.issueDate,
+      totalAmount: inv.totalAmount,
+      sharedWith: await sharedWith(),
     };
   }
 
@@ -429,6 +482,8 @@ export class TradeDocsService {
         }
         await this.settle(tx, [...touched], [doc!.id, ...(source ? [source.id] : [])]);
         if (source) await this.refreshOrderStatus(tx, source.id);
+        // 문서보다 먼저 수집돼 기다리던 세금계산서와 짝짓는다(이중 분개 방지)
+        if (INVOICE_KINDS.includes(kind)) await matchTradeInvoicesIn(tx, { docIds: [doc!.id] });
 
         await this.audit.record(
           {
@@ -735,6 +790,17 @@ export class TradeDocsService {
           HttpStatus.CONFLICT,
         );
       }
+      const [issued] = await tx
+        .select({ mgtKey: taxInvoiceIssues.mgtKey })
+        .from(taxInvoiceIssues)
+        .where(and(eq(taxInvoiceIssues.tradeDocId, id), ne(taxInvoiceIssues.status, 'cancelled')));
+      if (issued) {
+        throw new AppException(
+          'TAX_INVOICE_ISSUED',
+          `발행한 전자세금계산서(${issued.mgtKey})를 먼저 취소해 주세요.`,
+          HttpStatus.CONFLICT,
+        );
+      }
       await tx
         .update(tradeDocs)
         .set({
@@ -745,6 +811,8 @@ export class TradeDocsService {
           updatedAt: new Date(),
         })
         .where(eq(tradeDocs.id, id));
+      // 짝지은 수집 계산서는 다시 자동분개 대상으로(월합계면 남은 문서에 잇는다)
+      await unlinkDocIn(tx, id);
 
       const moved = await tx
         .select({ itemId: stockMoves.itemId })

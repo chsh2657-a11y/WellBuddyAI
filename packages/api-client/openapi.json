@@ -20175,6 +20175,16 @@
                           "matched"
                         ]
                       },
+                      "tradeDocId": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "tradeDocNo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "type": "string"
                       }
@@ -20198,6 +20208,8 @@
                       "message",
                       "taxInvoiceId",
                       "evidenceStatus",
+                      "tradeDocId",
+                      "tradeDocNo",
                       "createdAt"
                     ],
                     "additionalProperties": false
@@ -20396,6 +20408,16 @@
                         "matched"
                       ]
                     },
+                    "tradeDocId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "tradeDocNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string"
                     }
@@ -20419,6 +20441,8 @@
                     "message",
                     "taxInvoiceId",
                     "evidenceStatus",
+                    "tradeDocId",
+                    "tradeDocNo",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -20572,6 +20596,16 @@
                         "matched"
                       ]
                     },
+                    "tradeDocId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "tradeDocNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -20599,6 +20633,8 @@
                     "message",
                     "taxInvoiceId",
                     "evidenceStatus",
+                    "tradeDocId",
+                    "tradeDocNo",
                     "createdAt",
                     "notice"
                   ],
@@ -20733,6 +20769,16 @@
                         "matched"
                       ]
                     },
+                    "tradeDocId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "tradeDocNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string"
                     }
@@ -20756,6 +20802,8 @@
                     "message",
                     "taxInvoiceId",
                     "evidenceStatus",
+                    "tradeDocId",
+                    "tradeDocNo",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -26941,6 +26989,56 @@
                       ],
                       "additionalProperties": false
                     },
+                    "taxInvoice": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "evidenceId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "issueId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "issued",
+                            "sent",
+                            "failed",
+                            "collected"
+                          ]
+                        },
+                        "approvalNo": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "issueDate": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "number"
+                        },
+                        "sharedWith": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "evidenceId",
+                        "issueId",
+                        "status",
+                        "approvalNo",
+                        "issueDate",
+                        "totalAmount",
+                        "sharedWith"
+                      ],
+                      "additionalProperties": false
+                    },
                     "lines": {
                       "type": "array",
                       "items": {
@@ -27124,6 +27222,7 @@
                     "cancelledAt",
                     "entry",
                     "costEntry",
+                    "taxInvoice",
                     "lines",
                     "children"
                   ],
@@ -27381,6 +27480,56 @@
                       ],
                       "additionalProperties": false
                     },
+                    "taxInvoice": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "evidenceId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "issueId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "issued",
+                            "sent",
+                            "failed",
+                            "collected"
+                          ]
+                        },
+                        "approvalNo": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "issueDate": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "number"
+                        },
+                        "sharedWith": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "evidenceId",
+                        "issueId",
+                        "status",
+                        "approvalNo",
+                        "issueDate",
+                        "totalAmount",
+                        "sharedWith"
+                      ],
+                      "additionalProperties": false
+                    },
                     "lines": {
                       "type": "array",
                       "items": {
@@ -27564,6 +27713,7 @@
                     "cancelledAt",
                     "entry",
                     "costEntry",
+                    "taxInvoice",
                     "lines",
                     "children"
                   ],
@@ -27841,6 +27991,56 @@
                       ],
                       "additionalProperties": false
                     },
+                    "taxInvoice": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "evidenceId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "issueId": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "issued",
+                            "sent",
+                            "failed",
+                            "collected"
+                          ]
+                        },
+                        "approvalNo": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "issueDate": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "number"
+                        },
+                        "sharedWith": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "evidenceId",
+                        "issueId",
+                        "status",
+                        "approvalNo",
+                        "issueDate",
+                        "totalAmount",
+                        "sharedWith"
+                      ],
+                      "additionalProperties": false
+                    },
                     "lines": {
                       "type": "array",
                       "items": {
@@ -28024,8 +28224,207 @@
                     "cancelledAt",
                     "entry",
                     "costEntry",
+                    "taxInvoice",
                     "lines",
                     "children"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (write)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "trade-docs"
+        ]
+      }
+    },
+    "/api/trade-docs/{id}/tax-invoice": {
+      "post": {
+        "operationId": "TradeDocsController_issueTaxInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "issueDate": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "buyerCeoName": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "buyerEmail": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 100,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "판매에서 전자세금계산서 발행(P3-08): 품목 줄·금액·거래처로 발행하고 증빙을 판매 전표에 잇는다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "mgtKey": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "issued",
+                        "sent",
+                        "cancelled",
+                        "failed"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "tax",
+                        "zero",
+                        "exempt"
+                      ]
+                    },
+                    "issueDate": {
+                      "type": "string"
+                    },
+                    "buyerBizNo": {
+                      "type": "string"
+                    },
+                    "buyerName": {
+                      "type": "string"
+                    },
+                    "buyerCeoName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "buyerEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "itemName": {
+                      "type": "string"
+                    },
+                    "supplyAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "vatAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "totalAmount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "approvalNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "message": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "taxInvoiceId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "evidenceStatus": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "review",
+                        "posted",
+                        "ignored",
+                        "matched"
+                      ]
+                    },
+                    "tradeDocId": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "tradeDocNo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "mgtKey",
+                    "provider",
+                    "status",
+                    "kind",
+                    "issueDate",
+                    "buyerBizNo",
+                    "buyerName",
+                    "buyerCeoName",
+                    "buyerEmail",
+                    "itemName",
+                    "supplyAmount",
+                    "vatAmount",
+                    "totalAmount",
+                    "approvalNo",
+                    "message",
+                    "taxInvoiceId",
+                    "evidenceStatus",
+                    "tradeDocId",
+                    "tradeDocNo",
+                    "createdAt"
                   ],
                   "additionalProperties": false
                 }
@@ -28388,6 +28787,335 @@
                     "opening",
                     "closing",
                     "lines"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "trade-docs"
+        ]
+      }
+    },
+    "/api/inventory/summary": {
+      "get": {
+        "operationId": "TradeDocsController_summary",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "재고수불현황(기간): 품목별 기초·입고·출고·기말 수량과 금액",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "spec": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "opening": {
+                            "type": "object",
+                            "properties": {
+                              "qty": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "qty",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "in": {
+                            "type": "object",
+                            "properties": {
+                              "qty": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "qty",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "out": {
+                            "type": "object",
+                            "properties": {
+                              "qty": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "qty",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "closing": {
+                            "type": "object",
+                            "properties": {
+                              "qty": {
+                                "type": "number"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "qty",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "itemId",
+                          "code",
+                          "name",
+                          "spec",
+                          "unit",
+                          "opening",
+                          "in",
+                          "out",
+                          "closing"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "properties": {
+                        "opening": {
+                          "type": "number"
+                        },
+                        "in": {
+                          "type": "number"
+                        },
+                        "out": {
+                          "type": "number"
+                        },
+                        "closing": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "opening",
+                        "in",
+                        "out",
+                        "closing"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "rows",
+                    "totals"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 필요: sales (read)"
+          }
+        },
+        "security": [
+          {
+            "wb_at": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "trade-docs"
+        ]
+      }
+    },
+    "/api/inventory/reconcile": {
+      "get": {
+        "operationId": "TradeDocsController_reconcile",
+        "parameters": [
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "재고–장부 대사: 재고 계정별 재고금액과 장부 잔액, 차이의 원인 후보 전표",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "balanced": {
+                      "type": "boolean"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "stockValue": {
+                            "type": "number"
+                          },
+                          "ledgerBalance": {
+                            "type": "number"
+                          },
+                          "difference": {
+                            "type": "number"
+                          },
+                          "pendingTrade": {
+                            "type": "number"
+                          },
+                          "otherEntries": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                "number": {
+                                  "type": "string"
+                                },
+                                "date": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "amount": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "number",
+                                "date",
+                                "description",
+                                "amount"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "code",
+                          "name",
+                          "stockValue",
+                          "ledgerBalance",
+                          "difference",
+                          "pendingTrade",
+                          "otherEntries"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "balanced",
+                    "rows"
                   ],
                   "additionalProperties": false
                 }

@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -21,6 +22,7 @@ import { accounts, partners } from './accounting-master.js';
 import { users } from './auth.js';
 import { companies } from './companies.js';
 import { journalEntries } from './journal.js';
+import { tradeDocs } from './sales.js';
 import { fileObjects } from './system.js';
 
 const companyRef = () =>
@@ -339,6 +341,8 @@ export const taxInvoiceIssues = pgTable(
     /** 공급자가 돌려준 마지막 안내(전송 실패 사유 등) */
     message: text(),
     taxInvoiceId: uuid().references(() => taxInvoices.id, { onDelete: 'set null' }),
+    /** 판매에서 발행했으면 그 판매 문서(P3-08) */
+    tradeDocId: uuid().references((): AnyPgColumn => tradeDocs.id, { onDelete: 'restrict' }),
     createdBy: uuid().references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -346,6 +350,10 @@ export const taxInvoiceIssues = pgTable(
   (t) => [
     uniqueIndex('tax_invoice_issues_company_mgt_key_uq').on(t.companyId, t.mgtKey),
     index('tax_invoice_issues_company_date_idx').on(t.companyId, t.issueDate),
+    /** 한 판매에 살아 있는 발행은 하나 */
+    uniqueIndex('tax_invoice_issues_trade_doc_uq')
+      .on(t.companyId, t.tradeDocId)
+      .where(sql`trade_doc_id is not null and status <> 'cancelled'`),
     check('tax_invoice_issues_status_ck', sql`status in ('issued', 'sent', 'cancelled', 'failed')`),
     check('tax_invoice_issues_kind_ck', sql`kind in ('tax', 'zero', 'exempt')`),
     check('tax_invoice_issues_amount_ck', sql`total_amount = supply_amount + vat_amount`),

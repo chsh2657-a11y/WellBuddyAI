@@ -20,6 +20,7 @@ import { tenantIsolationPolicy } from './_rls.js';
 import { accounts, partners } from './accounting-master.js';
 import { users } from './auth.js';
 import { companies } from './companies.js';
+import { taxInvoices } from './evidence.js';
 import { journalEntries } from './journal.js';
 
 const companyRef = () =>
@@ -158,6 +159,8 @@ export const tradeDocs = pgTable(
     entryId: uuid().references(() => journalEntries.id, { onDelete: 'restrict' }),
     /** 매출원가·재고조정 전표 */
     costEntryId: uuid().references(() => journalEntries.id, { onDelete: 'restrict' }),
+    /** 짝지은 세금계산서(우리가 발행했거나 홈택스에서 수집한 것). 월합계는 여러 문서가 한 장을 가리킨다 */
+    taxInvoiceId: uuid().references((): AnyPgColumn => taxInvoices.id, { onDelete: 'set null' }),
     cancelledAt: timestamp({ withTimezone: true }),
     cancelledBy: uuid().references(() => users.id, { onDelete: 'set null' }),
     cancelReason: text(),
@@ -169,6 +172,7 @@ export const tradeDocs = pgTable(
     uniqueIndex('trade_docs_company_no_uq').on(t.companyId, t.docNo),
     index('trade_docs_company_kind_date_idx').on(t.companyId, t.kind, t.docDate),
     index('trade_docs_source_idx').on(t.sourceDocId),
+    index('trade_docs_tax_invoice_idx').on(t.taxInvoiceId),
     check(
       'trade_docs_kind_ck',
       sql`kind in ('quote', 'sales_order', 'shipment', 'sale', 'sales_return', 'purchase_order', 'receipt', 'purchase', 'purchase_return', 'transfer', 'adjustment', 'opening')`,

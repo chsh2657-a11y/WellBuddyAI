@@ -212,6 +212,16 @@ export class ReportsService {
     return row?.net ?? 0;
   }
 
+  /** 기준일 현재 계정별 잔액(차변 - 대변, 회계연도 기초 포함). 다른 모듈의 대사용 */
+  async accountBalancesIn(tx: Transaction, accountIds: string[], date: string) {
+    const year = await this.fiscal.rangeFor(tx, date);
+    const balances = new Map<string, number>();
+    for (const id of accountIds) {
+      balances.set(id, await this.balance(tx, [id], year.startDate, date, true));
+    }
+    return { yearStart: year.startDate, balances };
+  }
+
   // ── 원장 ─────────────────────────────────────────────
 
   /** 계정별원장(거래처를 주면 거래처원장, 현금 계정이면 현금출납장) */

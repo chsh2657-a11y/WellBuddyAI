@@ -22,7 +22,7 @@ export function popbillTaxinvoice(
     writeDate,
     chargeDirection: '정과금',
     issueType: '정발행',
-    purposeType: '영수',
+    purposeType: draft.purpose === 'claim' ? '청구' : '영수',
     taxType: TAX_TYPES[draft.kind ?? 'tax'],
     invoicerCorpNum: supplier.corpNum,
     invoicerMgtKey: draft.mgtKey,
@@ -36,15 +36,26 @@ export function popbillTaxinvoice(
     supplyCostTotal: String(draft.supplyAmount),
     taxTotal: String(draft.vatAmount),
     totalAmount: String(draft.supplyAmount + draft.vatAmount),
-    detailList: [
-      {
-        serialNum: 1,
-        purchaseDT: writeDate,
-        itemName: draft.itemName,
-        supplyCost: String(draft.supplyAmount),
-        tax: String(draft.vatAmount),
-      },
-    ],
+    detailList: draft.lines?.length
+      ? draft.lines.map((l, i) => ({
+          serialNum: i + 1,
+          purchaseDT: writeDate,
+          itemName: l.itemName,
+          ...(l.spec ? { spec: l.spec } : {}),
+          ...(l.qty != null ? { qty: String(l.qty) } : {}),
+          ...(l.unitPrice != null ? { unitCost: String(l.unitPrice) } : {}),
+          supplyCost: String(l.supplyAmount),
+          tax: String(l.vatAmount),
+        }))
+      : [
+          {
+            serialNum: 1,
+            purchaseDT: writeDate,
+            itemName: draft.itemName,
+            supplyCost: String(draft.supplyAmount),
+            tax: String(draft.vatAmount),
+          },
+        ],
   };
 }
 

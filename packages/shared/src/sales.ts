@@ -333,3 +333,15 @@ export const TradeDocCancelSchema = z.object({
   reason: z.string().trim().min(1, { error: '취소 사유를 입력해 주세요.' }).max(200),
 });
 export type TradeDocCancelInput = z.infer<typeof TradeDocCancelSchema>;
+
+/** 판매에서 전자세금계산서 발행(P3-08). 금액·품목은 판매 문서에서 가져온다 */
+export const TradeTaxInvoiceIssueSchema = z.object({
+  /** 작성일자. 비우면 판매일자 */
+  issueDate: z.preprocess(emptyToNull, IsoDate.nullish()),
+  buyerCeoName: optionalText(50),
+  buyerEmail: z.preprocess(
+    emptyToNull,
+    z.email({ error: '이메일 형식이 올바르지 않습니다.' }).max(100).nullish(),
+  ),
+});
+export type TradeTaxInvoiceIssueInput = z.infer<typeof TradeTaxInvoiceIssueSchema>;
